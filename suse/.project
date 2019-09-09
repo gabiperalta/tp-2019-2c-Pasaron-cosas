@@ -3,6 +3,7 @@
 	<name>suse</name>
 	<comment></comment>
 	<projects>
+		<project>libSuse</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
