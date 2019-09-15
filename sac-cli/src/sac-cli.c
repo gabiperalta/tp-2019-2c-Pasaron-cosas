@@ -2,6 +2,6 @@
 #include <stdlib.h>
 
 int main(void) {
-	puts("Process SUSE"); /* prints Proceso SUSE */
+	puts("Proceso SAC-Cli");
 	return EXIT_SUCCESS;
 }
