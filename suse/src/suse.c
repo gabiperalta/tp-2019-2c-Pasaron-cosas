@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <suse.h>
 
-int main(void) {
-	puts("Process SUSE"); /* prints Proceso SUSE */
-	return EXIT_SUCCESS;
-}
+
+
