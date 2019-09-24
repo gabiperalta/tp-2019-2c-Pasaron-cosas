@@ -12,20 +12,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-//#include "biblioteca.h"
+#include "biblioteca.h"
 
+# define MAX_CLIENTES 50 //cantidad maxima de conexiones que pueden escucharse
 
-#define PUERTO_ESCUCHA_FS 8090
-#define PUERTO_ESCUCHA_MEM 36263
-#define IP_LOCAL "127.0.0.1"
-
-
-//int escuchar(int puerto);
-//int conectarseA(char *ip, int puerto);
-//int aceptarConexion(int socketEscucha);
+int escuchar(int puerto);
+int conectarseA(char *ip, int puerto);
+int aceptarConexion(int socketEscucha);
 //int enviarMensaje(char* mensaje, int socketDestino);
 //char* recibirMensaje(int socketCliente);
-//void enviarRequest(int servidor, t_request request);
+void enviarSolicitud(int servidor, t_datos datos);
 //void enviarResponse(int cliente,t_response response);
 //void enviarCantidadDeDescribes(int cliente,uint8_t cantidadDeDescribes);
 //t_request recibirRequest(int servidor);
