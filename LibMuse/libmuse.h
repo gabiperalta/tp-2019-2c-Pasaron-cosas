@@ -17,8 +17,20 @@
 #ifndef LIBMUSE_H_
 #define LIBMUSE_H_
 
+#include <commons/string.h> // solo para probar algo
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <unistd.h>
+#include <pthread.h>
+
+//#include "../biblioteca/biblioteca.h"
+
+//int puerto_muse;
+//char* ip_muse;
+//pid_t id_proceso;
+
 
 /**
  * Inicializa la biblioteca de MUSE.
