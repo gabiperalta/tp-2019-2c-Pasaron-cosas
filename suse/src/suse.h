@@ -8,12 +8,10 @@
 #ifndef SUSE_H_
 #define SUSE_H_
 
-#define NEW     0
-#define READY 	1
-#define EXEC 	2
-#define BLOCKED 3
-#define EXIT 	4
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <commons/collections/dictionary.h>
 
 
 #endif /* SUSE_H_ */
