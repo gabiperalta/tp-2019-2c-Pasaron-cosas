@@ -34,3 +34,11 @@ t_config * obtenerConfigDeSuse(){
 	t_config * config = config_create("/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config");
 	return config;
 }
+
+int main(){
+	puts("Proceso SUSE");
+	inicializarColaNew();
+	inicializarColaReady();
+	pasarDeNewAReady();
+	return 0;
+}
