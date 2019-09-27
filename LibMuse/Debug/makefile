@@ -24,11 +24,14 @@ endif
 # All Target
 all: liblibMuse.so
 
+dependents:
+	-cd /home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug && $(MAKE) clean all
+
 # Tool invocations
-liblibMuse.so: $(OBJS) $(USER_OBJS)
+liblibMuse.so: $(OBJS) $(USER_OBJS) /home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug/libbiblioteca.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -shared -o "liblibMuse.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug" -shared -o "liblibMuse.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -38,5 +41,6 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
+/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug/libbiblioteca.so:
 
 -include ../makefile.targets
