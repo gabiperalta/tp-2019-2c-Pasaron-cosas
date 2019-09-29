@@ -21,11 +21,11 @@ int conectarseA(char *ip, int puerto);
 int aceptarConexion(int socketEscucha);
 //int enviarMensaje(char* mensaje, int socketDestino);
 //char* recibirMensaje(int socketCliente);
-void enviarSolicitud(int servidor, t_datos datos);
+//void enviarSolicitud(int servidor, t_datos datos);
 //void enviarResponse(int cliente,t_response response);
 //void enviarCantidadDeDescribes(int cliente,uint8_t cantidadDeDescribes);
 //t_request recibirRequest(int servidor);
 //t_response recibirResponse(int servidor);
-
+void enviar_paquete(t_paquete paquete,int socket_servidor);
 
 #endif

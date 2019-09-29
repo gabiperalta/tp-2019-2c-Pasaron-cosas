@@ -82,6 +82,7 @@ int aceptarConexion(int socketEscucha) {
 	return nuevoSocket;
 }
 
+/*
 void enviarSolicitud(int servidor,t_datos datos){
 	int posicion = 0;
 
@@ -138,4 +139,27 @@ t_datos recibirRequest(int cliente){
 	free(buffer);
 
 	return datos;
+}
+*/
+
+// Si no se envia la lista de parametros, inicializarla con NULL
+void enviar_paquete(t_paquete paquete,int socket_servidor){
+	void* buffer;
+	int tam_buffer = sizeof(paquete.header);
+	t_parametro* parametro;
+
+	if(paquete.parametros != NULL){
+		for(int i=0;i<list_size(paquete.parametros);i++){
+			parametro = list_get(paquete.parametros,i);
+			tam_buffer += sizeof(parametro->valor);
+			if(parametro->recibir_string)
+				tam_buffer += parametro->valor + 1; // mas uno por el \0
+		}
+	}
+
+	buffer = malloc(tam_buffer);
+
+
+
+	//printf("tamano buffer: %d\n",tam_buffer);
 }

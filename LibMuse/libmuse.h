@@ -22,20 +22,19 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <commons/collections/list.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <commons/string.h>
 #include "../biblioteca/biblioteca_sockets.h"
 
-typedef struct{
 
-	//int id_normal: //seria por si en las pruebas el id del
-	//proceso/hilo es un numero aleatorio (ej: 3,7,0,etc)
+char* ip_programa;
 
-	int id_proceso_hilo;
-	int socket;
-
-}t_conexion;
-
-t_list* lista_conexiones;
+// ver si conviene hacer un struct
+__thread char* id_proceso_hilo;
+__thread int socket_muse;
 
 /**
  * Inicializa la biblioteca de MUSE.
@@ -128,7 +127,6 @@ int muse_sync(uint32_t addr, size_t len);
 int muse_unmap(uint32_t dir);
 
 //================= FUNCIONES AUXILIARES =================
-t_conexion* agregarConexion(int id,int socket_creado);
-
+void obtener_ip();
 
 #endif

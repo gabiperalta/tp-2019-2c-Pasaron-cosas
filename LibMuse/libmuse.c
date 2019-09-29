@@ -5,38 +5,47 @@
  *      Author: utnso
  */
 
-/*
- *
- *
- * ya fue, voy a hacer q el malloc tenga un getIdHilo, y q dependiendo
- * de q hilo sea, tengo un numero de socket
- *
- *
- *
- */
-
 #include "libmuse.h"
 
 
 int muse_init(int id, char* ip, int puerto){
-	int socket_muse = conectarseA(ip,puerto);
+
+	if(ip_programa == NULL){
+		obtener_ip();		// esto no funciona si la VM no tiene conexion
+		printf("ip del programa actual: %s\n",ip_programa);
+	}
+
+	/*
+	socket_muse = conectarseA(ip,puerto);
 
 	if(socket_muse == 0){
 		return -1;
 	}
+	*/
 
-	list_add(lista_conexiones,agregarConexion(id,socket_muse));
-	//id_proceso = id;
-	//ip_muse = malloc(strlen(ip) + 1);
-	//puerto_muse = puerto;
+	id_proceso_hilo = string_new();
+	string_append(&id_proceso_hilo,string_itoa(id));
+	string_append(&id_proceso_hilo,"-");
+	string_append(&id_proceso_hilo,ip_programa);
 
-	//int muse_servidor = conectarseA(ip,puerto);
+	t_paquete paquete = {
+			.header = MUSE_INIT,
+			.parametros = list_create()
+	};
+	agregar_string(paquete.parametros,id_proceso_hilo);
+
+	//enviar_paquete(paquete,socket_muse);
+
 	return 0;
 }
 
 void muse_close(){
 	sleep(2);
-	printf("id hilo: %d\n",(int)pthread_self());
+	//printf("id hilo: %d\n",(int)pthread_self());
+	//printf("variable de prueba: %d\n",variable_prueba);
+	printf("%s\n",id_proceso_hilo);
+	printf("%d\n",strlen(id_proceso_hilo));
+
 }
 
 uint32_t muse_alloc(uint32_t tam){
@@ -44,7 +53,11 @@ uint32_t muse_alloc(uint32_t tam){
 	//variable_prueba = tam;
 	//printf("id proceso: %d\n",getpid());
 
-	printf("%d\n",list_size(lista_conexiones));
+	//printf("%d\n",list_size(lista_conexiones));
+
+	//extern int variable_prueba;
+	//variable_prueba = (int) tam;
+
 
 	return 0;
 }
@@ -75,13 +88,33 @@ int muse_unmap(uint32_t dir){
 
 //================= FUNCIONES AUXILIARES =================
 
-void __attribute__((constructor)) libmuse_init(){
-	lista_conexiones = list_create();
-}
+//void __attribute__((constructor)) libmuse_init(){
+//	obtener_ip();
+//}
 
-t_conexion* agregarConexion(int id,int socket_creado) {
-	 t_conexion* nuevo = malloc(sizeof(t_conexion));
-	 nuevo->id_proceso_hilo = id;
-	 nuevo->socket = socket_creado;
-	 return nuevo;
+void obtener_ip(){
+	int fd;
+	struct ifreq ifr;
+	//int tam_ip;
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+	/* I want to get an IPv4 IP address */
+	ifr.ifr_addr.sa_family = AF_INET;
+
+	/* I want IP address attached to "eth0" */
+	strncpy(ifr.ifr_name, "enp0s3", IFNAMSIZ-1);
+
+	ioctl(fd, SIOCGIFADDR, &ifr);
+
+	close(fd);
+
+	//tam_ip = strlen(inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr)) + 1;
+	//ip_programa = malloc(tam_ip);
+	//strcpy()
+
+	/* display result */
+	//printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+
+	ip_programa = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
