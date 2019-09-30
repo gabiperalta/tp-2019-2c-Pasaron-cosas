@@ -83,32 +83,6 @@ int aceptarConexion(int socketEscucha) {
 }
 
 /*
-void enviarSolicitud(int servidor,t_datos datos){
-	int posicion = 0;
-
-	int tamano_buffer;
-	void* buffer;
-
-	switch(datos.header){
-		case MUSE_ALLOC:
-
-			tamano_buffer = sizeof(datos.header) + sizeof(datos.id_proceso_hilo);
-			buffer = malloc(tamano_buffer);
-
-			memcpy(&buffer[posicion],&datos.header,sizeof(datos.header));
-			posicion += sizeof(datos.header);
-
-			memcpy(&buffer[posicion],&datos.id_proceso_hilo,sizeof(datos.id_proceso_hilo));
-
-			break;
-
-	}
-
-	send(servidor,buffer,tamano_buffer,0);
-
-	free(buffer);
-}
-
 t_datos recibirRequest(int cliente){
 
 	int bytesRecibidos;
@@ -145,11 +119,15 @@ t_datos recibirRequest(int cliente){
 // Si no se envia la lista de parametros, inicializarla con NULL
 void enviar_paquete(t_paquete paquete,int socket_servidor){
 	void* buffer;
-	int tam_buffer = sizeof(paquete.header);
+	int posicion = 0;
+	uint8_t cantidad_parametros = 0;
+	int tam_buffer = sizeof(paquete.header) + sizeof(tam_buffer) + sizeof(cantidad_parametros);
 	t_parametro* parametro;
 
 	if(paquete.parametros != NULL){
-		for(int i=0;i<list_size(paquete.parametros);i++){
+		cantidad_parametros = list_size(paquete.parametros);
+
+		for(int i=0;i<cantidad_parametros;i++){
 			parametro = list_get(paquete.parametros,i);
 			tam_buffer += sizeof(parametro->valor);
 			if(parametro->recibir_string)
@@ -159,7 +137,92 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 	buffer = malloc(tam_buffer);
 
+	memcpy(&buffer[posicion],&tam_buffer,sizeof(tam_buffer)); //mando el tamano del buffer para saber el total a recibir
+	posicion += sizeof(tam_buffer);
+	memcpy(&buffer[posicion],&paquete.header,sizeof(paquete.header));
+	posicion += sizeof(paquete.header);
+	memcpy(&buffer[posicion],&cantidad_parametros,sizeof(cantidad_parametros));
+	posicion += sizeof(cantidad_parametros);
 
+	if(paquete.parametros != NULL){
+		for(int i=0;i<cantidad_parametros;i++){
+			parametro = list_get(paquete.parametros,i);
 
+			memcpy(&buffer[posicion],&parametro->valor,sizeof(parametro->valor));
+			posicion += sizeof(parametro->valor);
+
+			memcpy(&buffer[posicion],&parametro->recibir_string,sizeof(parametro->recibir_string));
+			posicion += sizeof(parametro->recibir_string);
+
+			if(!parametro->recibir_string){ continue; }
+			memcpy(&buffer[posicion],parametro->valor_string,parametro->valor);
+			posicion += parametro->valor;
+		}
+	}
 	//printf("tamano buffer: %d\n",tam_buffer);
+
+	send(socket_servidor,buffer,tam_buffer,0);
+
+	free(buffer);
+}
+
+t_paquete recibir_paquete(int socket_cliente){
+	int bytesRecibidos;
+	t_paquete paquete;
+	int tam_buffer;
+	void* buffer;
+	uint8_t cantidad_parametros = 0;
+	//t_parametro* parametro;
+
+
+	bytesRecibidos = recv(socket_cliente,&tam_buffer, sizeof(tam_buffer), 0);
+	//bytesRecibidos = recv(socket_cliente,&paquete.header, sizeof(paquete.header), 0);
+	paquete.error = 0;
+
+	if(bytesRecibidos <= 0) {
+		perror("Se desconecto el cliente");
+		paquete.error = 1;
+		return paquete;
+	}
+
+	buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
+
+	recv(socket_cliente,buffer, sizeof(paquete.header), 0);
+	memcpy(&paquete.header,buffer,sizeof(paquete.header));
+	recv(socket_cliente,buffer, sizeof(cantidad_parametros), 0);
+	memcpy(&cantidad_parametros,buffer,sizeof(cantidad_parametros));
+
+	if(cantidad_parametros == 0){
+		free(buffer);
+		return paquete;
+	}
+
+	paquete.parametros = list_create();
+	for(int i=0; i<cantidad_parametros ; i++){
+		t_parametro* parametro = malloc(sizeof(t_parametro));
+
+
+		// si hay un error, revisar lo del & ///////////////////////////////
+
+		recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
+		memcpy(&parametro->valor,buffer,sizeof(parametro->valor));
+		recv(socket_cliente,buffer, sizeof(parametro->recibir_string), 0);
+		memcpy(&parametro->recibir_string,buffer,sizeof(parametro->recibir_string));
+
+		////////////////////////////////////////////////////////////////////
+
+		if(parametro->recibir_string){
+			recv(socket_cliente,buffer, parametro->valor, 0);
+			parametro->valor_string = malloc(parametro->valor);
+			memcpy(parametro->valor_string,buffer,parametro->valor);
+		}
+
+		list_add(paquete.parametros,parametro);
+
+	}
+
+
+	free(buffer);
+
+	return paquete;
 }
