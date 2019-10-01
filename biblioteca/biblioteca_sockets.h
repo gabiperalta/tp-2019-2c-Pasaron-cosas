@@ -14,7 +14,7 @@
 #include <arpa/inet.h>
 #include "biblioteca.h"
 
-# define MAX_CLIENTES 50 //cantidad maxima de conexiones que pueden escucharse
+# define MAX_CLIENTES 100 //cantidad maxima de conexiones que pueden escucharse
 
 int escuchar(int puerto);
 int conectarseA(char *ip, int puerto);

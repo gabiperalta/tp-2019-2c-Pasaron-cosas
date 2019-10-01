@@ -27,7 +27,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <commons/string.h>
-#include "../biblioteca/biblioteca_sockets.h"
+#include "biblioteca_sockets.h"
 
 
 char* ip_programa;

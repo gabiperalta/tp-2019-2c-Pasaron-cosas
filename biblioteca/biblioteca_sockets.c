@@ -131,7 +131,7 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 			parametro = list_get(paquete.parametros,i);
 			tam_buffer += sizeof(parametro->valor);
 			if(parametro->recibir_string)
-				tam_buffer += parametro->valor + 1; // mas uno por el \0
+				tam_buffer += parametro->valor;
 		}
 	}
 
@@ -173,7 +173,6 @@ t_paquete recibir_paquete(int socket_cliente){
 	void* buffer;
 	uint8_t cantidad_parametros = 0;
 	//t_parametro* parametro;
-
 
 	bytesRecibidos = recv(socket_cliente,&tam_buffer, sizeof(tam_buffer), 0);
 	//bytesRecibidos = recv(socket_cliente,&paquete.header, sizeof(paquete.header), 0);
@@ -218,7 +217,6 @@ t_paquete recibir_paquete(int socket_cliente){
 		}
 
 		list_add(paquete.parametros,parametro);
-
 	}
 
 

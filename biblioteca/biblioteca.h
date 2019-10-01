@@ -26,10 +26,6 @@ typedef enum {
 typedef struct{
 
 	funcion header;
-	//uint8_t tam_ip;
-	//char* ip;
-	//long unsigned int id_proceso_hilo;
-	//int id_proceso_hilo;
 	int error;
 	//bool agregar_parametros
 	t_list* parametros;
@@ -44,5 +40,8 @@ typedef struct{
 
 void agregar_valor(t_list* lista_parametros,int valor);
 void agregar_string(t_list* lista_parametros,char* valor_string);
+int obtener_valor(t_list* lista_parametros);
+char* obtener_string(t_list* lista_parametros);
+void destruir_parametro(t_parametro* parametro);
 
 #endif /* BIBLIOTECA_H_ */

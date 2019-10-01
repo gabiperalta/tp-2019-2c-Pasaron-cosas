@@ -3,6 +3,7 @@
 	<name>muse</name>
 	<comment></comment>
 	<projects>
+		<project>biblioteca</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

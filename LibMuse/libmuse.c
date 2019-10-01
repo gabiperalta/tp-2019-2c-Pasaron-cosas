@@ -15,13 +15,11 @@ int muse_init(int id, char* ip, int puerto){
 		printf("ip del programa actual: %s\n",ip_programa);
 	}
 
-	/*
 	socket_muse = conectarseA(ip,puerto);
 
 	if(socket_muse == 0){
 		return -1;
 	}
-	*/
 
 	id_proceso_hilo = string_new();
 	string_append(&id_proceso_hilo,string_itoa(id));
@@ -32,20 +30,23 @@ int muse_init(int id, char* ip, int puerto){
 			.header = MUSE_INIT,
 			.parametros = list_create()
 	};
+	//agregar_valor(paquete.parametros,25);
 	agregar_string(paquete.parametros,id_proceso_hilo);
 
-	//enviar_paquete(paquete,socket_muse);
+	enviar_paquete(paquete,socket_muse);
+
+	//close(socket_muse); // deberia estar en muse_close
 
 	return 0;
 }
 
 void muse_close(){
-	sleep(2);
+	//sleep(2);
 	//printf("id hilo: %d\n",(int)pthread_self());
 	//printf("variable de prueba: %d\n",variable_prueba);
-	printf("%s\n",id_proceso_hilo);
-	printf("%d\n",strlen(id_proceso_hilo));
-
+	//printf("%s\n",id_proceso_hilo);
+	//printf("%d\n",strlen(id_proceso_hilo));
+	close(socket_muse);
 }
 
 uint32_t muse_alloc(uint32_t tam){
