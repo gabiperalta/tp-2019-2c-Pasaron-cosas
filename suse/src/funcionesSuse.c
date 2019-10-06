@@ -33,6 +33,7 @@ void pasarDeNewAReady(){
 			list_remove(cola_new, cola_new[i]);
 			//ver el tema de usar SJF a corto plazo
 
+
 		}
 		else{
 			break; //se me ocurre esto para que si en el medio del for se libera un cupo de ready no se asigne
