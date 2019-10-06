@@ -21,13 +21,24 @@ void inicializarColaNew(){
 }
 void inicializarColaReady(){
 	cola_ready= list_create();
-
+	// hay que chequear aca constantemente si se libera espacio para que de new pasen a ready?
 }
 void pasarDeNewAReady(){
 	int cantidad_max_procesos = obtenerGradoMultiprogramacion();
-	for(int i = 0; i < cantidad_max_procesos; i++){
 
-	}
+	for(int i = 0; cola_new->elements_count ; i++){
+		if(cola_ready->elements_count <= cantidad_max_procesos){
+
+			list_add(cola_ready, cola_new[i]);
+			list_remove(cola_new, cola_new[i]);
+			//ver el tema de usar SJF a corto plazo
+
+		}
+		else{
+			break; //se me ocurre esto para que si en el medio del for se libera un cupo de ready no se asigne
+				//un hilo de new que no esta primero en la lista
+				//es decir, si ya vemos que la lista de ready esta llena que salga de la asignacion
+		}
 }
 
 int obtenerGradoMultiprogramacion(){
@@ -40,5 +51,3 @@ t_config * obtenerConfigDeSuse(){
 	t_config * config = config_create(PATH_CONFIG);
 	return config;
 }
-
-
