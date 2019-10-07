@@ -59,6 +59,12 @@ uint32_t muse_alloc(uint32_t tam){
 	//extern int variable_prueba;
 	//variable_prueba = (int) tam;
 
+	t_paquete paquete = {
+			.header = MUSE_ALLOC,
+			.parametros = list_create()
+	};
+
+
 
 	return 0;
 }
