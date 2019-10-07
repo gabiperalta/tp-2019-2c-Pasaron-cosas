@@ -11,7 +11,9 @@
 #include <commons/config.h>
 #include "muse.h"
 
-void procesar_solicitud(t_paquete paquete);
+void procesar_solicitud(void* socket_cliente);
 void leer_config();
+void init_threads();
+void servidor();
 
 #endif /* FUNCIONESMUSE_H_ */

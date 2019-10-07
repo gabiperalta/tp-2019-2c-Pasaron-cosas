@@ -4,6 +4,12 @@
 int main(void) {
 
 	leer_config();
+	lista_threads = list_create();
+
+	upcm = malloc(TAM_MEMORIA); // memoria principal
+
+	init_threads();
+
 	/*
 	int cliente;
 	int puerto_escucha;
@@ -24,5 +30,22 @@ int main(void) {
 	printf("%d\n",TAM_PAGINA);
 	printf("%d\n",TAM_SWAP);
 
+	system("clear");
+	printf("---------------- MUSE ----------------\n");
+
+	char * linea;
+	while(1) {
+		linea = readline(">");
+		if(linea)
+			add_history(linea);
+		if(!strncmp(linea, "exit", 4)) {
+			free(linea);
+			break;
+		}
+
+		free(linea);
+	}
+
+	free(upcm);
 	return 0;
 }

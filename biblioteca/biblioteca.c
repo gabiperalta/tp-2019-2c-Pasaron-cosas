@@ -7,7 +7,7 @@
 
 #include "biblioteca.h"
 
-void agregar_valor(t_list* lista_parametros,int valor){
+void agregar_valor(t_list* lista_parametros,uint32_t valor){
 	t_parametro* parametro = malloc(sizeof(t_parametro));
 	parametro->valor = valor;
 	parametro->recibir_string = false;
@@ -24,7 +24,7 @@ void agregar_string(t_list* lista_parametros,char* valor_string){
 	list_add(lista_parametros,parametro);
 }
 
-int obtener_valor(t_list* lista_parametros){
+uint32_t obtener_valor(t_list* lista_parametros){
 	t_parametro* parametro = list_get(lista_parametros,0);
 	int valor_obtenido = parametro->valor;
 

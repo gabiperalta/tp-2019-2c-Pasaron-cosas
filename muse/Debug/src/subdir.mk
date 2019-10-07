@@ -5,15 +5,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/funcionesMuse.c \
-../src/muse.c 
+../src/muse.c \
+../src/segmentacionPaginada.c 
 
 OBJS += \
 ./src/funcionesMuse.o \
-./src/muse.o 
+./src/muse.o \
+./src/segmentacionPaginada.o 
 
 C_DEPS += \
 ./src/funcionesMuse.d \
-./src/muse.d 
+./src/muse.d \
+./src/segmentacionPaginada.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
