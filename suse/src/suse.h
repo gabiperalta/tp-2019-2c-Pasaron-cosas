@@ -17,17 +17,23 @@
 #include <commons/collections/list.h>
 #include <commons/config.h>
 #include <semaphore.h>
+#include <hilolay2.h>
 
 #define PATH_CONFIG = "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config";
                        /* Estructuras*/
-t_list * cola_new;
-t_list * cola_ready;
-t_list* cola_exit;
-t_list * cola_blocked;
+t_dictionary* cola_new;
+t_dictionary * cola_ready;
+t_dictionary* cola_exit;
+t_dictionary * cola_blocked;
 
 t_config *archivo_config;
 
-
+typedef struct{
+	enum estado new,ready,exec,exit;
+	t_dictionary* hilos_new;
+	t_dictionary* hilos_ready;
+	t_dictionary* hilos_exec;
+};
 
 typedef struct{
 	int cant_instancias_disponibles;

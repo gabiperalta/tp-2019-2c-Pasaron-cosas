@@ -18,6 +18,9 @@
 #include <commons/config.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 
 void inicializarColaNew();
 void inicializarColaReady();

@@ -3,7 +3,7 @@
 int main(){
 	puts("Proceso SUSE");
 	char* linea;
-	archivo_config = config_create(PATH_CONFIG);
+	t_config * archivo_config = config_create(PATH_CONFIG);
 	inicializarColaNew();
 	inicializarColaReady();
 	pasarDeNewAReady();

@@ -7,12 +7,16 @@
 
 #include <funcionesSuse.h>
 
-void inicializarColaNew(){
+
+
+
+
+/*void inicializarColaNew(){
 	//llegan los hilos con hilolay_create
 		//pthread_t hilo;
 		//pthread_create(&hilo;NULL;(void*)atenderRequest;NULL);
-		cola_new = list_create();
-		for(int i = 0; i < cola_new->elements_count; i++){
+		cola_new = dictionary_create();
+		for(int i = 0; i < cola_new->elements_amount; i++){
 			list_add(cola_new, hilo);
 		}
 
@@ -51,4 +55,4 @@ int obtenerGradoMultiprogramacion(){
 t_config * obtenerConfigDeSuse(){
 	t_config * config = config_create(PATH_CONFIG);
 	return config;
-}
+}*/
