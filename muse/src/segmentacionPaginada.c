@@ -36,6 +36,14 @@ t_pagina* crear_pagina(uint8_t bit_modificado, void* datos) {
     return new;
 }
 
+t_thread* buscar_thread(t_list* lista,int socket_thread) {
+	int igualSocket(t_thread *p) {
+		return p->socket == socket_thread;
+	}
+
+	return list_find(lista, (void*) igualSocket);
+}
+
 /*
 t_registro* crearRegistro(t_response respuesta, uint16_t keyNuevo){
 	t_registro* nuevo = malloc(sizeof(t_registro));
@@ -43,14 +51,6 @@ t_registro* crearRegistro(t_response respuesta, uint16_t keyNuevo){
 	nuevo->timestamp = respuesta.timestamp;
 	nuevo->value = respuesta.value ;
 	return nuevo;
-}
-
-t_segmento* buscarSegmento(t_list* lista,char *path) {
-	int igualPath(t_segmento *p) {
-		return string_equals_ignore_case(p->path, path);
-	}
-
-	return list_find(lista, (void*) igualPath);
 }
 
 t_pagina* buscarPagina(t_list* lista,uint16_t key) {

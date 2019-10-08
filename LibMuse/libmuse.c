@@ -30,12 +30,11 @@ int muse_init(int id, char* ip, int puerto){
 			.header = MUSE_INIT,
 			.parametros = list_create()
 	};
-	//agregar_valor(paquete.parametros,25);
+
+	///////////////// Parametros a enviar /////////////////
 	agregar_string(paquete.parametros,id_proceso_hilo);
-
+	///////////////////////////////////////////////////////
 	enviar_paquete(paquete,socket_muse);
-
-	//close(socket_muse); // deberia estar en muse_close
 
 	return 0;
 }
@@ -50,8 +49,6 @@ void muse_close(){
 }
 
 uint32_t muse_alloc(uint32_t tam){
-	//variable_prueba = malloc(sizeof(uint32_t));
-	//variable_prueba = tam;
 	//printf("id proceso: %d\n",getpid());
 
 	//printf("%d\n",list_size(lista_conexiones));
@@ -64,7 +61,14 @@ uint32_t muse_alloc(uint32_t tam){
 			.parametros = list_create()
 	};
 
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros, tam);
+	///////////////////////////////////////////////////////
+	enviar_paquete(paquete,socket_muse);
 
+	///////////////// Parametros a recibir ////////////////
+
+	///////////////////////////////////////////////////////
 
 	return 0;
 }

@@ -3,12 +3,19 @@
 
 int main(void) {
 
+	//int (*funcion_muse)(int);
+	//funcion_muse = muse_prueba;
+	//funcion_muse(16);
+	//return 0;
+
+
 	leer_config();
 	lista_threads = list_create();
 
 	upcm = malloc(TAM_MEMORIA); // memoria principal
 
 	init_threads();
+
 
 	/*
 	int cliente;

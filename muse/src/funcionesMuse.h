@@ -15,5 +15,7 @@ void procesar_solicitud(void* socket_cliente);
 void leer_config();
 void init_threads();
 void servidor();
+void funcion_init(t_paquete paquete,int socket_muse);
+void funcion_alloc(t_paquete paquete,int socket_muse);
 
 #endif /* FUNCIONESMUSE_H_ */

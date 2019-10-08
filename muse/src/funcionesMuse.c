@@ -9,16 +9,21 @@
 
 void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
+	void (*funcion_muse)(t_paquete,int);
 
 	while(paquete.error != 1){
 		switch(paquete.header){
 			case MUSE_INIT:
+				funcion_muse = funcion_init;
 				break;
 			case MUSE_ALLOC:
+				funcion_muse = funcion_alloc;
 				break;
 			case MUSE_CLOSE:
-				break;
+				return;
 		}
+
+		funcion_muse(paquete,socket_cliente);
 
 		paquete = recibir_paquete(socket_cliente);
 	}
@@ -53,4 +58,21 @@ void servidor(){
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
 	}
+}
+
+void funcion_init(t_paquete paquete,int socket_muse){
+	list_add(lista_threads,crear_thread(obtener_string(paquete.parametros),socket_muse));
+}
+
+void funcion_alloc(t_paquete paquete,int socket_muse){
+	int tam = obtener_valor(paquete.parametros);
+	t_thread* thread_encontrado = buscar_thread(lista_threads,socket_muse);
+	t_thread* thread_nuevo;
+
+	if(thread_encontrado == NULL){
+		printf("No se inicializo libmuse\n");
+		return;
+	}
+
+
 }

@@ -36,4 +36,6 @@ t_thread* crear_thread(char* id_proceso_hilo,int socket_creado);
 t_segmento* crear_segmento(uint8_t tipo);
 t_pagina* crear_pagina(uint8_t bit_modificado, void* datos);
 
+t_thread* buscar_thread(t_list* lista,int socket_thread);
+
 #endif /* SEGMENTACIONPAGINADA_H_ */
