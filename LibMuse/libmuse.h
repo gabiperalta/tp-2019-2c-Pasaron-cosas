@@ -31,10 +31,13 @@
 
 
 char* ip_programa;
+char* ip_muse;
+int puerto_muse;
 
 // ver si conviene hacer un struct
 __thread char* id_proceso_hilo;
 __thread int socket_muse;
+__thread bool conexion_realizada;
 
 /**
  * Inicializa la biblioteca de MUSE.
@@ -128,5 +131,6 @@ int muse_unmap(uint32_t dir);
 
 //================= FUNCIONES AUXILIARES =================
 void obtener_ip();
+void obtener_socket();
 
 #endif

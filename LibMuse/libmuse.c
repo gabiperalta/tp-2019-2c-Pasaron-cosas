@@ -10,10 +10,14 @@
 
 int muse_init(int id, char* ip, int puerto){
 
-	if(ip_programa == NULL){
-		obtener_ip();		// esto no funciona si la VM no tiene conexion
-		printf("ip del programa actual: %s\n",ip_programa);
-	}
+	//if(ip_programa == NULL){
+	//	obtener_ip();		// esto no funciona si la VM no tiene conexion
+	//	printf("ip del programa actual: %s\n",ip_programa);
+	//}
+
+	ip_muse = string_new();
+	string_append(&ip_muse,ip);
+	puerto_muse = puerto;
 
 	socket_muse = conectarseA(ip,puerto);
 
@@ -22,7 +26,7 @@ int muse_init(int id, char* ip, int puerto){
 	}
 
 	id_proceso_hilo = string_new();
-	string_append(&id_proceso_hilo,string_itoa(id));
+	string_append(&id_proceso_hilo,string_itoa(socket_muse));
 	string_append(&id_proceso_hilo,"-");
 	string_append(&id_proceso_hilo,ip_programa);
 
@@ -33,6 +37,7 @@ int muse_init(int id, char* ip, int puerto){
 
 	///////////////// Parametros a enviar /////////////////
 	agregar_string(paquete.parametros,id_proceso_hilo);
+	//agregar_valor(paquete.parametros,socket_muse); // Envio el socket creado para que sea id
 	///////////////////////////////////////////////////////
 	enviar_paquete(paquete,socket_muse);
 
@@ -49,6 +54,7 @@ void muse_close(){
 }
 
 uint32_t muse_alloc(uint32_t tam){
+	obtener_socket();
 	//printf("id proceso: %d\n",getpid());
 
 	//printf("%d\n",list_size(lista_conexiones));
@@ -128,4 +134,11 @@ void obtener_ip(){
 	//printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 
 	ip_programa = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+}
+
+void obtener_socket(){
+	if(!conexion_realizada){
+		socket_muse = conectarseA(ip_muse,puerto_muse);
+		conexion_realizada = true;
+	}
 }
