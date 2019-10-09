@@ -65,14 +65,13 @@ void funcion_init(t_paquete paquete,int socket_muse){
 }
 
 void funcion_alloc(t_paquete paquete,int socket_muse){
-	int tam = obtener_valor(paquete.parametros);
-	t_thread* thread_encontrado = buscar_thread(lista_threads,socket_muse);
-	t_thread* thread_nuevo;
+	uint32_t tam_obtenido = obtener_valor(paquete.parametros);
+	tam_obtenido *= 2;
 
-	if(thread_encontrado == NULL){
-		printf("No se inicializo libmuse\n");
-		return;
-	}
+	t_paquete paquete_respuesta = {
+			.header = MUSE_INIT,
+			.parametros = list_create()
+	};
 
-
+	agregar_valor(paquete_respuesta.parametros,tam_obtenido);
 }

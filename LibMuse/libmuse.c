@@ -73,7 +73,8 @@ uint32_t muse_alloc(uint32_t tam){
 	enviar_paquete(paquete,socket_muse);
 
 	///////////////// Parametros a recibir ////////////////
-
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	printf("valor recibido: %d\n",obtener_valor(paquete_recibido.parametros));
 	///////////////////////////////////////////////////////
 
 	return 0;
