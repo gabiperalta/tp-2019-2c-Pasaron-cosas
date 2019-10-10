@@ -10,8 +10,9 @@
 
 #include "muse.h"
 
+
 typedef struct{
-	char* id_proceso_hilo;
+	char* id_programa;
 	t_list* tabla_segmentos;
 	int socket;
 }t_thread;
@@ -32,10 +33,10 @@ typedef struct{
 }t_pagina;
 
 
-t_thread* crear_thread(char* id_proceso_hilo,int socket_creado);
+t_thread* crear_thread(char* id_programa,int socket_creado);
 t_segmento* crear_segmento(uint8_t tipo);
 t_pagina* crear_pagina(uint8_t bit_modificado, void* datos);
 
-t_thread* buscar_thread(t_list* lista,int socket_thread);
+t_thread* buscar_thread(t_list* lista,char* id_programa,int socket_thread);
 
 #endif /* SEGMENTACIONPAGINADA_H_ */

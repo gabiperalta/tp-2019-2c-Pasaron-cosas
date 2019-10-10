@@ -8,10 +8,10 @@
 #include "segmentacionPaginada.h"
 
 
-t_thread* crear_thread(char* id_proceso_hilo,int socket_creado){
+t_thread* crear_thread(char* id_programa,int socket_creado){
 	t_thread* nuevo = malloc(sizeof(t_thread));
 
-	nuevo->id_proceso_hilo = strdup(id_proceso_hilo);
+	nuevo->id_programa = strdup(id_programa);
 	nuevo->socket = socket_creado;
 	nuevo->tabla_segmentos = list_create();
 
@@ -19,14 +19,12 @@ t_thread* crear_thread(char* id_proceso_hilo,int socket_creado){
 	//list_add(lista_threads,nuevo);
 }
 
-
 t_segmento* crear_segmento(uint8_t tipo) {
 	 t_segmento* nuevo = malloc(sizeof(t_segmento));
 	 nuevo->tipo_segmento = tipo;
 	 nuevo->tabla_paginas = list_create();
 	 return nuevo;
 }
-
 
 t_pagina* crear_pagina(uint8_t bit_modificado, void* datos) {
     t_pagina* new = malloc(sizeof(t_pagina));
@@ -36,12 +34,12 @@ t_pagina* crear_pagina(uint8_t bit_modificado, void* datos) {
     return new;
 }
 
-t_thread* buscar_thread(t_list* lista,int socket_thread) {
-	int igualSocket(t_thread *p) {
-		return p->socket == socket_thread;
+t_thread* buscar_thread(t_list* lista,char* id_programa,int socket_thread) {
+	int igualIdySocket(t_thread *p) {
+		return (p->socket == socket_thread) && string_equals_ignore_case(p->id_programa, id_programa);
 	}
 
-	return list_find(lista, (void*) igualSocket);
+	return list_find(lista, (void*) igualIdySocket);
 }
 
 /*

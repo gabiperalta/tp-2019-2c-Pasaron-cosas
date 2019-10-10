@@ -9,39 +9,42 @@
 
 
 int muse_init(int id, char* ip, int puerto){
-
 	//if(ip_programa == NULL){
 	//	obtener_ip();		// esto no funciona si la VM no tiene conexion
 	//	printf("ip del programa actual: %s\n",ip_programa);
 	//}
+	// Ahora obtengo la IP desde MUSE
 
 	ip_muse = string_new();
 	string_append(&ip_muse,ip);
 	puerto_muse = puerto;
 
-	socket_muse = conectarseA(ip,puerto);
+	id_programa = id;
 
-	if(socket_muse == 0){
-		return -1;
-	}
+	//obtener_socket();
 
-	id_proceso_hilo = string_new();
-	string_append(&id_proceso_hilo,string_itoa(socket_muse));
-	string_append(&id_proceso_hilo,"-");
-	string_append(&id_proceso_hilo,ip_programa);
+	//socket_muse = conectarseA(ip,puerto);
+	//if(socket_muse == 0){
+	//	return -1;
+	//}
+	//conexion_realizada = true;
 
-	t_paquete paquete = {
-			.header = MUSE_INIT,
-			.parametros = list_create()
-	};
+	//t_paquete paquete = {
+	//		.header = MUSE_INIT,
+	//		.parametros = list_create()
+	//};
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_string(paquete.parametros,id_proceso_hilo);
-	//agregar_valor(paquete.parametros,socket_muse); // Envio el socket creado para que sea id
+	//agregar_valor(paquete.parametros,id_programa);
+	//enviar_paquete(paquete,socket_muse);
 	///////////////////////////////////////////////////////
-	enviar_paquete(paquete,socket_muse);
 
-	return 0;
+
+	///////////////// Parametros a recibir ////////////////
+	//t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	///////////////////////////////////////////////////////
+
+	return obtener_socket();
 }
 
 void muse_close(){
@@ -68,6 +71,7 @@ uint32_t muse_alloc(uint32_t tam){
 	};
 
 	///////////////// Parametros a enviar /////////////////
+	//agregar_valor(paquete.parametros, id_programa);
 	agregar_valor(paquete.parametros, tam);
 	///////////////////////////////////////////////////////
 	enviar_paquete(paquete,socket_muse);
@@ -107,39 +111,24 @@ int muse_unmap(uint32_t dir){
 //================= FUNCIONES AUXILIARES =================
 
 //void __attribute__((constructor)) libmuse_init(){
-//	obtener_ip();
+//	obtener_ip(); // para obtener esta funcion, revisar commits antes del 10/10
 //}
 
-void obtener_ip(){
-	int fd;
-	struct ifreq ifr;
-	//int tam_ip;
-
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-
-	/* I want to get an IPv4 IP address */
-	ifr.ifr_addr.sa_family = AF_INET;
-
-	/* I want IP address attached to "eth0" */
-	strncpy(ifr.ifr_name, "enp0s3", IFNAMSIZ-1);
-
-	ioctl(fd, SIOCGIFADDR, &ifr);
-
-	close(fd);
-
-	//tam_ip = strlen(inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr)) + 1;
-	//ip_programa = malloc(tam_ip);
-	//strcpy()
-
-	/* display result */
-	//printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
-
-	ip_programa = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
-}
-
-void obtener_socket(){
+int obtener_socket(){
 	if(!conexion_realizada){
 		socket_muse = conectarseA(ip_muse,puerto_muse);
+		if(socket_muse == 0){ return -1;}
 		conexion_realizada = true;
+
+		t_paquete paquete = {
+				.header = MUSE_INIT,
+				.parametros = list_create()
+		};
+
+		///////////////// Parametros a enviar /////////////////
+		agregar_valor(paquete.parametros,id_programa);
+		enviar_paquete(paquete,socket_muse);
+		///////////////////////////////////////////////////////
 	}
+	return 0;
 }

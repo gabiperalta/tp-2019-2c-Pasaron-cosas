@@ -27,15 +27,15 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <commons/string.h>
-#include "biblioteca_sockets.h"
+#include "../biblioteca/biblioteca_sockets.h"
 
 
-char* ip_programa;
+int id_programa;
 char* ip_muse;
 int puerto_muse;
 
 // ver si conviene hacer un struct
-__thread char* id_proceso_hilo;
+//__thread char* id_proceso_hilo;
 __thread int socket_muse;
 __thread bool conexion_realizada;
 
@@ -130,7 +130,6 @@ int muse_sync(uint32_t addr, size_t len);
 int muse_unmap(uint32_t dir);
 
 //================= FUNCIONES AUXILIARES =================
-void obtener_ip();
 void obtener_socket();
 
 #endif

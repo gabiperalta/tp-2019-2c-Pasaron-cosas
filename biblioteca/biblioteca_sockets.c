@@ -129,7 +129,7 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 		for(int i=0;i<cantidad_parametros;i++){
 			parametro = list_get(paquete.parametros,i);
-			tam_buffer += sizeof(parametro->valor);
+			tam_buffer += sizeof(parametro->valor) + sizeof(parametro->recibir_string);
 			if(parametro->recibir_string)
 				tam_buffer += parametro->valor;
 		}
@@ -200,7 +200,6 @@ t_paquete recibir_paquete(int socket_cliente){
 	for(int i=0; i<cantidad_parametros ; i++){
 		t_parametro* parametro = malloc(sizeof(t_parametro));
 
-
 		// si hay un error, revisar lo del & ///////////////////////////////
 
 		recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
@@ -218,7 +217,6 @@ t_paquete recibir_paquete(int socket_cliente){
 
 		list_add(paquete.parametros,parametro);
 	}
-
 
 	free(buffer);
 
