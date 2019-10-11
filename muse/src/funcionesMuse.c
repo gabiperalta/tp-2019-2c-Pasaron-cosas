@@ -28,6 +28,7 @@ void procesar_solicitud(void* socket_cliente){
 				funcion_muse = funcion_alloc;
 				break;
 			case MUSE_CLOSE:
+				// Nunca ingresara a esta condicion
 				return;
 		}
 
@@ -72,11 +73,25 @@ void servidor(){
 void funcion_init(t_paquete paquete,int socket_muse){
 
 	char* id_programa = string_new();
+	char* ip_socket = obtener_ip_socket(socket_muse);
 	string_append(&id_programa,string_itoa(obtener_valor(paquete.parametros)));
 	string_append(&id_programa,"-");
-	string_append(&id_programa,obtener_ip_socket(socket_muse));
+	string_append(&id_programa,ip_socket);
 
 	list_add(lista_threads,crear_thread(id_programa,socket_muse));
+
+	//				PRUEBA
+	t_thread* thread_obtenido;
+	for(int i=0; i<list_size(lista_threads); i++){
+		thread_obtenido = list_get(lista_threads,i);
+		printf("hilo nro %d\t",i);
+		printf("id_programa: %s\t",thread_obtenido->id_programa);
+		printf("socket: %d\t\n",thread_obtenido->socket);
+	}
+
+	printf("\n");
+
+	free(ip_socket); // Sacar si falla
 }
 
 void funcion_init_thread(t_paquete paquete,int socket_muse){
@@ -109,6 +124,7 @@ char* obtener_ip_socket(int s){
 	socklen_t len;
 	struct sockaddr_storage addr;
 	char ipstr[INET6_ADDRSTRLEN];
+	char* ipstr_reservado = malloc(sizeof(ipstr));
 	//int port;
 
 	len = sizeof addr;
@@ -125,5 +141,7 @@ char* obtener_ip_socket(int s){
 	    inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
 
-	return ipstr;
+	strcpy(ipstr_reservado,ipstr);
+
+	return ipstr_reservado;
 }

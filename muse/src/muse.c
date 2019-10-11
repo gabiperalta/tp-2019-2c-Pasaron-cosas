@@ -32,10 +32,10 @@ int main(void) {
 	close(cliente);
 	*/
 
-	printf("%d\n",PUERTO);
-	printf("%d\n",TAM_MEMORIA);
-	printf("%d\n",TAM_PAGINA);
-	printf("%d\n",TAM_SWAP);
+	//printf("%d\n",PUERTO);
+	//printf("%d\n",TAM_MEMORIA);
+	//printf("%d\n",TAM_PAGINA);
+	//printf("%d\n",TAM_SWAP);
 
 	system("clear");
 	printf("---------------- MUSE ----------------\n");

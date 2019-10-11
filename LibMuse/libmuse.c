@@ -44,6 +44,7 @@ int muse_init(int id, char* ip, int puerto){
 	//t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	///////////////////////////////////////////////////////
 
+	printf("Fin muse_init\n");
 	return obtener_socket();
 }
 
@@ -65,6 +66,7 @@ uint32_t muse_alloc(uint32_t tam){
 	//extern int variable_prueba;
 	//variable_prueba = (int) tam;
 
+	/*
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,
 			.parametros = list_create()
@@ -80,12 +82,14 @@ uint32_t muse_alloc(uint32_t tam){
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	printf("valor recibido: %d\n",obtener_valor(paquete_recibido.parametros));
 	///////////////////////////////////////////////////////
+	*/
 
+	printf("Fin muse_alloc\n");
 	return 0;
 }
 
 void muse_free(uint32_t dir){
-
+	printf("socket del hilo: %d\n",socket_muse);
 }
 
 int muse_get(void* dst, uint32_t src, size_t n){
@@ -129,6 +133,8 @@ int obtener_socket(){
 		agregar_valor(paquete.parametros,id_programa);
 		enviar_paquete(paquete,socket_muse);
 		///////////////////////////////////////////////////////
+
+		printf("Socket obtenido correctamente\n");
 	}
 	return 0;
 }
