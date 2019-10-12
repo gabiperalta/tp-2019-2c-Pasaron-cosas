@@ -1,3 +1,5 @@
+
+
 #include <fuse.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -18,8 +20,13 @@ static int sac_cli_getattr( const char *path, struct stat *st );
 static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi );
 
 // ARCHIVOS
+static int sac_cli_mknod(const char *, mode_t, dev_t);
+static int sac_cli_open(const char *, struct fuse_file_info *);
+static int sac_cli_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi );
-
+static int sac_cli_unlink(const char *);
 
 // DIRECTORIOS
 
+static int sac_cli_mkdir(const char *, mode_t);
+static int sac_cli_rmdir(const char *);
