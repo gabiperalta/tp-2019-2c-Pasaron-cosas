@@ -48,6 +48,7 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 	t_list* tabla_segmentos_filtrada;
 	t_segmento* segmento_obtenido;
 	t_pagina* pagina_obtenida;
+	void* direccion_datos;
 
 	switch(tipo_segmento){
 		case SEGMENTO_HEAP:
@@ -56,8 +57,8 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 
 			for(int i=0; i<list_size(tabla_segmentos_filtrada); i++){
 				segmento_obtenido = list_get(tabla_segmentos_filtrada,i);
+				buscar_bloque_libre(segmento_obtenido->tabla_paginas,tam);
 
-				pagina_obtenida = list_find(segmento_obtenido->tabla_paginas,(void*)buscarBloqueLibre);
 
 			}
 
@@ -82,16 +83,43 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 	*/
 }
 
-int buscarBloqueLibre(t_pagina* pagina){
+t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
+	t_pagina* pagina_obtenida;
+	void* direccion_datos;
+	int posicion = 0;
+	int bytes_recorridos;
+	//t_desplazamiento desplazamiento;
+	t_heap_metadata heap_metadata;
 
-	//list_fold()
+	for(int x=0; x<list_size(tabla_paginas); x++){
+		pagina_obtenida = list_get(tabla_paginas,x);
+		direccion_datos = obtener_datos_frame(pagina_obtenida);
 
+		while(posicion <= TAM_PAGINA){
+			memcpy(&heap_metadata.isFree,&direccion_datos[posicion],sizeof(heap_metadata.isFree));
+			posicion += sizeof(heap_metadata.isFree);
+			memcpy(&heap_metadata.size,&direccion_datos[posicion],sizeof(heap_metadata.size));
+			posicion += sizeof(heap_metadata.size);
+
+			if(heap_metadata.isFree && (tam<=heap_metadata.size)){
+				t_desplazamiento desplazamiento = {
+						.numero_pagina = x,
+						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size)
+				};
+				return desplazamiento;
+			}
+
+			posicion += heap_metadata.size;
+
+		}
+	}
 
 	return 0;
 }
 
-void* obtener_datos_frame(uint16_t frame){
-	int posicion_inicio_frame = frame * TAM_PAGINA;
+void* obtener_datos_frame(t_pagina* pagina){
+	// Tambien deberia chequear si el frame se encuentra en memoria o no
+	int posicion_inicio_frame = pagina->frame * TAM_PAGINA;
 	return (char*) upcm + posicion_inicio_frame;
 }
 
