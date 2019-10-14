@@ -1,7 +1,2 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "sac-server.h"
 
-int main(void) {
-	puts("Proceso SAC-Server"); /* prints Proceso SAC-Server */
-	return EXIT_SUCCESS;
-}

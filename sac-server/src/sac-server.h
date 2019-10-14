@@ -1,15 +1,20 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <commons/bitarray.h>
+#include <sys/mman.h>
 
 #define BLOCK_SIZE 4096
 #define MAGIC_NUMBER_NAME 3
 #define MAX_FILENAME_LENGTH 71
 #define MAX_FILE_NUMBER 1024
 #define BITMAP_START_BLOCK 1
-#define BITMAP_SIZE_IN_BLOCKS 1
+#define BITMAP_SIZE_IN_BLOCKS 131072
 #define NODE_TABLE_SIZE 1024  // EN BLOQUES
 #define NEXT_BLOCK(A) A + 1
+
+// TAMANIO BLOQUE * CANTIDAD DE BLOQUES = TAMANIO MAXIMO DE DISCO
+//       2^12     *        2^X          =       2^44   =>   X = 32
+//		 ( 2^32 ) / 8 = 2^29  =>  ( 2^29 ) / ( 2^12 ) = 131.072	(TAMANIO DEL BITMAP EN BLOQUES)
 
 typedef uint32_t ptrGBloque;
 
