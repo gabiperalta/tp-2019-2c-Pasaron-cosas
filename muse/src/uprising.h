@@ -5,11 +5,13 @@
  *      Author: utnso
  */
 
-#ifndef SEGMENTACIONPAGINADA_H_
-#define SEGMENTACIONPAGINADA_H_
+#ifndef UPRISING_H_
+#define UPRISING_H_
 
 #include "muse.h"
 
+#define SEGMENTO_HEAP 0
+#define SEGMENTO_MMAP 1
 
 typedef struct{
 	char* id_programa;
@@ -26,17 +28,24 @@ typedef struct{
 
 typedef struct{
 	//uint16_t numero_pagina;
-	uint16_t marco;
-	uint16_t bloque_swap;
+	uint16_t frame;
 	uint8_t bit_presencia;
 	uint8_t bit_modificado;
 }t_pagina;
+
+typedef struct{
+	uint32_t size;
+	bool isFree;
+}t_heap_metadata;
 
 
 t_thread* crear_thread(char* id_programa,int socket_creado);
 t_segmento* crear_segmento(uint8_t tipo);
 t_pagina* crear_pagina(uint8_t bit_modificado, void* datos);
 
-t_thread* buscar_thread(t_list* lista,char* id_programa,int socket_thread);
+t_thread* buscar_thread(t_list* lista,int socket_thread);
+t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
 
-#endif /* SEGMENTACIONPAGINADA_H_ */
+int filtrarHeap(t_segmento* p);
+
+#endif /* UPRISING_H_ */

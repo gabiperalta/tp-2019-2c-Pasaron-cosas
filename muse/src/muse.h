@@ -14,7 +14,8 @@
 #include <pthread.h>
 #include "biblioteca_sockets.h"
 #include "commons/collections/list.h"
-#include "funcionesMuse.h"
+
+#include "resistance.h"
 
 #define IP "127.0.0.1"
 //#define PUERTO 34043

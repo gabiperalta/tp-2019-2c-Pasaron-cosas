@@ -5,13 +5,13 @@
  *      Author: utnso
  */
 
-#ifndef FUNCIONESMUSE_H_
-#define FUNCIONESMUSE_H_
+#ifndef RESISTANCE_H_
+#define RESISTANCE_H_
 
 #include <commons/config.h>
 #include <commons/string.h>
 #include "muse.h"
-#include "segmentacionPaginada.h"
+#include "uprising.h"
 
 void procesar_solicitud(void* socket_cliente);
 void leer_config();
@@ -23,4 +23,4 @@ void funcion_alloc(t_paquete paquete,int socket_muse);
 
 char* obtener_ip_socket(int s);
 
-#endif /* FUNCIONESMUSE_H_ */
+#endif /* RESISTANCE_H_ */

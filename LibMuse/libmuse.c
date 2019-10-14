@@ -9,11 +9,6 @@
 
 
 int muse_init(int id, char* ip, int puerto){
-	//if(ip_programa == NULL){
-	//	obtener_ip();		// esto no funciona si la VM no tiene conexion
-	//	printf("ip del programa actual: %s\n",ip_programa);
-	//}
-	// Ahora obtengo la IP desde MUSE
 
 	ip_muse = string_new();
 	string_append(&ip_muse,ip);
@@ -21,52 +16,16 @@ int muse_init(int id, char* ip, int puerto){
 
 	id_programa = id;
 
-	//obtener_socket();
-
-	//socket_muse = conectarseA(ip,puerto);
-	//if(socket_muse == 0){
-	//	return -1;
-	//}
-	//conexion_realizada = true;
-
-	//t_paquete paquete = {
-	//		.header = MUSE_INIT,
-	//		.parametros = list_create()
-	//};
-
-	///////////////// Parametros a enviar /////////////////
-	//agregar_valor(paquete.parametros,id_programa);
-	//enviar_paquete(paquete,socket_muse);
-	///////////////////////////////////////////////////////
-
-
-	///////////////// Parametros a recibir ////////////////
-	//t_paquete paquete_recibido = recibir_paquete(socket_muse);
-	///////////////////////////////////////////////////////
-
-	printf("Fin muse_init\n");
 	return obtener_socket();
 }
 
 void muse_close(){
-	//sleep(2);
-	//printf("id hilo: %d\n",(int)pthread_self());
-	//printf("variable de prueba: %d\n",variable_prueba);
-	//printf("%s\n",id_proceso_hilo);
-	//printf("%d\n",strlen(id_proceso_hilo));
 	close(socket_muse);
 }
 
 uint32_t muse_alloc(uint32_t tam){
 	obtener_socket();
-	//printf("id proceso: %d\n",getpid());
 
-	//printf("%d\n",list_size(lista_conexiones));
-
-	//extern int variable_prueba;
-	//variable_prueba = (int) tam;
-
-	/*
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,
 			.parametros = list_create()
@@ -75,16 +34,16 @@ uint32_t muse_alloc(uint32_t tam){
 	///////////////// Parametros a enviar /////////////////
 	//agregar_valor(paquete.parametros, id_programa);
 	agregar_valor(paquete.parametros, tam);
-	///////////////////////////////////////////////////////
 	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
 
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
-	printf("valor recibido: %d\n",obtener_valor(paquete_recibido.parametros));
+	uint32_t direccion_recibida = obtener_valor(paquete_recibido.parametros);
+	printf("Direccion recibida: %d\n",direccion_recibida);
 	///////////////////////////////////////////////////////
-	*/
 
-	printf("Fin muse_alloc\n");
+	//printf("Fin muse_alloc\n");
 	return 0;
 }
 

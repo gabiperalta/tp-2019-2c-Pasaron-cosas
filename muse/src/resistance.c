@@ -5,7 +5,9 @@
  *      Author: utnso
  */
 
-#include "funcionesMuse.h"
+// Funciones generales de MUSE
+
+#include "resistance.h"
 
 // El socket que se crea en MUSE es diferente al creado en libmuse
 // Ej.: para una misma conexion, MUSE tiene el socket 2 y libmuse el 7
@@ -81,6 +83,7 @@ void funcion_init(t_paquete paquete,int socket_muse){
 	list_add(lista_threads,crear_thread(id_programa,socket_muse));
 
 	//				PRUEBA
+	/*
 	t_thread* thread_obtenido;
 	for(int i=0; i<list_size(lista_threads); i++){
 		thread_obtenido = list_get(lista_threads,i);
@@ -88,27 +91,25 @@ void funcion_init(t_paquete paquete,int socket_muse){
 		printf("id_programa: %s\t",thread_obtenido->id_programa);
 		printf("socket: %d\t\n",thread_obtenido->socket);
 	}
-
 	printf("\n");
+	*/
 
 	free(ip_socket); // Sacar si falla
 }
 
-void funcion_init_thread(t_paquete paquete,int socket_muse){
-
-	char* id_programa = string_new();
-	string_append(&id_programa,string_itoa(obtener_valor(paquete.parametros)));
-	string_append(&id_programa,"-");
-	string_append(&id_programa,obtener_ip_socket(socket_muse));
-
-	//t_thread * thread_obtenido = buscar_thread(lista_threads,id_programa,socket_muse);
-
-	list_add(lista_threads,crear_thread(id_programa,socket_muse));
-}
-
 void funcion_alloc(t_paquete paquete,int socket_muse){
 	//int id = obtener_valor(paquete.parametros);
-	uint32_t tam_obtenido = obtener_valor(paquete.parametros);
+	uint32_t tam = obtener_valor(paquete.parametros);
+
+	t_thread* thread_encontrado = buscar_thread(lista_threads,socket_muse);
+	t_thread* thread_nuevo;
+
+	if(thread_encontrado == NULL){
+		printf("No se inicializo libmuse\n");
+		return;
+	}
+
+	reservar_espacio(thread_encontrado,tam,SEGMENTO_HEAP);
 
 
 
