@@ -1,5 +1,4 @@
 #include <string.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -62,14 +61,8 @@ void writeBitmap(char* myDiskBitmap){
 	msync(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS * 4096, MS_SYNC); // ES NECESARIO ESTO?
 }
 
-size_t getFileSize(char* file){
-	FILE* fd = fopen(file, "r");
-
-	fseek(fd, 0L, SEEK_END);
-	uint32_t dfSize = ftell(fd);
-
-	fclose(fd);
-	return dfSize;
+void dumpBitmap(GBlock *diskPointer){
+	// TENGO QUE VER COMO PUEDO MOSTRARLO
 }
 
 void writeHeader(GBlock *diskPointer){
@@ -138,7 +131,11 @@ int main(int argc, char **argv){
 		printf("Contenidos Del Header:\n");
 		dumpHeader(myDisk);
 
+		printf("Contenidos Del Bitmap:\n");
+		dumpBitmap(NEXT_BLOCK(myDisk));
 
+		printf("Contenidos Del NodeTable:\n");
+		dumpNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
 
 	}
 }
