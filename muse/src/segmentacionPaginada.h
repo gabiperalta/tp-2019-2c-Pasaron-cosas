@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef UPRISING_H_
-#define UPRISING_H_
+#ifndef SEGMENTACIONPAGINADA_H_
+#define SEGMENTACIONPAGINADA_H_
 
 #include "muse.h"
 
@@ -54,4 +54,4 @@ t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
 
 int filtrarHeap(t_segmento* p);
 
-#endif /* UPRISING_H_ */
+#endif /* SEGMENTACIONPAGINADA_H_ */

@@ -7,7 +7,7 @@
 
 // Funciones para la segmentacion paginada de MUSE
 
-#include "uprising.h"
+#include "segmentacionPaginada.h"
 
 
 t_thread* crear_thread(char* id_programa,int socket_creado){
@@ -49,6 +49,7 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 	t_segmento* segmento_obtenido;
 	t_pagina* pagina_obtenida;
 	void* direccion_datos;
+	t_desplazamiento desplazamiento_obtenido;
 
 	switch(tipo_segmento){
 		case SEGMENTO_HEAP:
@@ -57,45 +58,37 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 
 			for(int i=0; i<list_size(tabla_segmentos_filtrada); i++){
 				segmento_obtenido = list_get(tabla_segmentos_filtrada,i);
-				buscar_bloque_libre(segmento_obtenido->tabla_paginas,tam);
+				desplazamiento_obtenido = buscar_bloque_libre(segmento_obtenido->tabla_paginas,tam);
 
-
+				if(desplazamiento_obtenido != NULL)
+					break; //se asigna el bloque
 			}
+
+
 
 			break;
 		case SEGMENTO_MMAP:
 			break;
 	}
 
-	/*
-	if(!list_size(lista))
-		return NULL;
-
-	t_segmento* segmento_obtenido;
-	t_list* tabla_segmentos_heap = list_filter(lista,(void*) filtrarHeap);
-
-	for(int i=0; i<list_size(tabla_segmentos_heap); i++){
-		segmento_obtenido = list_get(tabla_segmentos_heap,i);
-
-		obtener_bloque_disponible(segmento_obtenido->tabla_paginas);
-
-	}
-	*/
 }
 
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
 	t_pagina* pagina_obtenida;
 	void* direccion_datos;
 	int posicion = 0;
-	int bytes_recorridos;
+	int bytes_recorridos = 0;
 	//t_desplazamiento desplazamiento;
 	t_heap_metadata heap_metadata;
+	int tam_pagina_limite = TAM_PAGINA - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size);
 
 	for(int x=0; x<list_size(tabla_paginas); x++){
 		pagina_obtenida = list_get(tabla_paginas,x);
 		direccion_datos = obtener_datos_frame(pagina_obtenida);
 
-		while(posicion <= TAM_PAGINA){
+		posicion = bytes_recorridos;
+
+		do{
 			memcpy(&heap_metadata.isFree,&direccion_datos[posicion],sizeof(heap_metadata.isFree));
 			posicion += sizeof(heap_metadata.isFree);
 			memcpy(&heap_metadata.size,&direccion_datos[posicion],sizeof(heap_metadata.size));
@@ -104,17 +97,63 @@ t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
 			if(heap_metadata.isFree && (tam<=heap_metadata.size)){
 				t_desplazamiento desplazamiento = {
 						.numero_pagina = x,
-						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size)
+						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size) // devuelvo la posicion desde la metadata
 				};
 				return desplazamiento;
 			}
-
 			posicion += heap_metadata.size;
+		}while(posicion <= tam_pagina_limite);
 
-		}
+		bytes_recorridos = posicion - TAM_PAGINA;
 	}
 
-	return 0;
+	return NULL;
+}
+
+void asignar_bloque(t_segmento segmento,t_desplazamiento desplazamiento,uint32_t tam){
+	int numero_pagina_recorrida = desplazamiento.numero_pagina;
+	t_pagina* pagina_obtenida;
+	void* direccion_datos;
+	int posicion;
+	t_heap_metadata heap_metadata_anterior;
+
+	t_heap_metadata heap_metadata_nuevo = {
+			.isFree = false,
+			.size = tam
+	};
+
+	for(int i=desplazamiento.numero_pagina; i<list_size(segmento.tabla_paginas); i++){
+		pagina_obtenida = list_get(segmento.tabla_paginas,numero_pagina_recorrida);
+		direccion_datos = obtener_datos_frame(pagina_obtenida);
+
+		posicion = desplazamiento.posicion;
+
+		do{
+			memcpy(&heap_metadata_anterior.isFree,&direccion_datos[posicion],sizeof(heap_metadata_anterior.isFree));
+			posicion += sizeof(heap_metadata_anterior.isFree);
+			memcpy(&heap_metadata_anterior.size,&direccion_datos[posicion],sizeof(heap_metadata_anterior.size));
+
+			posicion -= sizeof(heap_metadata_anterior.isFree);
+			memset(&direccion_datos[posicion],NULL,sizeof(heap_metadata_anterior.size) + sizeof(heap_metadata_anterior.isFree));
+
+			memcpy(&direccion_datos[posicion],&heap_metadata_nuevo.isFree,sizeof(heap_metadata_nuevo.isFree));
+			posicion += sizeof(heap_metadata_nuevo.isFree);
+			memcpy(&direccion_datos[posicion],&heap_metadata_nuevo.size,sizeof(heap_metadata_nuevo.size));
+			posicion += sizeof(heap_metadata_nuevo.size) ;
+
+			if(heap_metadata.isFree && (tam<=heap_metadata.size)){
+				t_desplazamiento desplazamiento = {
+						.numero_pagina = x,
+						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size) // devuelvo la posicion de la metadata
+				};
+				return desplazamiento;
+			}
+			posicion += heap_metadata.size;
+		}while(posicion <= tam_pagina_limite);
+
+		bytes_recorridos = posicion - TAM_PAGINA;
+
+	}
 }
 
 void* obtener_datos_frame(t_pagina* pagina){

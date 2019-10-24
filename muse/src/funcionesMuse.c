@@ -7,7 +7,7 @@
 
 // Funciones generales de MUSE
 
-#include "resistance.h"
+#include "funcionesMuse.h"
 
 // El socket que se crea en MUSE es diferente al creado en libmuse
 // Ej.: para una misma conexion, MUSE tiene el socket 2 y libmuse el 7
@@ -102,14 +102,15 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	uint32_t tam = obtener_valor(paquete.parametros);
 
 	t_thread* thread_encontrado = buscar_thread(lista_threads,socket_muse);
-	t_thread* thread_nuevo;
+	//t_thread* thread_nuevo; // creo q no es necesario
 
 	if(thread_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
 		return;
 	}
 
-	reservar_espacio(thread_encontrado,tam,SEGMENTO_HEAP);
+
+	//reservar_espacio(thread_encontrado,tam,SEGMENTO_HEAP);
 
 
 
