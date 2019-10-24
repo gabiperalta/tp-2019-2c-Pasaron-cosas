@@ -8,11 +8,8 @@ int main(int argc, char *argv[]){
 	}
 	char* fileName = argv[1];
 
-	size_t diskSize = getFileSize(fileName);
-	int diskFD = open(fileName, O_RDWR);
-	myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);  // DECLARE myDisk COMO UNA VARIABLE GLOBAL EN GESTOR DE MEMORIA
-	close(diskFD);
 
+	cargarBitmap(fileName);
 	pthread_mutex_init(&mutexBitmap, NULL);
 	inicializarServidor();
 
@@ -28,4 +25,13 @@ size_t getFileSize(char* file){
 
 	fclose(fd);
 	return dfSize;
+}
+
+void cargarDisco(char* diskName){
+	diskFD = open(diskName, O_RDWR);
+	char* myDiskBitarray = mmap(NULL, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, BLOCK_SIZE);  // DECLARE myDisk COMO UNA VARIABLE GLOBAL EN GESTOR DE MEMORIA
+
+	bitmap = bitarray_create_with_mode(myDiskBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
+
+	msync(myDiskBitarray, sizeof(bitmap), MS_SYNC);
 }
