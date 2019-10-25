@@ -11,6 +11,8 @@ int main(int argc, char *argv[]){
 
 	cargarBitmap(fileName);
 	pthread_mutex_init(&mutexBitmap, NULL);
+	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
+
 	inicializarServidor();
 
 

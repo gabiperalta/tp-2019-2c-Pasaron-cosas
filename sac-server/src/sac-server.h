@@ -91,7 +91,7 @@ typedef struct sac_block_IS{ // BLOQUE DE PUNTEROS
 //////////// ESTRUCTURAS PARA TABLAS DE ARCHIVOS ////////////
 
 typedef struct sac_global_fd_node{
-	GFile* inodo;
+	ptrGBloque inodo;
 	uint8_t numero_aperturas;
 } GlobalFdNode;
 

@@ -1,8 +1,6 @@
 #include "gestorDeMemoria.h"
 
 int bloqueLibre(){
-	t_bitarray bitmap;	// DEBO VER COMO CONSIGO EL BITMAP DEL ARCHIVO... POSIBLEMENTE HAGA UN DOBLE MMAP DEL ARCHIVO,
-					    //	UNO EN GBLOQUES Y OTRO PARA EL BITARRAY SOLO
 	int bloque = 0;
 	bool ocupado;
 	int tamanioBitarray;
@@ -38,4 +36,20 @@ int inodoLibre(){
 	}
 
 	return nInodo;
+}
+
+void liberarBloque(int bloque){
+	bitarray_clean_bit(bitmap, bloque);
+}
+
+int reservarInodo(int tipoDeArchivo){
+	int inode;
+	pthread_mutex_lock(mutexEscrituraInodeTable);
+
+	inode = inodoLibre();
+
+	// SETEAR EL STATUS DEL INODO CON tipoDeArchivo
+
+
+	pthread_mutex_unlock(mutexEscrituraInodeTable);
 }

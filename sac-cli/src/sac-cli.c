@@ -133,7 +133,7 @@ static int sac_cli_unlink(const char *path){
 	return retorno;
 }
 
-static int sac_cli_mkdir(const char *path, mode_t){
+static int sac_cli_mkdir(const char *path, mode_t mode){
 	int retorno = 0;
 
 	/** Create a directory
@@ -156,6 +156,16 @@ static int sac_cli_rmdir(const char *path){
 	return retorno;
 }
 
+off_t sac_cli_lseek(int filedes, off_t offset, int whence){
+	off_t newOffset;
+	/* Move FD's file position to OFFSET bytes from the
+	   beginning of the file (if WHENCE is SEEK_SET),
+	   the current position (if WHENCE is SEEK_CUR),
+	   or the end of the file (if WHENCE is SEEK_END).
+	   Return the new file position.  */
+	return newOffset;
+}
+
 //sac_cli_dirfd
 
 static struct fuse_operations sac_cli_oper = {
@@ -168,7 +178,7 @@ static struct fuse_operations sac_cli_oper = {
 		.unlink = sac_cli_unlink,
 		.mkdir = sac_cli_mkdir,
 		.rmdir = sac_cli_rmdir,
-		//.fseek = sac_cli_fseek,
+		.lseek = sac_cli_lseek,
 		//.dirfd = sac_cli_dirfd,
 };
 
