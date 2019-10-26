@@ -1,7 +1,7 @@
 #include "gestorDeMemoria.h"
 
-int bloqueLibre(){
-	int bloque = 0;
+ptrGBloque bloqueLibre(){
+	ptrGBloque bloque = 0;
 	bool ocupado;
 	int tamanioBitarray;
 
@@ -20,36 +20,41 @@ int bloqueLibre(){
 	return bloque;
 }
 
-int inodoLibre(){
+ptrGBloque inodoLibre(){
 	int nInodo = 0;
 	bool encontrado = false;
-	struct sac_file_t *nodeTable = (struct sac_file_t*) myDisk;
-	GFile node;
+	GFile *nodeTable = obtenerBloque(INODE_TABLE_START);
 
-	node = nodeTable[nInodo];
-	while(node->state == BORRADO && nInodo < NODE_TABLE_SIZE){
-		nInodo++;
-		node = nodeTable[nInodo];
+	while((nodeTable+nInodo)->state == BORRADO && nInodo < NODE_TABLE_SIZE){
+		nInodo ++;
 	}
-	if(node.state != BORRADO){
-		return -1; // SIGNIFICA QUE NO HAY NINGUN INODO LIBRE
+	if((nodeTable+nInodo)->state != BORRADO){
+		return 0;
 	}
 
 	return nInodo;
 }
 
-void liberarBloque(int bloque){
+void liberarBloqueDeDatos(ptrGBloque bloque){
 	bitarray_clean_bit(bitmap, bloque);
 }
 
-int reservarInodo(int tipoDeArchivo){
-	int inode;
+ptrGBloque reservarInodo(int tipoDeArchivo){
+	ptrGBloque inode;
+	GFile *nuevoInodo;
+
 	pthread_mutex_lock(mutexEscrituraInodeTable);
 
 	inode = inodoLibre();
 
-	// SETEAR EL STATUS DEL INODO CON tipoDeArchivo
+	if(inode){
+		// SETEAR EL STATUS DEL INODO CON tipoDeArchivo
+		nuevoInodo = obtenerBloque(inode);
 
+		nuevoInodo->state = tipoDeArchivo;
+	}
 
 	pthread_mutex_unlock(mutexEscrituraInodeTable);
+
+	return inode;
 }

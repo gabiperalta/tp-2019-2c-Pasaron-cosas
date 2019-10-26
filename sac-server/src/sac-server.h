@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <commons/bitarray.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
@@ -46,25 +47,18 @@
 //GBlock* directorioRaiz;
 t_bitarray *bitmap;
 int diskFD;
+t_list *tablaProcesosAbiertosGlobal;
 
 ////////////////////////////////////
+
+
+//////// ESTRUCTURAS GENERALES ////////
 
 typedef uint32_t ptrGBloque;
 
 typedef struct sac_block {
 	unsigned char bytes[BLOCK_SIZE];
 } GBlock;
-
-typedef struct sac_dir_entry{
-	unsigned char fname[MAX_FILENAME_LENGTH];
-	uint32_t file_size;
-	ptrGBloque inode; // si tiene asignado 0, la entrada esta vacia
-	unsigned char padding[49]; // RELLENO
-}GDirEntry;
-
-typedef struct sac_directory_block {
-	GDirEntry entries[32]; // aca iria la cantidad de entradas que entran en un bloque
-}GDirectoryBlock;
 
 typedef struct sac_header_t {
 	unsigned char sac[MAGIC_NUMBER_NAME];
@@ -86,12 +80,27 @@ typedef struct sac_file_t {
 
 typedef struct sac_block_IS{ // BLOQUE DE PUNTEROS
 	ptrGBloque blocks[1024];
-}GBlockIs;
+}GPointerBlock;
+
+
+//////// ESTRUCTURAS DIRECTORIOS ////////
+
+typedef struct sac_dir_entry{
+	unsigned char fname[MAX_FILENAME_LENGTH];
+	uint32_t file_size;
+	ptrGBloque inode; // si tiene asignado 0, la entrada esta vacia
+	unsigned char padding[49]; // RELLENO
+}GDirEntry;
+
+typedef struct sac_directory_block {
+GDirEntry entries[32]; // aca iria la cantidad de entradas que entran en un bloque
+}GDirectoryBlock;
 
 //////////// ESTRUCTURAS PARA TABLAS DE ARCHIVOS ////////////
 
 typedef struct sac_global_fd_node{
-	ptrGBloque inodo;
+	unsigned char fname[MAX_FILENAME_LENGTH];
+	ptrGBloque inodePointer;
 	uint8_t numero_aperturas;
 } GlobalFdNode;
 

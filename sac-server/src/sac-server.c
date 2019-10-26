@@ -13,6 +13,7 @@ int main(int argc, char *argv[]){
 	pthread_mutex_init(&mutexBitmap, NULL);
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
 
+	procesosAbiertosGlobal = list_create();
 	inicializarServidor();
 
 
@@ -30,10 +31,12 @@ size_t getFileSize(char* file){
 }
 
 void cargarDisco(char* diskName){
+
+	size_t diskSize = getFileSize(diskName);
 	diskFD = open(diskName, O_RDWR);
-	char* myDiskBitarray = mmap(NULL, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, BLOCK_SIZE);  // DECLARE myDisk COMO UNA VARIABLE GLOBAL EN GESTOR DE MEMORIA
+	GBlock* myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
-	bitmap = bitarray_create_with_mode(myDiskBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
+	bitmap = bitarray_create_with_mode(NEXT_BLOCK(myDisk), BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
 
-	msync(myDiskBitarray, sizeof(bitmap), MS_SYNC);
+	msync(myDisk, sizeof(bitmap), MS_SYNC);
 }
