@@ -10,28 +10,36 @@
 void levantarSuse(){
 	levantarServidor();
 	char* elemento = recibir_elemento();
-	if(elemento = "proceso"){
+	if(elemento == "proceso"){
 		recibir_proceso(elemento);
 	}
-	else if (elemento = "hilo"){
+	else if (elemento == "hilo"){
 		recibir_hilo(elemento);
 	}
 }
 
-void recibir_hilo(char* hilo){
-	process* p = obtener_proceso();
-	if(p->new){
-		planificar_procesos(p,hilo);
+void recibir_proceso(process* proceso){
+	dictionary_put(procesos, string_itoa(proceso->pid),proceso);
+	proceso->estado = NEW;
+}
+void recibir_hilo(thread* hilo){
+	process* p = obtener_proceso_asociado(hilo);
+	if(p->estado == NEW){
+		dictionary_put(procesos,string_itoa(hilo->pid),hilo);
+		//planificar_procesos(p,hilo);
 	}
 	else{
-		//dictionary_put(p->hilos_ready,hilo,)
+		dictionary_put(p->hilos_ready,string_itoa(hilo->pid),hilo);
 	}
 }
 
+process* obtener_proceso_asociado(thread* hilo){
+	return dictionary_get(procesos,string_itoa(hilo->pid));
+}
 void planificar_procesos(process* p, char* hilo){
 	hilo = obtener_hilo_sjf(p);
 	//dictionary_put(p->hilos_exec, hilo, )
-	p->exec;
+	p->estado = EXEC;
 	planificar(hilo);
 }
 

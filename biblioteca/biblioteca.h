@@ -22,7 +22,9 @@ typedef enum {
 	MUSE_MAP,
 	MUSE_SYNC,
 	MUSE_UNMAP,
-	MUSE_INIT_THREAD
+	MUSE_INIT_THREAD,
+	SUSE_PROCESS,
+	SUSE_THREAD
 } funcion;
 
 typedef struct{

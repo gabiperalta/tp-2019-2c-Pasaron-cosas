@@ -1,7 +1,7 @@
 #include <suse.h>
 
 int main(){
-	//puts("Proceso SUSE");
+	puts("Proceso SUSE");
 	archivo_config = config_create(PATH_CONFIG);
 	char* linea;
 	levantarSuse();
