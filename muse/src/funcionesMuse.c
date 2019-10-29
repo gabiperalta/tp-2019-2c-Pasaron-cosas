@@ -23,14 +23,29 @@ void procesar_solicitud(void* socket_cliente){
 			case MUSE_INIT:
 				funcion_muse = funcion_init;
 				break;
-			//case MUSE_INIT_THREAD:
-			//	funcion_muse = funcion_init_thread;
-			//	break;
 			case MUSE_ALLOC:
 				funcion_muse = funcion_alloc;
 				break;
+			case MUSE_FREE:
+				funcion_muse = funcion_free;
+				break;
+			case MUSE_GET:
+				funcion_muse = funcion_get;
+				break;
+			case MUSE_CPY:
+				funcion_muse = funcion_cpy;
+				break;
+			case MUSE_MAP:
+				funcion_muse = funcion_map;
+				break;
+			case MUSE_SYNC:
+				funcion_muse = funcion_sync;
+				break;
+			case MUSE_UNMAP:
+				funcion_muse = funcion_sync;
+				break;
 			case MUSE_CLOSE:
-				// Nunca ingresara a esta condicion
+				// Nunca ingresara a esta condicion, o si
 				return;
 		}
 
@@ -40,7 +55,6 @@ void procesar_solicitud(void* socket_cliente){
 	}
 
 	close(socket_cliente);
-
 }
 
 void leer_config(){
@@ -50,6 +64,16 @@ void leer_config(){
 	TAM_PAGINA = config_get_int_value(archivo_config,"PAGE_SIZE");
 	TAM_SWAP = config_get_int_value(archivo_config,"SWAP_SIZE");
 	config_destroy(archivo_config);
+}
+
+void init_memoria(){
+	cantidad_frames = TAM_MEMORIA / TAM_PAGINA;
+	int cantidad_frames_bytes = (int)ceil((double)cantidad_frames/8);
+	void* frames_bitmap = malloc(cantidad_frames_bytes);
+	memset(frames_bitmap,NULL,cantidad_frames_bytes); // seteo frames_bitmap en 0 por las dudas
+
+	upcm = malloc(TAM_MEMORIA); // memoria principal
+	bitmap_upcm = bitarray_create_with_mode(frames_bitmap,cantidad_frames_bytes,MSB_FIRST);
 }
 
 void init_threads(){
@@ -80,7 +104,7 @@ void funcion_init(t_paquete paquete,int socket_muse){
 	string_append(&id_programa,"-");
 	string_append(&id_programa,ip_socket);
 
-	list_add(lista_threads,crear_thread(id_programa,socket_muse));
+	list_add(lista_procesos,crear_proceso(id_programa,socket_muse));
 
 	//				PRUEBA
 	/*
@@ -97,21 +121,32 @@ void funcion_init(t_paquete paquete,int socket_muse){
 	free(ip_socket); // Sacar si falla
 }
 
+void funcion_close(t_paquete paquete,int socket_muse){
+
+}
+
 void funcion_alloc(t_paquete paquete,int socket_muse){
 	//int id = obtener_valor(paquete.parametros);
 	uint32_t tam = obtener_valor(paquete.parametros);
 
-	t_thread* thread_encontrado = buscar_thread(lista_threads,socket_muse);
+	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
 	//t_thread* thread_nuevo; // creo q no es necesario
 
-	if(thread_encontrado == NULL){
+	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
 		return;
 	}
 
+	t_list* tabla_segmentos_heap = list_filter(proceso_encontrado->tabla_segmentos,(void*) filtrarHeap);
 
-	//reservar_espacio(thread_encontrado,tam,SEGMENTO_HEAP);
+	if(list_size(tabla_segmentos_heap) > 0){
 
+	}
+	else{ //si no hay ningun segmento creado, se crea uno nuevo
+		t_segmento* segmento_nuevo = crear_segmento(SEGMENTO_HEAP,tam);
+		list_add(thread_encontrado->tabla_segmentos,segmento_nuevo);
+
+	}
 
 
 	//t_paquete paquete_respuesta = {
@@ -121,6 +156,31 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	//agregar_valor(paquete_respuesta.parametros,tam_obtenido);
 }
+
+void funcion_free(t_paquete paquete,int socket_muse){
+
+}
+
+void funcion_get(t_paquete paquete,int socket_muse){
+
+}
+
+void funcion_cpy(t_paquete paquete,int socket_muse){
+
+}
+
+void funcion_map(t_paquete paquete,int socket_muse){
+
+}
+
+void funcion_sync(t_paquete paquete,int socket_muse){
+
+}
+
+void funcion_unmap(t_paquete paquete,int socket_muse){
+
+}
+
 
 char* obtener_ip_socket(int s){
 	socklen_t len;

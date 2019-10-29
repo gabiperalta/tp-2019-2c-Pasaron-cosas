@@ -17,7 +17,7 @@ typedef struct{
 	char* id_programa;
 	t_list* tabla_segmentos;
 	int socket;
-}t_thread;
+}t_proceso;
 
 typedef struct{
 	uint32_t base;
@@ -43,12 +43,14 @@ typedef struct{
 	int posicion;
 }t_desplazamiento;
 
-t_thread* crear_thread(char* id_programa,int socket_creado);
+t_proceso* crear_proceso(char* id_programa,int socket_creado);
 t_segmento* crear_segmento(uint8_t tipo);
-t_pagina* crear_pagina(uint8_t bit_modificado, void* datos);
+t_pagina* crear_pagina(uint8_t bit_presencia, void* datos);
 
-t_thread* buscar_thread(t_list* lista,int socket_thread);
+t_proceso* buscar_proceso(t_list* lista,int socket_proceso);
 t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
+uint32_t obtener_base(t_list* tabla_segmentos);
+int obtener_frame_libre();
 
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
 

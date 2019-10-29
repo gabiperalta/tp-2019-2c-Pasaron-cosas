@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include "biblioteca_sockets.h"
 #include "commons/collections/list.h"
+#include "commons/bitarray.h"
 
 #include "funcionesMuse.h"
 
@@ -22,12 +23,14 @@
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/muse/muse.config"
 
 void* upcm;
+t_bitarray* bitmap_upcm;
+int cantidad_frames;
 
 int PUERTO;
 int TAM_MEMORIA;
 int TAM_PAGINA;
 int TAM_SWAP;
 
-t_list* lista_threads;
+t_list* lista_procesos;
 
 #endif /* MUSE_H_ */

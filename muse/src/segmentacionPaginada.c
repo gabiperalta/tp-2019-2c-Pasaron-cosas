@@ -10,8 +10,8 @@
 #include "segmentacionPaginada.h"
 
 
-t_thread* crear_thread(char* id_programa,int socket_creado){
-	t_thread* nuevo = malloc(sizeof(t_thread));
+t_proceso* crear_proceso(char* id_programa,int socket_creado){
+	t_proceso* nuevo = malloc(sizeof(t_proceso));
 
 	nuevo->id_programa = strdup(id_programa);
 	nuevo->socket = socket_creado;
@@ -22,28 +22,70 @@ t_thread* crear_thread(char* id_programa,int socket_creado){
 }
 
 t_segmento* crear_segmento(uint8_t tipo) {
-	 t_segmento* nuevo = malloc(sizeof(t_segmento));
-	 nuevo->tipo_segmento = tipo;
-	 nuevo->tabla_paginas = list_create();
-	 return nuevo;
+	t_segmento* nuevo = malloc(sizeof(t_segmento));
+	nuevo->tipo_segmento = tipo;
+	nuevo->tabla_paginas = list_create();
+	return nuevo;
 }
 
-t_pagina* crear_pagina(uint8_t bit_modificado, void* datos) {
+void crear_segmento_v2(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado) {
+	int cantidad_paginas_solicitadas;
+	//double cantidad_paginas_solicitadas_coma;
+	t_heap_metadata heap_metadata;
+	uint8_t bit_presencia = 0;
+	uint32_t tam_solicitado_real = sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size) + tam_solicitado;
+	t_pagina* pagina_nueva;
+	void* direccion_datos;
+	int posicion = 0;
+	t_segmento* nuevo = malloc(sizeof(t_segmento));
+	nuevo->tipo_segmento = tipo;
+	nuevo->tabla_paginas = list_create();
+	nuevo->base = obtener_base(tabla_segmentos);
+
+	if(tipo == SEGMENTO_HEAP)
+		bit_presencia = 1;
+
+	if((tam_solicitado_real%TAM_PAGINA) != 0){  // si da 0, no necesito agregar la metadata para indicar FREE
+		tam_solicitado_real += sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size); //agrego la metadata para indicar FREE
+	}
+
+	cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado_real/TAM_PAGINA);
+
+	heap_metadata.isFree = false;
+	heap_metadata.size = tam_solicitado;
+
+	while(cantidad_paginas_solicitadas > 0){
+		pagina_nueva = crear_pagina(bit_presencia);
+		list_add(nuevo->tabla_paginas,pagina_nueva);
+
+		direccion_datos = obtener_datos_frame(pagina_nueva);
+
+		memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+		posicion += sizeof(heap_metadata.isFree);
+
+		cantidad_paginas_solicitadas--;
+	}
+}
+
+t_pagina* crear_pagina(uint8_t bit_presencia) {
     t_pagina* new = malloc(sizeof(t_pagina));
     //new->numeroPagina = numeroPagina;
-    new->bit_modificado = bit_modificado;
-    //new->marco = guardarRegistro(registro);
+    //new->bit_modificado = bit_modificado;
+    new->bit_presencia = bit_presencia;
+    new->frame = obtener_frame_libre();
+
     return new;
 }
 
-t_thread* buscar_thread(t_list* lista,int socket_thread) {
-	int igualSocket(t_thread *p) {
-		return p->socket == socket_thread;
+t_proceso* buscar_proceso(t_list* lista,int socket_proceso) {
+	int igualSocket(t_proceso *p) {
+		return p->socket == socket_proceso;
 	}
 
 	return list_find(lista, (void*) igualSocket);
 }
 
+/*
 void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_segmento){
 	t_list* tabla_segmentos_filtrada;
 	t_segmento* segmento_obtenido;
@@ -72,6 +114,7 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 	}
 
 }
+*/
 
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
 	t_pagina* pagina_obtenida;
@@ -110,6 +153,7 @@ t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
 	return NULL;
 }
 
+/*
 void asignar_bloque(t_segmento segmento,t_desplazamiento desplazamiento,uint32_t tam){
 	int numero_pagina_recorrida = desplazamiento.numero_pagina;
 	t_pagina* pagina_obtenida;
@@ -155,11 +199,27 @@ void asignar_bloque(t_segmento segmento,t_desplazamiento desplazamiento,uint32_t
 
 	}
 }
+*/
 
 void* obtener_datos_frame(t_pagina* pagina){
 	// Tambien deberia chequear si el frame se encuentra en memoria o no
 	int posicion_inicio_frame = pagina->frame * TAM_PAGINA;
 	return (char*) upcm + posicion_inicio_frame;
+}
+
+int obtener_frame_libre(){
+	for(int i=0;i<cantidad_frames;i++){
+		if(!bitarray_test_bit(bitmap_upcm,i)) // retorna el primer bit q encuentre en 0
+			bitarray_set_bit(bitmap_upcm,i);
+			return i;
+	}
+	return -1; // no hay frames libres
+}
+
+uint32_t obtener_base(t_list* tabla_segmentos){
+	// obtengo el ultimo segmento
+	t_segmento* segmento_obtenido = list_get(tabla_segmentos,list_size(tabla_segmentos) - 1);
+	return segmento_obtenido->base + segmento_obtenido->limite;
 }
 
 int filtrarHeap(t_segmento* p){

@@ -10,10 +10,9 @@ int main(void) {
 
 
 	leer_config();
-	lista_threads = list_create();
+	lista_procesos = list_create();
 
-	upcm = malloc(TAM_MEMORIA); // memoria principal
-
+	init_memoria();
 	init_threads();
 
 

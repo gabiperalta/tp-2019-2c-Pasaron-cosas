@@ -30,14 +30,13 @@
 #include "../biblioteca/biblioteca_sockets.h"
 
 
-int id_programa;
-char* ip_muse;
-int puerto_muse;
-
 // ver si conviene hacer un struct
 //__thread char* id_proceso_hilo;
-__thread int socket_muse;
-__thread bool conexion_realizada;
+
+// en el issue #1516 se aclara q la tabla de segmentos es por proceso
+int socket_muse;
+
+//__thread bool conexion_realizada;
 
 /**
  * Inicializa la biblioteca de MUSE.
@@ -129,7 +128,5 @@ int muse_sync(uint32_t addr, size_t len);
  */
 int muse_unmap(uint32_t dir);
 
-//================= FUNCIONES AUXILIARES =================
-int obtener_socket();
 
 #endif

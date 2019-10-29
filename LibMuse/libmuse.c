@@ -10,13 +10,22 @@
 
 int muse_init(int id, char* ip, int puerto){
 
-	ip_muse = string_new();
-	string_append(&ip_muse,ip);
-	puerto_muse = puerto;
+	socket_muse = conectarseA(ip,puerto);
+	if(socket_muse == 0){ return -1;}
 
-	id_programa = id;
+	t_paquete paquete = {
+			.header = MUSE_INIT,
+			.parametros = list_create()
+	};
 
-	return obtener_socket();
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros,id);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	//printf("Socket obtenido correctamente\n");
+
+	return 0;
 }
 
 void muse_close(){
@@ -24,7 +33,6 @@ void muse_close(){
 }
 
 uint32_t muse_alloc(uint32_t tam){
-	obtener_socket();
 
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,
@@ -76,24 +84,3 @@ int muse_unmap(uint32_t dir){
 //void __attribute__((constructor)) libmuse_init(){
 //	obtener_ip(); // para obtener esta funcion, revisar commits antes del 10/10
 //}
-
-int obtener_socket(){
-	if(!conexion_realizada){
-		socket_muse = conectarseA(ip_muse,puerto_muse);
-		if(socket_muse == 0){ return -1;}
-		conexion_realizada = true;
-
-		t_paquete paquete = {
-				.header = MUSE_INIT,
-				.parametros = list_create()
-		};
-
-		///////////////// Parametros a enviar /////////////////
-		agregar_valor(paquete.parametros,id_programa);
-		enviar_paquete(paquete,socket_muse);
-		///////////////////////////////////////////////////////
-
-		printf("Socket obtenido correctamente\n");
-	}
-	return 0;
-}
