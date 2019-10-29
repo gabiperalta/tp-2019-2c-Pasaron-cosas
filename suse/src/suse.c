@@ -1,12 +1,10 @@
 #include <suse.h>
 
 int main(){
-	puts("Proceso SUSE");
+	//puts("Proceso SUSE");
+	archivo_config = config_create(PATH_CONFIG);
 	char* linea;
-	t_config * archivo_config = config_create(PATH_CONFIG);
-	inicializarColaNew();
-	inicializarColaReady();
-	pasarDeNewAReady();
+	levantarSuse();
 
 	while(1){
 		linea = readline(">");

@@ -9,22 +9,10 @@
 #define FUNCIONESSUSE_H_
 
 #include <suse.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-#include <commons/collections/dictionary.h>
-#include <commons/collections/list.h>
-#include <commons/config.h>
-#include <semaphore.h>
-#include <pthread.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
 
-void inicializarColaNew();
-void inicializarColaReady();
-void pasarDeNewAReady();
+
+void levantarSuse();
 int obtenerGradoMultiprogramacion();
 t_config * obtenerConfigDeSuse();
 

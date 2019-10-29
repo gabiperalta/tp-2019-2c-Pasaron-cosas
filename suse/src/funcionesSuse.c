@@ -7,8 +7,37 @@
 
 #include <funcionesSuse.h>
 
+void levantarSuse(){
+	levantarServidor();
+	char* elemento = recibir_elemento();
+	if(elemento = "proceso"){
+		recibir_proceso(elemento);
+	}
+	else if (elemento = "hilo"){
+		recibir_hilo(elemento);
+	}
+}
 
+void recibir_hilo(char* hilo){
+	process* p = obtener_proceso();
+	if(p->new){
+		planificar_procesos(p,hilo);
+	}
+	else{
+		//dictionary_put(p->hilos_ready,hilo,)
+	}
+}
 
+void planificar_procesos(process* p, char* hilo){
+	hilo = obtener_hilo_sjf(p);
+	//dictionary_put(p->hilos_exec, hilo, )
+	p->exec;
+	planificar(hilo);
+}
+
+void planificar(char* hilo){
+	notificar_proceso(hilo);
+}
 
 
 /*void inicializarColaNew(){
