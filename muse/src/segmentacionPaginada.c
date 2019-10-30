@@ -37,6 +37,12 @@ void crear_segmento_v2(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicit
 	t_pagina* pagina_nueva;
 	void* direccion_datos;
 	int posicion = 0;
+	void* variable_partida;
+	int tam_pagina_restante = TAM_PAGINA;
+	int tipo_dato = 0;
+	void* buffer;
+	bool agregar_metadata_free = false;
+	uint32_t limite;
 	t_segmento* nuevo = malloc(sizeof(t_segmento));
 	nuevo->tipo_segmento = tipo;
 	nuevo->tabla_paginas = list_create();
@@ -47,12 +53,34 @@ void crear_segmento_v2(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicit
 
 	if((tam_solicitado_real%TAM_PAGINA) != 0){  // si da 0, no necesito agregar la metadata para indicar FREE
 		tam_solicitado_real += sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size); //agrego la metadata para indicar FREE
+		agregar_metadata_free = true;
 	}
 
 	cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado_real/TAM_PAGINA);
+	limite = cantidad_paginas_solicitadas * TAM_PAGINA;
+	// comienzo a crear el buffer para luego dividirlo en paginas
+	buffer = malloc(limite);
 
 	heap_metadata.isFree = false;
 	heap_metadata.size = tam_solicitado;
+
+	memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+	posicion += sizeof(heap_metadata.isFree);
+
+	memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
+	posicion += sizeof(heap_metadata.size) + heap_metadata.size;
+
+	if(agregar_metadata_free){
+		heap_metadata.isFree = true;
+		heap_metadata.size = limite - posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size); // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
+
+		memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+		posicion += sizeof(heap_metadata.isFree);
+
+		memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
+		posicion += sizeof(heap_metadata.size) + heap_metadata.size;
+	}
+	// terminar
 
 	while(cantidad_paginas_solicitadas > 0){
 		pagina_nueva = crear_pagina(bit_presencia);
@@ -60,8 +88,111 @@ void crear_segmento_v2(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicit
 
 		direccion_datos = obtener_datos_frame(pagina_nueva);
 
-		memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
-		posicion += sizeof(heap_metadata.isFree);
+		switch(tipo_dato){
+			case 0: // heap_metadata.isFree
+				tam_pagina_restante -= sizeof(heap_metadata.isFree);
+				if(tam_pagina_restante >= 0){
+					// ejemplo 1: 50 - 1 = 49
+					// ejemplo 2: 50 - 1 = 49 	se solicita 63 bytes
+					memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+					posicion += sizeof(heap_metadata.isFree);
+				}
+				else{
+					// ejemplo: 7 - 10 = -3
+					variable_partida = &heap_metadata.isFree;
+					memcpy(&direccion_datos[posicion],&variable_partida[0],TAM_PAGINA);
+					posicion += sizeof(heap_metadata.isFree);
+
+					continue;
+				}
+				tipo_dato++;
+				break;
+			case 1: // heap_metadata.size
+				break;
+			case 2: // tam solicitado
+				break;
+			case 3:	// heap_metadata.isFree
+				break;
+			case 4: // heap_metadata.size
+				break;
+		}
+
+
+
+		// si el tam restante es menor al valor q quiero guardar
+		tam_pagina_restante -= sizeof(heap_metadata.isFree);
+		if(tam_pagina_restante >= 0){
+			// ejemplo 1: 50 - 1 = 49
+			// ejemplo 2: 50 - 1 = 49 	se solicita 63 bytes
+			memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+			posicion += sizeof(heap_metadata.isFree);
+		}
+		else{
+			// ejemplo: 7 - 10 = -3
+			variable_partida = &heap_metadata.isFree;
+			memcpy(&direccion_datos[posicion],&variable_partida[0],TAM_PAGINA);
+			posicion += sizeof(heap_metadata.isFree);
+
+			continue;
+		}
+
+		tam_pagina_restante -= sizeof(heap_metadata.size);
+		if(tam_pagina_restante >= 0){
+			// ejemplo 1: 49 - 4 = 45
+			// ejemplo 2: 49 - 4 = 45
+			memcpy(&direccion_datos[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
+			posicion += sizeof(heap_metadata.size);
+		}
+		else{
+			// ejemplo: 7 - 10 = -3
+			variable_partida = &heap_metadata.size;
+			memcpy(&direccion_datos[posicion],&variable_partida[0],TAM_PAGINA);
+			posicion += sizeof(heap_metadata.size);
+
+			continue;
+		}
+
+		tam_pagina_restante -= heap_metadata.size;
+		if(tam_pagina_restante > 0){
+			// ejemplo 1: 45 - 10 = 35
+			heap_metadata.isFree = false;
+			tam_pagina_restante -= sizeof(heap_metadata.isFree);
+			if(tam_pagina_restante >= 0){
+				// ejemplo 1: 35 - 1 = 34
+				memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion += sizeof(heap_metadata.isFree);
+			}
+			else{
+				// ejemplo: 7 - 10 = -3
+				variable_partida = &heap_metadata.isFree;
+				memcpy(&direccion_datos[posicion],&variable_partida[0],TAM_PAGINA);
+				posicion += sizeof(heap_metadata.isFree);
+
+				continue;
+			}
+
+			tam_pagina_restante -= sizeof(heap_metadata.size);
+			heap_metadata.size = tam_pagina_restante;
+			if(tam_pagina_restante >= 0){
+				// ejemplo 1: 34 - 4 = 30
+				memcpy(&direccion_datos[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion += sizeof(heap_metadata.isFree);
+			}
+			else{
+				// ejemplo: 7 - 10 = -3
+				variable_partida = &heap_metadata.isFree;
+				memcpy(&direccion_datos[posicion],&variable_partida[0],TAM_PAGINA);
+				posicion += sizeof(heap_metadata.isFree);
+
+				continue;
+			}
+		}
+		else if(tam_pagina_restante == 0){ // es el tamano justo y no hace falta hacer nada
+
+		}
+		else{
+			// ejemplo 1: 49 - 63 = -14
+		}
 
 		cantidad_paginas_solicitadas--;
 	}
