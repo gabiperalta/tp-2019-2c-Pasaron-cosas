@@ -130,22 +130,27 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
 	t_segmento* segmento_obtenido;
+	t_segmento* segmento_siguiente;
 	t_pagina* pagina_obtenida;
 	uint32_t direccion_retornada;
 	void* direccion_frame;
 	int posicion_recorrida = 0;
 	t_heap_metadata heap_metadata;
 	void* buffer;
+	uint32_t tam_real = tam + sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
+	uint32_t size_original;
+	uint32_t base_siguiente;
+	bool analizar_extension = false;
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
 		return;
 	}
 
-	t_list* tabla_segmentos_heap = list_filter(proceso_encontrado->tabla_segmentos,(void*) filtrarHeap);
+	//t_list* tabla_segmentos_heap = list_filter(proceso_encontrado->tabla_segmentos,(void*) filtrarHeap);
 
-	for(int numero_segmento=0;numero_segmento<list_size(tabla_segmentos_heap);numero_segmento++){
-		segmento_obtenido = list_get(tabla_segmentos_heap,numero_segmento);
+	for(int numero_segmento=0;numero_segmento<list_size(proceso_encontrado->tabla_segmentos);numero_segmento++){
+		segmento_obtenido = list_get(proceso_encontrado->tabla_segmentos,numero_segmento);
 		buffer = malloc(segmento_obtenido->limite);// si falla, probar declarando la variable aca mismo
 		posicion_recorrida = 0;
 
@@ -161,12 +166,64 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
 			posicion_recorrida += sizeof(heap_metadata.isFree);
 			memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
-			posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
 
-			if((heap_metadata.isFree == true) && (heap_metadata.size <= tam)){
+			if((heap_metadata.isFree == true) && (heap_metadata.size == tam)){
+				// hay un espacio libre donde se puede asignar el tam solicitado
+				heap_metadata.isFree = false;
+				heap_metadata.size = tam;
+
+				// se cambia la metadata
+				posicion_recorrida -= sizeof(heap_metadata.isFree);
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion_recorrida += sizeof(heap_metadata.isFree);
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
+				posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+
+				break;
+			}
+			else if((heap_metadata.isFree == true) && (heap_metadata.size >= tam_real )){
+				// hay un espacio libre donde se puede asignar el tam solicitado pero tambien se debe indicar el espacio libre restante
+				size_original = heap_metadata.size;
+				heap_metadata.isFree = false;
+				heap_metadata.size = tam;
+
+				// se cambia la metadata
+				posicion_recorrida -= sizeof(heap_metadata.isFree);
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion_recorrida += sizeof(heap_metadata.isFree);
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
+				posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+
+				heap_metadata.isFree = true;
+				heap_metadata.size = size_original - tam_real;
+
+				// se agrega la metadata nueva
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion_recorrida += sizeof(heap_metadata.isFree);
+				memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
+				posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+
+				break;
+			}
+
+			posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+		}
+
+
+		//se analiza si se puede extender el segmento
+		if((numero_segmento + 1) < list_size(proceso_encontrado->tabla_segmentos)){
+			segmento_siguiente = list_get(proceso_encontrado->tabla_segmentos,numero_segmento + 1);
+
+			// se revisa cual fue la ultima metadata
+			if(heap_metadata.isFree == true){
+				tam_real - heap_metadata.size
+			}
+
+			if((segmento_siguiente->base - (segmento_obtenido->base + segmento_obtenido->limite)) >= ){
 
 			}
 		}
+
 
 		free(buffer);
 	}
