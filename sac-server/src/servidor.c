@@ -23,7 +23,9 @@ void inicializarServidor(){
 }
 
 
-void atenderRequest(int socketCliente){
+void hiloDeAtencionProceso(int socketCliente){
+
+	t_list *listaDeProcesosAbiertos = list_create();
 	//t_request request = recibirRequest(socketCliente);
 	//int horror;
 	//t_response structRespuesta;
@@ -46,7 +48,7 @@ void crearHiloDeAtencion(int listenningSocket){
 	int socketCliente;
 	while((socketCliente=aceptarConexion(listenningSocket))!= 1){
 		pthread_t hiloRequest;
-		pthread_create(&hiloRequest,NULL,(void*)atenderRequest, (void*)socketCliente);
+		pthread_create(&hiloRequest,NULL,(void*)hiloDeAtencionProceso, (void*)socketCliente);
 		pthread_detach(hiloRequest);
 
 	}

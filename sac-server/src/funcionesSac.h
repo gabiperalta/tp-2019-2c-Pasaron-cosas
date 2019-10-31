@@ -11,12 +11,13 @@ int myGetattr( const char *path, struct stat *statRetorno );
 
 int crearDirectorio(const char *path, mode_t mode);
 int eliminarDirectorio(const char *path);
-myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi );
+int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi );
 
 // FUNCIONES CON ARCHIVOS
 int crearArchivo(const char *path, mode_t, dev_t);
 int abrirArchivo(const char *path, struct fuse_file_info * info);
 int eliminarArchivo(const char *path);
+int cerrarArchivo(const char *path); // TODAVIA NO SE QUE PARAMETROS LLEVA
 
 
 //////// FUNCIONES AUXILIARES ////////
@@ -30,7 +31,7 @@ int eliminarArchivo(const char *path);
 t_list* listarDirectorio(GFile *directorio);
 // Busca el inodo de un archivo, y retorna el puntero a su inodo. el inodo en si es devuelto en el parametro inodoDirectorio;
 // En caso de que no exista el archivo, el inodo devuelto es igual a NULL y el retorno es 0
-ptrGBloque buscarInodoArchivo(const char *path, int mode, GFile inodoArchivo);
+ptrGBloque buscarInodoArchivo(const char *path, int mode, GFile *inodoArchivo);
 ptrGBloque buscarArchivoEnDirectorio(GFile *directorio, char* archivo);
 bool elEstadoDelArchivoEs(GFile *archivo, uint8_t state);
 GFile *directorioRaiz();
@@ -46,6 +47,8 @@ GBlock *obtenerBloque(ptrGBloque bloque);
 bool noTieneHijos(ptrGBloque punteroAInodo);
 void liberarBloquesAsignados(ptrGBloque blocks[]);
 bool estaAbierto(ptrGBloque punteroAlInodo);
+GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio);
+void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque punteroSelf, ptrGBloque punteroPadre);
 
 // manejo char**
 uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);

@@ -17,8 +17,8 @@ int myGetattr( const char *path, struct stat *statRetorno ){
 		statRetorno->st_size = inodoArchivo->file_size;
 		statRetorno->st_blksize = BLOCK_SIZE;
 		statRetorno->st_blocks = cantidadBloquesAsignados(inodoArchivo->blocks);
-		statRetorno->st_mtim = inodoArchivo->modification_date;
-		//statRetorno->st_atim =
+		statRetorno->st_mtim.tv_nsec = inodoArchivo->modification_date;
+		//statRetorno->st_atim
 		//statRetorno->st_ctim =
 
 		return 0;
@@ -40,10 +40,13 @@ int crearDirectorio(const char *path, mode_t mode){ // mode ni lo usamos
 	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
 	char** pathDividida = string_split(path, '/');
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
-	ptrGBloque numeroInodo = reservarInodo(DIRECTORIO);
+	ptrGBloque punteroAInodo = reservarInodo(DIRECTORIO);
 	GFile *inodo;
 	struct timeval tiempo;
 	int hayEntradaLibre;
+	GDirectoryBlock* bloqueDeDirectorio;
+
+
 
 	gettimeofday(tiempo, NULL);
 
@@ -52,9 +55,9 @@ int crearDirectorio(const char *path, mode_t mode){ // mode ni lo usamos
 	}
 
 
-	if(numeroInodo > 0){ // DEBERIA SINCRONIZAR ESTO DE MANERA QUE UNA VEZ QUE SEPA QUE TIENE INODO Y ENTRADA DI DIRECTORIO LIBRES, NADIE SE LOS PUEDA QUITAR
-		inodo = (GFile*) obtenerBloque(numeroInodo); // PUEDO ASIGNARLO Y SI NO PUEDO TERMINAR LA OPREACION LO LIBERA
-		hayEntradaLibre = reservarEntrada(punteroAInodoPadre, numeroInodo, pathDividida[longitudDePath - 1]);
+	if(punteroAInodo > 0){ // DEBERIA SINCRONIZAR ESTO DE MANERA QUE UNA VEZ QUE SEPA QUE TIENE INODO Y ENTRADA DI DIRECTORIO LIBRES, NADIE SE LOS PUEDA QUITAR
+		inodo = (GFile*) obtenerBloque(punteroAInodo); // PUEDO ASIGNARLO Y SI NO PUEDO TERMINAR LA OPREACION LO LIBERA
+		hayEntradaLibre = reservarEntrada(punteroAInodoPadre, punteroAInodo, pathDividida[longitudDePath - 1]);
 		if(hayEntradaLibre){ // retorna true si se reservo correctamente, y false si no habian entradas.
 			for(int i; i<1000; i++){
 				inodo->blocks[i] = 0;
@@ -68,6 +71,10 @@ int crearDirectorio(const char *path, mode_t mode){ // mode ni lo usamos
 			inodo->modification_date = tiempo.tv_usec;
 			inodo->state = DIRECTORIO;
 
+			bloqueDeDirectorio = asignarBloqueDeDirectorio(inodo);
+
+			// CREAR LAS ENTRADAS . Y ..
+			inicializarPrimerasEntradas(bloqueDeDirectorio, punteroAInodo, punteroAInodoPadre);
 
 			liberarCharAsteriscoAsterisco(pathDividida);
 
@@ -101,24 +108,34 @@ int eliminarDirectorio(const char *path){
 	return -1;
 }
 
-// LS
-myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
+// READDIR (LS)
+int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
 	GFile *directorio;
 	ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL, directorio);
-	t_list *listaDeArchivos = listarDirectorio(directorio);
+	t_list *listaDeArchivos;
 	int archivosEnDirectorio;
 
 	char* nombre(GDirEntry *entrada){
 		return entrada->fname;
 	}
 
-	t_list *listaDeNombres = list_map(listaDeArchivos, nombre);
 
-	archivosEnDirectorio = list_size(listaDeNombres);
+	// TODO SI NO EXISTE EL DIRECTORIO, DEBERIA TIRAR ERROR
+	if(punteroInodo != 0){
 
-	for(int i=0; i<archivosEnDirectorio; i++){
-		filler( buffer, list_get(archivosEnDirectorio, i), NULL, 0); // SI QUEREMOS PONER MAS DATOS, SE REEMPLAZARA NULL POR UN STAT
+		listaDeArchivos = listarDirectorio(directorio);
+
+		t_list *listaDeNombres = list_map(listaDeArchivos, nombre);
+
+		archivosEnDirectorio = list_size(listaDeNombres);
+
+		for(int i=0; i<archivosEnDirectorio; i++){
+			filler( buffer, list_get(archivosEnDirectorio, i), NULL, 0); // SI QUEREMOS PONER MAS DATOS, DEBEMOS REEMPLAZAR NULL POR UN STAT
+		}
+		return 0;
 	}
+
+	return -1;
 
 }
 
@@ -184,9 +201,9 @@ int abrirArchivo(const char *path, struct fuse_file_info * info){ // debemos ver
 
 		punteroArchivo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
 		if(punteroArchivo){
-			*fdNode = malloc(sizeof(GlobalFdNode));
+			fdNode = malloc(sizeof(GlobalFdNode));
 
-			memcpy(fdNode->fname, direccion[longitudDireccion - 1 ]);
+			memcpy(fdNode->fname, direccion[longitudDireccion - 1 ], MAX_FILENAME_LENGTH);
 			fdNode->inodePointer = punteroArchivo;
 			fdNode->numero_aperturas = 0;
 
@@ -209,6 +226,24 @@ int abrirArchivo(const char *path, struct fuse_file_info * info){ // debemos ver
 
 }
 
+int leerArchivo( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
+	int retorno = 0;
+
+
+	/** Read data from an open file
+	 *
+	 * Read should return exactly the number of bytes requested except
+	 * on EOF or error, otherwise the rest of the data will be
+	 * substituted with zeroes.	 An exception to this is when the
+	 * 'direct_io' mount option is specified, in which case the return
+	 * value of the read system call will reflect the return value of
+	 * this operation.
+	 */
+
+
+}
+
+// CLOSE
 int cerrarArchivo(const char *path){ // TODAVIA NO SE QUE PARAMETROS LLEVA
 	// VERIFICAR QUE EL ARCHIVO ESTE ABIERTO POR ESTE PROCESO
 
@@ -252,7 +287,7 @@ t_list* listarDirectorio(GFile *directorio){
 		t_list* lista = list_create();
 		GPointerBlock *bloqueDePunteros;
 		GDirectoryBlock *bloqueDeDirectorio;
-		GDirEntry entrada;
+		//GDirEntry entrada;
 		int numeroEntrada = 0;
 		int numeroBloqueDePunteros = 0;
 		int numeroBloqueDeDatos = 0;
@@ -268,10 +303,15 @@ t_list* listarDirectorio(GFile *directorio){
 				do{
 
 					// LEER ENTRADAS
-					memcpy(entrada, bloqueDeDirectorio->entries[numeroEntrada],sizeof(GDirEntry));
+					/*memcpy(entrada, bloqueDeDirectorio->entries[numeroEntrada],sizeof(GDirEntry));
 					if(!entradaVacia(entrada)){
 						list_add(lista,entrada);
+					}*/
+					// CREO QUE ES MEJOR ASI
+					if(!entradaVacia(bloqueDeDirectorio->entries[numeroEntrada])){
+						list_add(lista, bloqueDeDirectorio->entries[numeroEntrada]);
 					}
+
 					numeroEntrada ++;
 
 				}while( numeroEntrada < ENTRADAS_POR_BLOQUE_DE_DIRECTORIO);
@@ -492,9 +532,11 @@ GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){
 	if(listaDeArchivos != NULL){
 		entrada = list_find(listaDeArchivos, esElArchivo);
 
-		// list_destroy(listaDeArchivos); TENGO QUE VER COMO LIBERAR ESTA MEMOTIA
-
-
+		list_destroy(listaDeArchivos); // TODO CREO QUE DES ESTA MANERA ELIMINO LA LISTA, PERO ENTRADA SIGUE EXISTIENDO
+										// PORQUE APUNTA DIRECTAMENTE A LA DIRECCION DEL MMAP
+		if(archivo == 0 && entrada == NULL){
+			asignarBloqueDePunteros(directorio);
+		}
 	}
 	return entrada;
 }
@@ -574,6 +616,71 @@ bool estaAbierto(ptrGBloque punteroAlInodo){
 		return nodo->inodePointer == punteroAlInodo && nodo->numero_aperturas > 0;
 	}
 	return list_any_satisfy(tablaProcesosAbiertosGlobal, condicion);
+}
+
+int agregarAListaDeArchivosDelProceso(fdNode){ // TODO
+	int fileDescriptor;
+
+	list_add(listaDeProcesosAbiertos, fdNode);
+	fileDescriptor = list_size(listaDeProcesosAbiertos);
+
+	return fileDescriptor;
+}
+
+// RETORNO: EL BLOQUE DE DIRECTORIO EN CASO EXITOSO. NULL EN CASO DE FALLO
+GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio){
+	GPointerBlock *bloqueDePunteros;
+	GDirectoryBlock *bloqueDeDirectorio;
+	int numeroBloqueDeDatos = 0;
+	int ultimoBloqueDePunteros = cantidadBloquesAsignados(directorio->blocks) - 1;
+
+	if(directorio->file_size <= MAX_FILE_SIZE){
+		// OBTENER ULTIMO BLOQUE DE PUNTEROS
+		bloqueDePunteros = (GPointerBlock*) obtenerBloque(directorio->blocks[ultimoBloqueDePunteros]);
+
+		// BUSCAR SI TIENE ALGUNA ENTRADA VACIA (CERO)
+		while(bloqueDePunteros->blocks[numeroBloqueDeDatos] != 0 && numeroBloqueDeDatos < 1024){
+			numeroBloqueDeDatos ++;
+		}
+
+		// SI LA TIENE, A ESA ENTRADA SE LE ASIGNA EL NUEVO BLOQUE DE DIRECTORIO
+		if(bloqueDePunteros->blocks[numeroBloqueDeDatos] == 0){
+			bloqueDePunteros->blocks[numeroBloqueDeDatos] = bloqueLibre();
+
+			bloqueDeDirectorio = (GDirectoryBlock*) obtenerBloque(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
+
+		}else{ 	// SI NO LA TIENE, DEBO ASIGNARLE UN NUEVO BLOQUE DE PUNTEROS
+			ultimoBloqueDePunteros ++;
+			directorio->blocks[ultimoBloqueDePunteros] = bloqueLibre();
+
+			bloqueDePunteros = (GPointerBlock*) obtenerBloque(directorio->blocks[ultimoBloqueDePunteros]);
+
+			// Y EN LA PRIMER ENTRADA DE DICHO BLOQUE ASIGNALE UN NUEVO BLOQUE DE DIRECTORIO
+			bloqueDePunteros->blocks[0] = bloqueLibre();
+
+			bloqueDeDirectorio = (GDirectoryBlock*) obtenerBloque(bloqueDePunteros->blocks[0]);
+
+		}
+
+		for(int i = 0; i < ENTRADAS_POR_BLOQUE_DE_DIRECTORIO; i++){
+			bloqueDeDirectorio->entries[i].inode = 0;
+		}
+
+
+		return bloqueDeDirectorio;
+	}
+	return NULL;
+
+}
+
+void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque punteroSelf, ptrGBloque punteroPadre){
+	memcpy(bloqueDeDirectorio->entries[0].fname, ".");
+	bloqueDeDirectorio->entries[0].file_size = 0;
+	bloqueDeDirectorio->entries[0].inode = punteroSelf;
+
+	memcpy(bloqueDeDirectorio->entries[0].fname, "..");
+	bloqueDeDirectorio->entries[0].file_size = 0;
+	bloqueDeDirectorio->entries[0].inode = punteroPadre;
 }
 
 
