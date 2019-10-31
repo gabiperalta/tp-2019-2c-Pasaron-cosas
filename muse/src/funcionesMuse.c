@@ -126,11 +126,16 @@ void funcion_close(t_paquete paquete,int socket_muse){
 }
 
 void funcion_alloc(t_paquete paquete,int socket_muse){
-	//int id = obtener_valor(paquete.parametros);
 	uint32_t tam = obtener_valor(paquete.parametros);
 
 	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
-	//t_thread* thread_nuevo; // creo q no es necesario
+	t_segmento* segmento_obtenido;
+	t_pagina* pagina_obtenida;
+	uint32_t direccion_retornada;
+	void* direccion_frame;
+	int posicion_recorrida = 0;
+	t_heap_metadata heap_metadata;
+	void* buffer;
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
@@ -139,14 +144,36 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	t_list* tabla_segmentos_heap = list_filter(proceso_encontrado->tabla_segmentos,(void*) filtrarHeap);
 
-	if(list_size(tabla_segmentos_heap) > 0){
+	for(int numero_segmento=0;numero_segmento<list_size(tabla_segmentos_heap);numero_segmento++){
+		segmento_obtenido = list_get(tabla_segmentos_heap,numero_segmento);
+		buffer = malloc(segmento_obtenido->limite);// si falla, probar declarando la variable aca mismo
+		posicion_recorrida = 0;
 
-	}
-	else{ //si no hay ningun segmento creado, se crea uno nuevo
-		t_segmento* segmento_nuevo = crear_segmento(SEGMENTO_HEAP,tam);
-		list_add(thread_encontrado->tabla_segmentos,segmento_nuevo);
+		for(int numero_pagina=0;numero_pagina<list_size(segmento_obtenido->tabla_paginas);numero_pagina++){
+			pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,numero_pagina);
 
+			direccion_frame = obtener_datos_frame(pagina_obtenida);
+
+			memcpy(&buffer[TAM_PAGINA*numero_pagina],direccion_frame,TAM_PAGINA);
+		}
+
+		while(posicion_recorrida < segmento_obtenido->limite){
+			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
+			posicion_recorrida += sizeof(heap_metadata.isFree);
+			memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
+			posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+
+			if((heap_metadata.isFree == true) && (heap_metadata.size <= tam)){
+
+			}
+		}
+
+		free(buffer);
 	}
+
+
+	//si no hay ningun segmento creado, se crea uno nuevo
+	direccion_retornada = crear_segmento(SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
 
 
 	//t_paquete paquete_respuesta = {

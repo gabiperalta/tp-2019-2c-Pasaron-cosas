@@ -44,12 +44,13 @@ typedef struct{
 }t_desplazamiento;
 
 t_proceso* crear_proceso(char* id_programa,int socket_creado);
-t_segmento* crear_segmento(uint8_t tipo);
+uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado);
 t_pagina* crear_pagina(uint8_t bit_presencia, void* datos);
 
 t_proceso* buscar_proceso(t_list* lista,int socket_proceso);
 t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
 uint32_t obtener_base(t_list* tabla_segmentos);
+void* obtener_datos_frame(t_pagina* pagina);
 int obtener_frame_libre();
 
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
