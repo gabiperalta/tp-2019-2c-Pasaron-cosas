@@ -132,46 +132,8 @@ void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_seg
 	}
 
 }
-*/
 
-t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam){
-	t_pagina* pagina_obtenida;
-	void* direccion_datos;
-	int posicion = 0;
-	int bytes_recorridos = 0;
-	//t_desplazamiento desplazamiento;
-	t_heap_metadata heap_metadata;
-	int tam_pagina_limite = TAM_PAGINA - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size);
 
-	for(int x=0; x<list_size(tabla_paginas); x++){
-		pagina_obtenida = list_get(tabla_paginas,x);
-		direccion_datos = obtener_datos_frame(pagina_obtenida);
-
-		posicion = bytes_recorridos;
-
-		do{
-			memcpy(&heap_metadata.isFree,&direccion_datos[posicion],sizeof(heap_metadata.isFree));
-			posicion += sizeof(heap_metadata.isFree);
-			memcpy(&heap_metadata.size,&direccion_datos[posicion],sizeof(heap_metadata.size));
-			posicion += sizeof(heap_metadata.size);
-
-			if(heap_metadata.isFree && (tam<=heap_metadata.size)){
-				t_desplazamiento desplazamiento = {
-						.numero_pagina = x,
-						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size) // devuelvo la posicion desde la metadata
-				};
-				return desplazamiento;
-			}
-			posicion += heap_metadata.size;
-		}while(posicion <= tam_pagina_limite);
-
-		bytes_recorridos = posicion - TAM_PAGINA;
-	}
-
-	return NULL;
-}
-
-/*
 void asignar_bloque(t_segmento segmento,t_desplazamiento desplazamiento,uint32_t tam){
 	int numero_pagina_recorrida = desplazamiento.numero_pagina;
 	t_pagina* pagina_obtenida;

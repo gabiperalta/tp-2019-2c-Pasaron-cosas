@@ -8,6 +8,7 @@
 #ifndef FUNCIONESMUSE_H_
 #define FUNCIONESMUSE_H_
 
+#include <math.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "muse.h"
