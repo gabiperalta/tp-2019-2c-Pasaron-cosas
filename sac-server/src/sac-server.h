@@ -29,6 +29,7 @@
 
 
 #define ENTRADAS_POR_BLOQUE_DE_DIRECTORIO 32
+#define CAPACIDAD_DIRECCIONAMIENTO_BLOQUE_DE_PUNTEROS 4194304 // EN BYTES
 
 
 
@@ -108,6 +109,14 @@ typedef struct sac_global_fd_node{
 typedef struct sac_process_fd_node{
 	GlobalFdNode* globalFd;
 } ProcessFdNode;
+
+//////////// ESTRUCTURAS ARCHIVOS ////////////
+
+typedef struct sac_file_offset{
+	uint16_t bloqueDePunteros;
+	uint16_t bloqueDeDatos; // NUMERO DE BLOQUE DE DATOS DENTRO DEL BLOQUE DE PUNTEROS
+	uint8_t posicionEnBloqueDeDatos; // POSICION DENTRO DEL BLOQUE DE DATOS
+} FileOffset;
 
 int main(int argc, char *argv[]);
 size_t getFileSize(char* file);

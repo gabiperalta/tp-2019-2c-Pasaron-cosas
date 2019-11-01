@@ -47,8 +47,13 @@ GBlock *obtenerBloque(ptrGBloque bloque);
 bool noTieneHijos(ptrGBloque punteroAInodo);
 void liberarBloquesAsignados(ptrGBloque blocks[]);
 bool estaAbierto(ptrGBloque punteroAlInodo);
+int agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode);
 GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio);
 void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque punteroSelf, ptrGBloque punteroPadre);
+
+// FUNCIONES AUXILIARES PARA EL MANEJO DE ARCHIVOS
+void posicionEnArchivo(uint32_t offset, FileOffset* offsetDelArchivo);
+void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
 // manejo char**
 uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
