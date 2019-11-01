@@ -18,11 +18,13 @@
 #include <commons/collections/list.h>
 #include <commons/config.h>
 #include <commons/string.h>
+#include <commons/collections/queue.h>
 #include <semaphore.h>
+#include <time.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
                        /* Estructuras*/
-t_dictionary* procesos;
+t_queue* procesos;
 
 t_config* archivo_config;
 

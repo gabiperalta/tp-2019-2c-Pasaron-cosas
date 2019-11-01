@@ -9,27 +9,40 @@
 
 void levantarSuse(){
 	levantarServidor();
-	char* elemento = recibir_elemento();
-	if(elemento == "proceso"){
-		recibir_proceso(elemento);
-	}
-	else if (elemento == "hilo"){
-		recibir_hilo(elemento);
-	}
+	//char* elemento = recibir_elemento();
+	//if(elemento == "proceso"){
+		//recibir_proceso(elemento);
+	//}
+	//else if (elemento == "hilo"){
+		//recibir_hilo(elemento);
+	//}
 }
 
 void recibir_proceso(process* proceso){
-	dictionary_put(procesos, string_itoa(proceso->pid),proceso);
+	//dictionary_put(procesos, string_itoa(proceso->pid),proceso);
+	queue_push(procesos,proceso);
 	proceso->estado = NEW;
 }
+void planificar(process* proceso){
+	while(!queue_is_empty(procesos)){
+		process* primerProceso = queue_pop(procesos);
+		primerProceso->estado = READY;
+		if(!dictionary_is_empty(primerProceso->hilos_new)){
+			planificarHilosPorSJF(primerProceso);
+		}
+
+	}
+}
 void recibir_hilo(thread* hilo){
-	process* p = obtener_proceso_asociado(hilo);
-	if(p->estado == NEW){
-		dictionary_put(procesos,string_itoa(hilo->pid),hilo);
+	process* proceso = obtener_proceso_asociado(hilo);
+	if(proceso->estado == NEW){
+		queue_push(procesos,hilo);
+		//dictionary_put(procesos,string_itoa(hilo->pid),hilo);
+
 		//planificar_procesos(p,hilo);
 	}
 	else{
-		dictionary_put(p->hilos_ready,string_itoa(hilo->pid),hilo);
+		dictionary_put(proceso->hilos_ready,string_itoa(hilo->pid),hilo);
 	}
 }
 
@@ -43,11 +56,16 @@ void planificar_procesos(process* p, char* hilo){
 	planificar(hilo);
 }
 
-void planificar(char* hilo){
-	notificar_proceso(hilo);
+int obtenerGradoMultiprogramacion(){
+	t_config * config = obtenerConfigDeSuse();
+	int grado_multiprog = config_get_int_value(config,"MAX_MULTIPROG");
+	return grado_multiprog;
 }
 
-
+t_config * obtenerConfigDeSuse(){
+	t_config * config = config_create(PATH_CONFIG);
+	return config;
+}
 /*void inicializarColaNew(){
 	//llegan los hilos con hilolay_create
 		//pthread_t hilo;
@@ -82,14 +100,5 @@ void pasarDeNewAReady(){
 				//es decir, si ya vemos que la lista de ready esta llena que salga de la asignacion
 		}
 }
+*/
 
-int obtenerGradoMultiprogramacion(){
-	t_config * config = obtenerConfigDeSuse();
-	int grado_multiprog = config_get_int_value(config,"MAX_MULTIPROG");
-	return grado_multiprog;
-}
-
-t_config * obtenerConfigDeSuse(){
-	t_config * config = config_create(PATH_CONFIG);
-	return config;
-}*/
