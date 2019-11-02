@@ -50,6 +50,9 @@
 t_bitarray *bitmap;
 int diskFD;
 t_list *tablaProcesosAbiertosGlobal;
+int PUERTO;
+
+#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/Config"
 
 ////////////////////////////////////
 

@@ -4,22 +4,25 @@
 
 
 void inicializarServidor(){
-	extern int socketDeEscucha;
-	t_config* config = config_create("/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/src/Config");
-	int puertoDeEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-	socketDeEscucha = escuchar(puertoDeEscucha);
-	int socketCliente;
 
-	printf("socketDeEscucha: %i\n", socketDeEscucha);
+	printf("socketDeEscucha: %i\n", PUERTO);
 	pthread_t hiloServidor;
 
+	pthread_create(&hiloServidor,NULL,(void*)servidor, NULL);
+	pthread_detach(hiloServidor);
+}
 
+void servidor(){
+	void * conectado;
+	int puerto_escucha = escuchar(PUERTO);
 
-	//pthread_create(&hiloServidor,NULL,(void*)crearHiloDeAtencion, (void*)socketDeEscucha);
-	//pthread_detach(hiloServidor);
+	while((conectado=aceptarConexion(puerto_escucha))!= 1){
 
-	config_destroy(config);
-
+		//printf("Se acepto conexion\n");
+		pthread_t thread_solicitud;
+		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
+		pthread_detach(thread_solicitud);
+	}
 }
 
 

@@ -1,6 +1,9 @@
 #include "sac-server.h"
 
 int main(int argc, char *argv[]){
+	t_config* archivo_config = config_create(PATH_CONFIG);
+
+	char * linea;
 
 	if(argc == 1){
 		printf("No has especificado ningun disco\n");
@@ -13,9 +16,28 @@ int main(int argc, char *argv[]){
 	pthread_mutex_init(&mutexBitmap, NULL);
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
 
-	procesosAbiertosGlobal = list_create();
+
+	PUERTO = config_get_int_value(archivo_config,"PUERTO_ESCUCHA");
+
+	config_destroy(archivo_config);
+
+	tablaProcesosAbiertosGlobal = list_create();
 	inicializarServidor();
 
+	system("clear");
+
+	while(1) {
+		linea = readline(">");
+		if (linea) {
+			add_history(linea);
+		}
+		if(!strncmp(linea, "exit", 4)) {
+			free(linea);
+			break;
+		}
+
+		free(linea);
+	}
 
 	return 0;
 }
