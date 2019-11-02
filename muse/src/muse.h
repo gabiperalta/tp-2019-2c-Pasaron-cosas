@@ -33,4 +33,7 @@ int TAM_SWAP;
 
 t_list* lista_procesos;
 
+pthread_mutex_t mutex_acceso_upcm;
+pthread_mutex_t mutex_lista_procesos;
+
 #endif /* MUSE_H_ */

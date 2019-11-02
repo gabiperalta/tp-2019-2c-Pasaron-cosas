@@ -3,12 +3,6 @@
 
 int main(void) {
 
-	//int (*funcion_muse)(int);
-	//funcion_muse = muse_prueba;
-	//funcion_muse(16);
-	//return 0;
-
-
 	leer_config();
 	lista_procesos = list_create();
 

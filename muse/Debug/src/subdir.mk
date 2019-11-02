@@ -4,19 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/funcionesMuse.c \
 ../src/muse.c \
-../src/resistance.c \
-../src/uprising.c 
+../src/segmentacionPaginada.c 
 
 OBJS += \
+./src/funcionesMuse.o \
 ./src/muse.o \
-./src/resistance.o \
-./src/uprising.o 
+./src/segmentacionPaginada.o 
 
 C_DEPS += \
+./src/funcionesMuse.d \
 ./src/muse.d \
-./src/resistance.d \
-./src/uprising.d 
+./src/segmentacionPaginada.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

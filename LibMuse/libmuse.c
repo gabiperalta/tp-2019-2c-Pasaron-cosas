@@ -23,7 +23,11 @@ int muse_init(int id, char* ip, int puerto){
 	enviar_paquete(paquete,socket_muse);
 	///////////////////////////////////////////////////////
 
-	//printf("Socket obtenido correctamente\n");
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	printf("Conexion exitosa?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
 
 	return 0;
 }

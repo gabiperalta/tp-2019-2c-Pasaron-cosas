@@ -31,10 +31,13 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	int posicion = 0;
 	void* buffer;
 	bool agregar_metadata_free = false;
+
 	t_segmento* nuevo = malloc(sizeof(t_segmento));
 	nuevo->tipo_segmento = tipo;
 	nuevo->tabla_paginas = list_create();
 	nuevo->base = obtener_base(tabla_segmentos);
+
+	printf("Se crea un nuevo segmento\n");
 
 	if(tipo == SEGMENTO_HEAP)
 		bit_presencia = 1;
@@ -188,17 +191,21 @@ void* obtener_datos_frame(t_pagina* pagina){
 
 int obtener_frame_libre(){
 	for(int i=0;i<cantidad_frames;i++){
-		if(!bitarray_test_bit(bitmap_upcm,i)) // retorna el primer bit q encuentre en 0
+		if(!bitarray_test_bit(bitmap_upcm,i)){ // retorna el primer bit q encuentre en 0
 			bitarray_set_bit(bitmap_upcm,i);
 			return i;
+		}
 	}
 	return -1; // no hay frames libres
 }
 
 uint32_t obtener_base(t_list* tabla_segmentos){
 	// obtengo el ultimo segmento
-	t_segmento* segmento_obtenido = list_get(tabla_segmentos,list_size(tabla_segmentos) - 1);
-	return segmento_obtenido->base + segmento_obtenido->limite;
+	if(list_size(tabla_segmentos)){
+		t_segmento* segmento_obtenido = list_get(tabla_segmentos,list_size(tabla_segmentos) - 1);
+		return segmento_obtenido->base + segmento_obtenido->limite;
+	}
+	return 0;
 }
 
 int filtrarHeap(t_segmento* p){

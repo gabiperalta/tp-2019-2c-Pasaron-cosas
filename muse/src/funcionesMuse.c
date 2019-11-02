@@ -16,8 +16,6 @@ void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_muse)(t_paquete,int);
 
-	// por cada conexion nueva, agrego al proceso/hilo a la lista de threads
-
 	while(paquete.error != 1){
 		switch(paquete.header){
 			case MUSE_INIT:
@@ -104,21 +102,33 @@ void funcion_init(t_paquete paquete,int socket_muse){
 	string_append(&id_programa,"-");
 	string_append(&id_programa,ip_socket);
 
+	pthread_mutex_lock(&mutex_lista_procesos);
 	list_add(lista_procesos,crear_proceso(id_programa,socket_muse));
+	pthread_mutex_unlock(&mutex_lista_procesos);
 
 	//				PRUEBA
-	/*
-	t_thread* thread_obtenido;
-	for(int i=0; i<list_size(lista_threads); i++){
-		thread_obtenido = list_get(lista_threads,i);
-		printf("hilo nro %d\t",i);
-		printf("id_programa: %s\t",thread_obtenido->id_programa);
-		printf("socket: %d\t\n",thread_obtenido->socket);
+
+	t_proceso* proceso_obtenido;
+	for(int i=0; i<list_size(lista_procesos); i++){
+		proceso_obtenido = list_get(lista_procesos,i);
+		printf("proceso nro %d\t",i);
+		printf("id_programa: %s\t",proceso_obtenido->id_programa);
+		printf("socket: %d\t\n",proceso_obtenido->socket);
 	}
 	printf("\n");
-	*/
+
 
 	free(ip_socket); // Sacar si falla
+
+	t_paquete paquete_respuesta = {
+			.header = MUSE_INIT,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1); // solo para confirmar que la comunicacion fue exitosa
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
 }
 
 void funcion_close(t_paquete paquete,int socket_muse){
@@ -144,11 +154,17 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	bool agregar_metadata_free = true;
 	int cantidad_paginas_solicitadas;
+	uint32_t segmento_limite_anterior;
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
 		return;
 	}
+
+	printf("Hasta aca funciona\n");
+	printf("id_programa: %s\t",proceso_encontrado->id_programa);
+	printf("socket: %d\t\n",proceso_encontrado->socket);
+	printf("\n");
 
 	//t_list* tabla_segmentos_heap = list_filter(proceso_encontrado->tabla_segmentos,(void*) filtrarHeap);
 
@@ -156,6 +172,8 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		segmento_obtenido = list_get(proceso_encontrado->tabla_segmentos,numero_segmento);
 		if(segmento_obtenido->tipo_segmento == SEGMENTO_MMAP)
 			continue;
+
+		printf("El segmento es HEAP\n");
 
 		buffer = malloc(segmento_obtenido->limite);// si falla, probar declarando la variable aca mismo
 		posicion_recorrida = 0;
@@ -168,10 +186,22 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			memcpy(&buffer[TAM_PAGINA*numero_pagina],direccion_frame,TAM_PAGINA);
 		}
 
+		//printf("Hasta aca funciona\n");
+
 		while(posicion_recorrida < segmento_obtenido->limite){
 			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
 			posicion_recorrida += sizeof(heap_metadata.isFree);
 			memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
+
+			//////// PRUEBA ////////
+			printf("metadata\t");
+			if(heap_metadata.isFree){
+				printf("libre\t %d bytes\n",heap_metadata.size);
+			}
+			else{
+				printf("usado\t %d bytes\n",heap_metadata.size);
+			}
+			////////////////////////
 
 			if((heap_metadata.isFree == true) && (heap_metadata.size == tam)){
 				// hay un espacio libre donde se puede asignar el tam solicitado
@@ -202,7 +232,9 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 				memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
 				posicion_recorrida += sizeof(heap_metadata.isFree);
 				memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
-				posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
+				posicion_recorrida += sizeof(heap_metadata.size);
+
+				direccion_retornada = posicion_recorrida + segmento_obtenido->base;
 
 				heap_metadata.isFree = true;
 				heap_metadata.size = size_original - tam_real;
@@ -212,8 +244,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 				posicion_recorrida += sizeof(heap_metadata.isFree);
 				memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
 				posicion_recorrida += sizeof(heap_metadata.size);
-
-				direccion_retornada = posicion_recorrida + segmento_obtenido->base;
 
 				//posicion_recorrida += heap_metadata.size;
 				analizar_extension = false;
@@ -244,11 +274,13 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 		cantidad_paginas_solicitadas = (int)ceil((double)tam_auxiliar/TAM_PAGINA);
 
+		printf("cantidad paginas solicitadas: %d\n",cantidad_paginas_solicitadas);
+
 		//en teoria, si el ultimo segmento es heap, se extiende ese segmento
 		if((numero_segmento + 1) < list_size(proceso_encontrado->tabla_segmentos)){
 			segmento_siguiente = list_get(proceso_encontrado->tabla_segmentos,numero_segmento + 1);
 
-			// si no hay entre los segmentos, se corta la iteracion actual para analizar el proximo segmento
+			// si no hay espacio entre los segmentos, se corta la iteracion actual para analizar el proximo segmento
 			if(!((segmento_siguiente->base - (segmento_obtenido->base + segmento_obtenido->limite)) >= (cantidad_paginas_solicitadas*TAM_PAGINA))){
 				continue;
 			}
@@ -259,16 +291,22 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		void* buffer_auxiliar = malloc(cantidad_paginas_solicitadas * TAM_PAGINA);
 		void* direccion_datos_auxiliar;
 
+		printf("Se extiende el segmento\n");
+
 		//modifico la ultima metadata
 		heap_metadata.isFree = false;
-		posicion_recorrida = segmento_obtenido->limite - heap_metadata.size - sizeof(heap_metadata.size);
+		posicion_recorrida = segmento_obtenido->limite - heap_metadata.size - sizeof(heap_metadata.size) - sizeof(heap_metadata.isFree);
 		memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
 		posicion_recorrida += sizeof(heap_metadata.isFree);
 		heap_metadata.size = tam;
 		memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
+		posicion_recorrida += sizeof(heap_metadata.size);
 
-		direccion_retornada = posicion_recorrida + sizeof(heap_metadata.size) + segmento_obtenido->base;
+		direccion_retornada = posicion_recorrida + segmento_obtenido->base;
 
+		printf("direccion_retornada: %d\n",direccion_retornada);
+
+		posicion_recorrida += heap_metadata.size;
 		posicion_recorrida -= segmento_obtenido->limite;
 
 		// se vuelven a copiar los datos en los frames correspondientes
@@ -280,11 +318,17 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			memcpy(direccion_frame,&buffer[TAM_PAGINA*x],TAM_PAGINA);
 		}
 
+		segmento_limite_anterior = segmento_obtenido->limite;
 		segmento_obtenido->limite += (cantidad_paginas_solicitadas * TAM_PAGINA);
 
 		if(agregar_metadata_free){
 			heap_metadata.isFree = true;
-			heap_metadata.size = segmento_obtenido->limite - posicion_recorrida - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size); // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
+
+			printf("Se agrega la nueva metadata para el espacio libre\n");
+			printf("segmento limite: %d\n",segmento_obtenido->limite);
+			printf("posicion recorrida: %d\n",posicion_recorrida);
+
+			heap_metadata.size = segmento_obtenido->limite - segmento_limite_anterior - posicion_recorrida - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size); // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
 
 			memcpy(&buffer_auxiliar[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
 			posicion_recorrida += sizeof(heap_metadata.isFree);
@@ -323,6 +367,26 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	agregar_valor(paquete_respuesta.parametros,direccion_retornada);
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
+
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
+
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
