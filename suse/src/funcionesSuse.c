@@ -18,8 +18,19 @@ void levantarSuse(){
 	//}
 }
 
+void servidor(){
+	void * conectado;
+	int puerto_escucha = escuchar(PUERTO);
+
+	while((conectado=aceptarConexion(puerto_escucha))!= 1){
+
+		//printf("Se acepto conexion\n");
+		pthread_t thread_solicitud;
+		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
+		pthread_detach(thread_solicitud);
+	}
+}
 void recibir_proceso(process* proceso){
-	//dictionary_put(procesos, string_itoa(proceso->pid),proceso);
 	queue_push(q_procesos,proceso);
 	dictionary_put(d_procesos,string_itoa(proceso->pid),proceso);
 	proceso->estado = NEW;
@@ -34,7 +45,7 @@ void recibir_hilo(thread* hilo){
 	else{
 		dictionary_put(proceso->hilos_ready,string_itoa(hilo->pid),hilo);
 	}
-	planificar(proceso); //Planificacion FIFO
+	planificarFIFO(proceso); //Planificacion FIFO
 }
 
 void planificarFIFO(process* proceso){
@@ -50,6 +61,7 @@ void planificarFIFO(process* proceso){
 		else{
 			i++;
 		}
+		//exec
 		planificarSJF(p);
 	}
 }
@@ -62,11 +74,11 @@ void planificarSJF(process* proceso){
 		avisarAHilolay(hilo); // sockets
 	}
 	//sem_wait() del semaforo del proceso
-		kill(proceso->pid,0); // finalizar proceso
+		 // finalizar proceso
 }
 thread* elegidoParaPlanificar(t_list* hilos){
 	while(1){
-
+		clock()
 	}
 	return
 }

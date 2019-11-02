@@ -230,5 +230,9 @@ int main(int argc, char *argv[]) {
 	// Esta es la funcion principal de FUSE, es la que se encarga
 	// de realizar el montaje, comuniscarse con el kernel, delegar todo
 	// en varios threads
+	 * levantar un archivo de config
+	 * conectarme a sac server
+	 *
+	 * guardas socket en variable global
 	return fuse_main(args.argc, args.argv, &hello_oper, NULL);*/
 }

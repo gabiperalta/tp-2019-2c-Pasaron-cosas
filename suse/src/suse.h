@@ -8,7 +8,7 @@
 #ifndef SUSE_H_
 #define SUSE_H_
 
-#include "biblioteca_sockets.h"
+#include "../../biblioteca/biblioteca_sockets.h"
 #include <funcionesSuse.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +24,11 @@
 #include <signal.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
-                       /* Estructuras*/
+
+									/* Estructuras*/
+
+int PUERTO;
+//hacer listas
 t_queue* q_procesos;
 t_dictionary* d_procesos;
 
@@ -42,6 +46,7 @@ typedef struct{
 	p_estado* estado;
 	t_list* hilos_ready;
 	thread* hilo_exec;
+	thread* hilo_blocked; // global
 }process;
 
 

@@ -1,3 +1,12 @@
+
+//hay que lograr que a hilolay le hagan collbacks, tiene que inicializar hilolay.
+//no hay main
+
+//alguien le tiene que decir a hilolay nicializate, lo hace e programa que corre el hilolay init
+
+//hillay no tiene el struct implenetado entonces implementa el init alumno . Entonces el rpograma llama al init de almuno que a su vez inicializa hilolay y usa el suse creat. Alumno le hace el callback a hilolay. El init esta en hilolay.h . Al hacer el callback hilolay conoce las funciones del struct de alumnos y puede e mpezar a implementarlas . El call back es cada funcion que es de inversion de control.
+
+
 #ifndef hilolay_alumnos_h__
 	#define hilolay_alumnos_h__
 
@@ -5,6 +14,7 @@
 	 * TODO: Interface for alumnos (what they should implement in orde to make this work)
 	 */
 	typedef struct hilolay_operations {
+
 		int (*suse_create) (int);
 		int (*suse_schedule_next) (void);
 		int (*suse_join) (int);
