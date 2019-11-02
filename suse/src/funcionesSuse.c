@@ -20,40 +20,58 @@ void levantarSuse(){
 
 void recibir_proceso(process* proceso){
 	//dictionary_put(procesos, string_itoa(proceso->pid),proceso);
-	queue_push(procesos,proceso);
+	queue_push(q_procesos,proceso);
+	dictionary_put(d_procesos,string_itoa(proceso->pid),proceso);
 	proceso->estado = NEW;
 }
-void planificar(process* proceso){
-	while(!queue_is_empty(procesos)){
-		process* primerProceso = queue_pop(procesos);
-		primerProceso->estado = READY;
-		if(!dictionary_is_empty(primerProceso->hilos_new)){
-			planificarHilosPorSJF(primerProceso);
-		}
 
-	}
-}
 void recibir_hilo(thread* hilo){
 	process* proceso = obtener_proceso_asociado(hilo);
 	if(proceso->estado == NEW){
-		queue_push(procesos,hilo);
-		//dictionary_put(procesos,string_itoa(hilo->pid),hilo);
-
-		//planificar_procesos(p,hilo);
+		queue_push(q_procesos,hilo);
+		dictionary_put(d_procesos,string_itoa(hilo->pid),hilo);
 	}
 	else{
 		dictionary_put(proceso->hilos_ready,string_itoa(hilo->pid),hilo);
 	}
+	planificar(proceso); //Planificacion FIFO
 }
 
-process* obtener_proceso_asociado(thread* hilo){
-	return dictionary_get(procesos,string_itoa(hilo->pid));
+void planificarFIFO(process* proceso){
+	int i= 0;
+	t_list* hilosListos = proceso->hilos_ready;
+	int grado_multiprog = obtenerGradoMultiprogramacion();
+	while(i<grado_multiprog && !list_is_empty(hilosListos)){
+		int pid = queue_peek(q_procesos);
+		int p = dictionary_get(d_procesos,string_itoa(pid));
+		if(list_size(hilosListos) > 0){
+			list_remove(hilosListos,i);
+		}
+		else{
+			i++;
+		}
+		planificarSJF(p);
+	}
 }
-void planificar_procesos(process* p, char* hilo){
-	hilo = obtener_hilo_sjf(p);
-	//dictionary_put(p->hilos_exec, hilo, )
-	p->estado = EXEC;
-	planificar(hilo);
+
+void planificarSJF(process* proceso){
+	t_list* hilosListos = proceso->hilos_ready;
+	while(!list_is_empty(hilosListos)){
+		thread* hilo = elegidoParaPlanificar(hilosListos);
+		proceso->hilo_exec = hilo;
+		avisarAHilolay(hilo); // sockets
+	}
+	//sem_wait() del semaforo del proceso
+		kill(proceso->pid,0); // finalizar proceso
+}
+thread* elegidoParaPlanificar(t_list* hilos){
+	while(1){
+
+	}
+	return
+}
+process* obtener_proceso_asociado(thread* hilo){
+	return dictionary_get(d_procesos,string_itoa(hilo->pid));
 }
 
 int obtenerGradoMultiprogramacion(){
@@ -66,39 +84,3 @@ t_config * obtenerConfigDeSuse(){
 	t_config * config = config_create(PATH_CONFIG);
 	return config;
 }
-/*void inicializarColaNew(){
-	//llegan los hilos con hilolay_create
-		//pthread_t hilo;
-		//pthread_create(&hilo;NULL;(void*)atenderRequest;NULL);
-		cola_new = dictionary_create();
-		for(int i = 0; i < cola_new->elements_amount; i++){
-			list_add(cola_new, hilo);
-		}
-
-		free(hilo);
-		return;
-}
-void inicializarColaReady(){
-	cola_ready= list_create();
-	// hay que chequear aca constantemente si se libera espacio para que de new pasen a ready?
-}
-void pasarDeNewAReady(){
-	int cantidad_max_procesos = obtenerGradoMultiprogramacion();
-
-	for(int i = 0; cola_new->elements_count ; i++){
-		if(cola_ready->elements_count <= cantidad_max_procesos){
-
-			list_add(cola_ready, cola_new[i]);
-			list_remove(cola_new, cola_new[i]);
-			//ver el tema de usar SJF a corto plazo
-
-
-		}
-		else{
-			break; //se me ocurre esto para que si en el medio del for se libera un cupo de ready no se asigne
-				//un hilo de new que no esta primero en la lista
-				//es decir, si ya vemos que la lista de ready esta llena que salga de la asignacion
-		}
-}
-*/
-

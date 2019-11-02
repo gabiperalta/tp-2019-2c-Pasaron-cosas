@@ -21,10 +21,12 @@
 #include <commons/collections/queue.h>
 #include <semaphore.h>
 #include <time.h>
+#include <signal.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
                        /* Estructuras*/
-t_queue* procesos;
+t_queue* q_procesos;
+t_dictionary* d_procesos;
 
 t_config* archivo_config;
 
@@ -38,9 +40,8 @@ typedef enum{
 typedef struct{
 	int pid; //id del proceso
 	p_estado* estado;
-	t_dictionary* hilos_new;
-	t_dictionary* hilos_ready;
-	t_dictionary* hilos_exec;
+	t_list* hilos_ready;
+	thread* hilo_exec;
 }process;
 
 

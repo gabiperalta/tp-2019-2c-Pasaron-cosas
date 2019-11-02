@@ -13,6 +13,13 @@
 
 
 void levantarSuse();
+void recibir_proceso(process* proceso);
+void recibir_hilo(thread* hilo);
+void planificarFIFO(process* proceso);
+void planificarSJF(process* proceso);
+process* obtener_proceso_asociado(thread* hilo);
+thread* elegidoParaPlanificar(t_list* hilos);
+
 int obtenerGradoMultiprogramacion();
 t_config * obtenerConfigDeSuse();
 
