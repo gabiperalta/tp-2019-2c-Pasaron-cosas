@@ -10,18 +10,20 @@
 
 #include <suse.h>
 
+void servidor();
+void procesar_solicitud(void* socket_cliente);
+void iniciarPlanificacion();
 
+void planificar();
+void aplicarFIFO();
+void aplicarSJF(process* proceso);
+void aplicarSJFConDesalojo(process* proceso);
+thread* CalcularEstimacion(thread* unHilo);
+bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo);
 
-void levantarSuse();
-void recibir_proceso(process* proceso);
-void recibir_hilo(thread* hilo);
-void planificarFIFO(process* proceso);
-void planificarSJF(process* proceso);
 process* obtener_proceso_asociado(thread* hilo);
 thread* elegidoParaPlanificar(t_list* hilos);
-
-int obtenerGradoMultiprogramacion();
-t_config * obtenerConfigDeSuse();
+void leer_config();
 
 
 #endif /* FUNCIONESSUSE_H_ */

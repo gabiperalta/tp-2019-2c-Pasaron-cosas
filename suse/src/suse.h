@@ -31,7 +31,9 @@
 int PUERTO;
 int grado_multiprogramacion;
 int tiempo_metricas;
-int alpha;
+int alpha_planificacion;
+int estimacion_inicial = 0;
+
 
 t_list* lista_procesos;
 
@@ -43,7 +45,7 @@ t_list* hilos_exit;
 
 typedef struct{
 	int pid; //id del proceso
-	t_list* hilos_ready;
+	t_list* hilos_ready = list_create();
 	thread* hilo_exec;
 }process;
 
@@ -51,6 +53,8 @@ typedef struct{
 typedef struct{
 	int tid; // id del hilo
 	int pid; // proceso en el que esta el hilo
+	double rafagas_estimadas;
+	double rafagas_ejecutadas;
 }thread;
 
 typedef struct{
