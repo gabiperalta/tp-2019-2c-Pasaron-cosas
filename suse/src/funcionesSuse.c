@@ -7,23 +7,13 @@
 
 #include <funcionesSuse.h>
 
-void levantarSuse(){
-	levantarServidor();
-	//char* elemento = recibir_elemento();
-	//if(elemento == "proceso"){
-		//recibir_proceso(elemento);
-	//}
-	//else if (elemento == "hilo"){
-		//recibir_hilo(elemento);
-	//}
-}
 
 void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(PUERTO);
 
 	while((conectado=aceptarConexion(puerto_escucha))!= 1){
-
+		// agrega procesos
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
@@ -31,40 +21,27 @@ void servidor(){
 	}
 }
 void recibir_proceso(process* proceso){
-	queue_push(q_procesos,proceso);
-	dictionary_put(d_procesos,string_itoa(proceso->pid),proceso);
+	list_add(lista_procesos,proceso);
 	proceso->estado = NEW;
 }
 
 void recibir_hilo(thread* hilo){
-	process* proceso = obtener_proceso_asociado(hilo);
-	if(proceso->estado == NEW){
-		queue_push(q_procesos,hilo);
-		dictionary_put(d_procesos,string_itoa(hilo->pid),hilo);
+	list_add(hilos_new,hilo);
+		int i = 0;
+		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){
+			planificarFIFO(hilo);
+			i++;
 	}
-	else{
-		dictionary_put(proceso->hilos_ready,string_itoa(hilo->pid),hilo);
-	}
-	planificarFIFO(proceso); //Planificacion FIFO
 }
 
-void planificarFIFO(process* proceso){
-	int i= 0;
-	t_list* hilosListos = proceso->hilos_ready;
-	int grado_multiprog = obtenerGradoMultiprogramacion();
-	while(i<grado_multiprog && !list_is_empty(hilosListos)){
-		int pid = queue_peek(q_procesos);
-		int p = dictionary_get(d_procesos,string_itoa(pid));
-		if(list_size(hilosListos) > 0){
-			list_remove(hilosListos,i);
-		}
-		else{
-			i++;
-		}
+void planificarFIFO(thread* hilo){
+		list_remove(hilos_new,0);
+		process* proceso = obtener_proceso_asociado(hilo);
+		t_list* hilosListos = proceso->hilos_ready;
+		list_add(hilosListos,hilo);
 		//exec
-		planificarSJF(p);
+		planificarSJF(proceso);
 	}
-}
 
 void planificarSJF(process* proceso){
 	t_list* hilosListos = proceso->hilos_ready;
@@ -86,13 +63,12 @@ process* obtener_proceso_asociado(thread* hilo){
 	return dictionary_get(d_procesos,string_itoa(hilo->pid));
 }
 
-int obtenerGradoMultiprogramacion(){
-	t_config * config = obtenerConfigDeSuse();
-	int grado_multiprog = config_get_int_value(config,"MAX_MULTIPROG");
-	return grado_multiprog;
+void leer_config(){
+	t_config* archivo_config = config_create(PATH_CONFIG);
+	PUERTO = config_get_int_value(archivo_config,"LISTEN_PORT");
+	grado_multiprogramacion= config_get_int_value(archivo_config,"MAX_MULTIPROG");
+	tiempo_metricas = config_get_int_value(archivo_config,"METRICS_TIMER");
+	alpha = config_get_int_value(archivo_config,"ALPHA_SJF");
+	config_destroy(archivo_config);
 }
 
-t_config * obtenerConfigDeSuse(){
-	t_config * config = config_create(PATH_CONFIG);
-	return config;
-}

@@ -9,6 +9,7 @@
 #define SUSE_H_
 
 #include "../../biblioteca/biblioteca_sockets.h"
+#include "../../biblioteca/biblioteca.h"
 #include <funcionesSuse.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,25 +29,22 @@
 									/* Estructuras*/
 
 int PUERTO;
-//hacer listas
-t_queue* q_procesos;
-t_dictionary* d_procesos;
+int grado_multiprogramacion;
+int tiempo_metricas;
+int alpha;
+
+t_list* lista_procesos;
 
 t_config* archivo_config;
 
-typedef enum{
-	NEW,
-	READY,
-	EXEC,
-	EXIT
-}p_estado;
+t_list* hilos_new;
+t_list* hilos_blocked;
+t_list* hilos_exit;
 
 typedef struct{
 	int pid; //id del proceso
-	p_estado* estado;
 	t_list* hilos_ready;
 	thread* hilo_exec;
-	thread* hilo_blocked; // global
 }process;
 
 
