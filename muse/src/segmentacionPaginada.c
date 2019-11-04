@@ -106,83 +106,17 @@ t_proceso* buscar_proceso(t_list* lista,int socket_proceso) {
 	return list_find(lista, (void*) igualSocket);
 }
 
-/*
-void reservar_espacio(t_thread* thread_solicitante,uint32_t tam,uint8_t tipo_segmento){
-	t_list* tabla_segmentos_filtrada;
+t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 	t_segmento* segmento_obtenido;
-	t_pagina* pagina_obtenida;
-	void* direccion_datos;
-	t_desplazamiento desplazamiento_obtenido;
-
-	switch(tipo_segmento){
-		case SEGMENTO_HEAP:
-
-			tabla_segmentos_filtrada = list_filter(thread_solicitante->tabla_segmentos,(void*) filtrarHeap);
-
-			for(int i=0; i<list_size(tabla_segmentos_filtrada); i++){
-				segmento_obtenido = list_get(tabla_segmentos_filtrada,i);
-				desplazamiento_obtenido = buscar_bloque_libre(segmento_obtenido->tabla_paginas,tam);
-
-				if(desplazamiento_obtenido != NULL)
-					break; //se asigna el bloque
-			}
-
-
-
-			break;
-		case SEGMENTO_MMAP:
-			break;
+	for(int i=0;i<list_size(tabla_segmentos);i++){
+		segmento_obtenido = list_get(tabla_segmentos,i);
+		if((segmento_obtenido->base < direccion) && (segmento_obtenido->limite >= direccion)){
+			return segmento_obtenido;
+		}
 	}
 
+	return NULL;
 }
-
-
-void asignar_bloque(t_segmento segmento,t_desplazamiento desplazamiento,uint32_t tam){
-	int numero_pagina_recorrida = desplazamiento.numero_pagina;
-	t_pagina* pagina_obtenida;
-	void* direccion_datos;
-	int posicion;
-	t_heap_metadata heap_metadata_anterior;
-
-	t_heap_metadata heap_metadata_nuevo = {
-			.isFree = false,
-			.size = tam
-	};
-
-	for(int i=desplazamiento.numero_pagina; i<list_size(segmento.tabla_paginas); i++){
-		pagina_obtenida = list_get(segmento.tabla_paginas,numero_pagina_recorrida);
-		direccion_datos = obtener_datos_frame(pagina_obtenida);
-
-		posicion = desplazamiento.posicion;
-
-		do{
-			memcpy(&heap_metadata_anterior.isFree,&direccion_datos[posicion],sizeof(heap_metadata_anterior.isFree));
-			posicion += sizeof(heap_metadata_anterior.isFree);
-			memcpy(&heap_metadata_anterior.size,&direccion_datos[posicion],sizeof(heap_metadata_anterior.size));
-
-			posicion -= sizeof(heap_metadata_anterior.isFree);
-			memset(&direccion_datos[posicion],NULL,sizeof(heap_metadata_anterior.size) + sizeof(heap_metadata_anterior.isFree));
-
-			memcpy(&direccion_datos[posicion],&heap_metadata_nuevo.isFree,sizeof(heap_metadata_nuevo.isFree));
-			posicion += sizeof(heap_metadata_nuevo.isFree);
-			memcpy(&direccion_datos[posicion],&heap_metadata_nuevo.size,sizeof(heap_metadata_nuevo.size));
-			posicion += sizeof(heap_metadata_nuevo.size) ;
-
-			if(heap_metadata.isFree && (tam<=heap_metadata.size)){
-				t_desplazamiento desplazamiento = {
-						.numero_pagina = x,
-						.posicion = posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size) // devuelvo la posicion de la metadata
-				};
-				return desplazamiento;
-			}
-			posicion += heap_metadata.size;
-		}while(posicion <= tam_pagina_limite);
-
-		bytes_recorridos = posicion - TAM_PAGINA;
-
-	}
-}
-*/
 
 void* obtener_datos_frame(t_pagina* pagina){
 	// Tambien deberia chequear si el frame se encuentra en memoria o no
@@ -210,4 +144,19 @@ uint32_t obtener_base(t_list* tabla_segmentos){
 
 int filtrarHeap(t_segmento* p){
 	return p->tipo_segmento == SEGMENTO_HEAP;
+}
+
+void liberar_frame(int numero_frame){
+	bitarray_clean_bit(bitmap_upcm,numero_frame);
+}
+
+void eliminar_pagina(t_pagina* pagina){
+	if(pagina->bit_presencia){
+		memset(obtener_datos_frame(pagina),NULL,TAM_PAGINA);
+	}
+	else{
+		// liberar del swap
+	}
+	liberar_frame(pagina->frame);
+	free(pagina);
 }

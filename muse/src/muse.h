@@ -30,6 +30,7 @@ int PUERTO;
 int TAM_MEMORIA;
 int TAM_PAGINA;
 int TAM_SWAP;
+uint32_t SIZE_HEAP_METADATA;
 
 t_list* lista_procesos;
 

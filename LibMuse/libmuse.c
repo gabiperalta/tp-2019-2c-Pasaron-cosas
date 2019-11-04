@@ -56,11 +56,28 @@ uint32_t muse_alloc(uint32_t tam){
 	///////////////////////////////////////////////////////
 
 	//printf("Fin muse_alloc\n");
-	return 0;
+	return direccion_recibida;
 }
 
 void muse_free(uint32_t dir){
-	printf("socket del hilo: %d\n",socket_muse);
+	if(dir == NULL)
+		return;
+
+	t_paquete paquete = {
+			.header = MUSE_FREE,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros, dir);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	printf("Free exitoso?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
 }
 
 int muse_get(void* dst, uint32_t src, size_t n){
