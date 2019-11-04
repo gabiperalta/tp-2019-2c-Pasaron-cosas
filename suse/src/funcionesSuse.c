@@ -45,7 +45,7 @@ void procesar_solicitud(void* socket_cliente){
 				return;
 		}
 
-		funcion_muse(paquete,socket_cliente);
+		//funcion_muse(paquete,socket_cliente);
 
 		paquete = recibir_paquete(socket_cliente);
 	}
@@ -122,3 +122,7 @@ void leer_config(){
 	config_destroy(archivo_config);
 }
 
+void destructor_de_procesos(process* proceso){
+	list_destroy(proceso->hilos_ready);
+	free(proceso->hilo_exec);
+}

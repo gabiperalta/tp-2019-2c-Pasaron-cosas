@@ -44,15 +44,15 @@ t_list* hilos_blocked;
 t_list* hilos_exit;
 
 typedef struct{
-	int pid; //id del proceso
+	uint8_t pid; //id del proceso
 	t_list* hilos_ready = list_create();
 	thread* hilo_exec;
 }process;
 
 
 typedef struct{
-	int tid; // id del hilo
-	int pid; // proceso en el que esta el hilo
+	uint8_t tid; // id del hilo
+	uint8_t pid; // proceso en el que esta el hilo
 	double rafagas_estimadas;
 	double rafagas_ejecutadas;
 }thread;
@@ -62,5 +62,7 @@ typedef struct{
 	t_list * hilos_bloqueados;
 }semaforos_suse;
 
-
+								/*FUNCIONES*/
+void destructor_de_procesos(process* proceso);
+void destructor_de_hilos(thread* hilo);
 #endif /* SUSE_H_ */
