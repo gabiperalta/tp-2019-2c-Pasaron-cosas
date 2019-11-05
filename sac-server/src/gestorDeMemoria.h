@@ -6,7 +6,6 @@
 
 pthread_mutex_t mutexBitmap;
 pthread_mutex_t mutexEscrituraInodeTable;
-GBlock* myDisk;
 
 ptrGBloque bloqueLibre();
 ptrGBloque inodoLibre();

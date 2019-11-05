@@ -46,10 +46,11 @@
 
 //////// VARIABLES GLOBALES ////////
 
-//GBlock* directorioRaiz;
-t_bitarray *bitmap;
+GBlock* myDisk;
+t_bitarray* bitmap;
 int diskFD;
-t_list *tablaProcesosAbiertosGlobal;
+t_list* tablaProcesosAbiertosGlobal;
+t_list* listaDeTablasDeArchivosPorProceso;
 int PUERTO;
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/Config"
@@ -109,8 +110,13 @@ typedef struct sac_global_fd_node{
 	uint8_t numero_aperturas;
 } GlobalFdNode;
 
+typedef struct sac_process_table_node{
+	int socket;
+	t_list *archivos_abiertos;
+} ProcessTableNode;
+
 typedef struct sac_process_fd_node{
-	GlobalFdNode* globalFd;
+	ptrGBloque archivo;
 } ProcessFdNode;
 
 //////////// ESTRUCTURAS ARCHIVOS ////////////

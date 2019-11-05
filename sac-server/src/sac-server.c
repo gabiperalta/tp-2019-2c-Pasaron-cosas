@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
 	char* fileName = argv[1];
 
 
-	cargarBitmap(fileName);
+	cargarDisco(fileName);
 	pthread_mutex_init(&mutexBitmap, NULL);
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
 
@@ -22,6 +22,7 @@ int main(int argc, char *argv[]){
 	config_destroy(archivo_config);
 
 	tablaProcesosAbiertosGlobal = list_create();
+	listaDeTablasDeArchivosPorProceso = list_create();
 	inicializarServidor();
 
 	system("clear");
@@ -56,7 +57,7 @@ void cargarDisco(char* diskName){
 
 	size_t diskSize = getFileSize(diskName);
 	diskFD = open(diskName, O_RDWR);
-	GBlock* myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
+	myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
 	bitmap = bitarray_create_with_mode(NEXT_BLOCK(myDisk), BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
 
