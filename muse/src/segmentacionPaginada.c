@@ -72,14 +72,7 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 		memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
 	}
 
-	for(int z=0;z<cantidad_paginas_solicitadas;z++){
-		pagina_nueva = crear_pagina(bit_presencia);
-		list_add(nuevo->tabla_paginas,pagina_nueva);
-
-		direccion_datos = obtener_datos_frame(pagina_nueva);
-
-		memcpy(direccion_datos,&buffer[TAM_PAGINA*z],TAM_PAGINA);
-	}
+	cargar_datos(buffer,nuevo->tabla_paginas,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 	list_add(tabla_segmentos,nuevo);
 
@@ -116,6 +109,36 @@ t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 	}
 
 	return NULL;
+}
+
+void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
+	t_pagina* pagina;
+	void* direccion_frame;
+	int paginas_a_recorrer = cantidad_paginas_solicitadas;
+
+	if(paginas_a_recorrer == NULL)
+		paginas_a_recorrer = list_size(tabla_paginas);
+
+	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){
+		if(flag_operacion == CREAR_DATOS){
+			pagina = crear_pagina(1);
+			list_add(tabla_paginas,pagina);
+		}
+		else{
+			pagina = list_get(tabla_paginas,numero_pagina);
+		}
+		direccion_frame = obtener_datos_frame(pagina);
+
+		switch(flag_operacion){
+			case CARGAR_DATOS:
+				memcpy(&buffer[TAM_PAGINA*numero_pagina],direccion_frame,TAM_PAGINA);
+				break;
+			case GUARDAR_DATOS:
+			case CREAR_DATOS:
+				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
+				break;
+		}
+	}
 }
 
 void* obtener_datos_frame(t_pagina* pagina){

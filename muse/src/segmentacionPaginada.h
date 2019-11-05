@@ -12,6 +12,11 @@
 
 #define SEGMENTO_HEAP 0
 #define SEGMENTO_MMAP 1
+
+#define CARGAR_DATOS 0
+#define GUARDAR_DATOS 1
+#define CREAR_DATOS 2
+
 //#define SIZE_HEAP_METADATA sizeof(((t_heap_metadata*)0)->size) + sizeof(((t_heap_metadata*)0)->isFree)
 
 typedef struct{
@@ -58,6 +63,8 @@ int obtener_frame_libre();
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
 
 int filtrarHeap(t_segmento* p);
+
+void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
 
 void liberar_frame(int numero_frame);
 void eliminar_pagina(t_pagina* pagina);
