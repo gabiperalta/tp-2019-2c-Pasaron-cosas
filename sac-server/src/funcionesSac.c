@@ -185,17 +185,18 @@ int crearArchivo(const char *path, mode_t modo, dev_t dev){ // no usamos ni mode
 }
 
 // OPEN
-int abrirArchivo(const char *path, struct fuse_file_info * info){ // debemos ver si hay que crear el archivo si no existe
+uint8_t abrirArchivo(const char *path, struct fuse_file_info * info, int socketProceso){ // debemos ver si hay que crear el archivo si no existe
 	GlobalFdNode *fdNode;
 	char** direccion = string_split(path, '/');
 	int longitudDireccion = cantidadElementosCharAsteriscoAsterisco(direccion);
 	// REVISAR LA TABLA DE ARCHIVOS ABIERTOS A VER SI EL ARCHIVO YA LO ESTA
-	bool buscador(GlobalFdNode* nodo){
-		return strcmp(direccion[longitudDireccion - 1 ], nodo->fname);
+	bool buscador(GlobalFdNode* nodo){ // TODO PROBAR, SI GENERA ALGUN PROBLEMA PORQUE HAY OTRO ARCHIVO CON EL MISMO NOMBRE, BUSCAR EL INODO DEL ARCHIVO Y COMPARAR POR EL PUNTERO DEL INODO
+		return !strcmp(direccion[longitudDireccion - 1 ], nodo->fname);
 	}
 
 	// SI NO LO ESTA, SE CARGA EN LA LISTA, Y RECIEN AHI SE PASA LA POSICION
 	if(!list_any_satisfy(tablaProcesosAbiertosGlobal, buscador)){
+		pthread_mutex_lock(&mx_tablaGlobal);
 		GFile *inodoArchivo;
 		ptrGBloque punteroArchivo;
 
@@ -218,11 +219,18 @@ int abrirArchivo(const char *path, struct fuse_file_info * info){ // debemos ver
 		fdNode = list_find(tablaProcesosAbiertosGlobal, buscador);
 	}
 
-	int fileDescriptor = agregarAListaDeArchivosDelProceso(fdNode);
+	uint8_t fileDescriptor = agregarAListaDeArchivosDelProceso(fdNode, socketProceso);
+
 
 	fdNode->numero_aperturas ++;
 
+	pthread_mutex_unlock(&mx_tablaGlobal);
+
 	return fileDescriptor;
+
+}
+
+int escribirArchivo(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
 
 }
 
@@ -232,13 +240,6 @@ int leerArchivo( const char *path, char *buffer, size_t size, off_t offset, stru
 	uint32_t loQueEsLeido;
 	FileOffset *offsetInicial;
 	FileOffset *offsetFinal;
-
-	uint32_t minimo(uint32_t unNumero, uint32_t otroNumero){
-		if(unNumero <= otroNumero)
-			return unNumero;
-		else
-			return otroNumero;
-	}
 
 	// BUSCAR EL INODO DEL ARCHIVO
 	buscarInodoArchivo(path, NORMAL, inodoArchivo);
@@ -262,32 +263,31 @@ int leerArchivo( const char *path, char *buffer, size_t size, off_t offset, stru
 	}
 
 	return -1;
-
-
-
-
-
-	/** Read data from an open file
-	 *
-	 * Read should return exactly the number of bytes requested except
-	 * on EOF or error, otherwise the rest of the data will be
-	 * substituted with zeroes.	 An exception to this is when the
-	 * 'direct_io' mount option is specified, in which case the return
-	 * value of the read system call will reflect the return value of
-	 * this operation.
-	 */
-
-
 }
 
 // CLOSE
-int cerrarArchivo(const char *path){ // TODAVIA NO SE QUE PARAMETROS LLEVA
-	// VERIFICAR QUE EL ARCHIVO ESTE ABIERTO POR ESTE PROCESO
+int cerrarArchivo(const char *path, int socketProceso){ // TODAVIA NO SE QUE PARAMETROS LLEVA
 
-	// SI LO ESTA, SE DISMINUYE EL VALOR DE aperturas DE LA TABLA GLOBAL, Y SE ELIMINA EL ELEMENTO DE LA LISTA DEL PROCESO.
-	// SI aperturas ES IGUAL A 0, SE SACA DE LA LISTA GLOBAL DICHO FD
+	GlobalFdNode *fdNode;
+	char** direccion = string_split(path, '/');
+	int longitudDireccion = cantidadElementosCharAsteriscoAsterisco(direccion);
+	// VERIFICO SI EL ARCHIVO ESTA EN LA TABLA GLOBAL
+	bool buscador(GlobalFdNode* nodo){ // TODO PROBAR, SI GENERA ALGUN PROBLEMA PORQUE HAY OTRO ARCHIVO CON EL MISMO NOMBRE, BUSCAR EL INODO DEL ARCHIVO Y COMPARAR POR EL PUNTERO DEL INODO
+		return !strcmp(direccion[longitudDireccion - 1 ], nodo->fname);
+	}
 
-	// SI NO ESTA ABIERTO EL ARCHIVO POR EL PROCESO, DEVUELVE -1
+
+	// SI NO LO ESTA, SE CARGA EN LA LISTA, Y RECIEN AHI SE PASA LA POSICION
+	if(list_any_satisfy(tablaProcesosAbiertosGlobal, buscador)){
+		fdNode = list_find(tablaProcesosAbiertosGlobal, buscador);
+
+		// VERIFICAR QUE EL ARCHIVO ESTE ABIERTO POR ESTE PROCESO ( LO HACE LA SIGUIENTE FUNCION )
+		int retorno = sacarDeLaListaDeArchivosDelProceso(fdNode, socketProceso);
+		return retorno;
+	}
+	else{
+		return -1;
+	}
 }
 
 // UNLINK
@@ -496,7 +496,7 @@ ptrGBloque buscarArchivoEnDirectorio(GFile *directorio, char* archivo){
 	ptrGBloque punteroAlInodo;
 
 	bool esElArchivo(GDirEntry unaEntrada){
-		return strcmp(unaEntrada.fname, archivo);
+		return !strcmp(unaEntrada.fname, archivo);
 	}
 
 	t_list* listaDeArchivos = listarDirectorio(directorio);
@@ -560,7 +560,7 @@ GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){
 	GFile *directorio = (GFile*) obtenerBloque(directorioPadre);
 
 	bool esElArchivo(GDirEntry *unaEntrada){
-		return strcmp(unaEntrada->inode, archivo);
+		return !strcmp(unaEntrada->inode, archivo);
 	}
 	// TENGO QUE VER UNA FORMA DE QUE SI ESTOY BUSCANDO UNA ENTRADA VACIA, Y NECESITO UN NUEVO BLOQUE, SE LO ASIGNE
 
@@ -655,11 +655,94 @@ bool estaAbierto(ptrGBloque punteroAlInodo){
 	return list_any_satisfy(tablaProcesosAbiertosGlobal, condicion);
 }
 
-int agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode){ // TODO
-	int fileDescriptor;
+uint8_t agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProceso){ // TODO
 
-	list_add(listaDeProcesosAbiertos, fdNode);
-	fileDescriptor = list_size(listaDeProcesosAbiertos);
+	uint8_t fileDescriptor;
+	ProcessFdNode *nuevoNodo;
+
+	bool buscadorDeNodo(ProcessTableNode* unNodo){
+		return unNodo->socket == socketProceso;
+	}
+
+	bool esElArchivo(ProcessFdNode* unNodo){
+		return unNodo->archivo == fdNode->inodePointer;
+	}
+
+	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, buscadorDeNodo);
+
+	// SI EL ARCHIVO YA ESTA ABIERTO POR ESTE PROCESO, NO SE HACE NADA, Y DEVUELVE EL FD QUE YA TENIA ASIGNADO
+	if(!list_any_satisfy(nodoProceso->archivos_abiertos, esElArchivo)){
+		nuevoNodo = malloc(sizeof(ProcessFdNode));
+
+		fileDescriptor = obtenerFD(nodoProceso->archivos_abiertos);
+
+		nuevoNodo->archivo = fdNode->inodePointer;
+		nuevoNodo->fd = fileDescriptor;
+
+		list_add(nodoProceso->archivos_abiertos, nuevoNodo);
+	}else{
+		nuevoNodo = list_find(nodoProceso->archivos_abiertos, esElArchivo);
+	}
+
+	return fileDescriptor;
+}
+
+int sacarDeLaListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProceso){
+
+	bool buscadorDeNodo(ProcessTableNode* unNodo){
+		return unNodo->socket == socketProceso;
+	}
+
+	bool esElArchivo(ProcessFdNode* unNodo){
+		return unNodo->archivo == fdNode->inodePointer;
+	}
+
+	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, buscadorDeNodo);
+	// VERIFICAR SI EL ARCHIVO ESTA ABIERTO POR EL PORCESO
+	if( list_any_satisfy(nodoProceso->archivos_abiertos, esElArchivo) ){
+		// SI LO ESTA, SE DISMINUYE EL VALOR DE aperturas DE LA TABLA GLOBAL, Y SE ELIMINA EL ELEMENTO DE LA LISTA DEL PROCESO.
+		fdNode->numero_aperturas --;
+		list_remove_and_destroy_by_condition(nodoProceso->archivos_abiertos, esElArchivo, free);
+
+		pthread_mutex_lock(&mx_tablaGlobal);
+		if(!fdNode->numero_aperturas){ 	// SI aperturas ES IGUAL A 0, SE SACA DE LA LISTA GLOBAL DICHO FD
+			sacarArchivoDeTablaGlobal(fdNode);
+		}
+		pthread_mutex_unlock(&mx_tablaGlobal);
+
+		return 0;
+	}else { // SI NO ESTA ABIERTO EL ARCHIVO POR EL PROCESO, DEVUELVE -1
+		return -1;
+	}
+
+}
+
+void sacarArchivoDeTablaGlobal(GlobalFdNode* fdNode){
+	bool esElNodo(GlobalFdNode* unNodo){
+		return unNodo->inodePointer == fdNode->inodePointer;
+	}
+
+	void sacarArchivo(GlobalFdNode* unNodo){
+		free(unNodo->fname);
+		free(unNodo);
+	}
+
+	list_remove_and_destroy_by_condition(tablaProcesosAbiertosGlobal, esElNodo, sacarArchivo);
+}
+
+
+uint8_t obtenerFD(t_list* listaDeArchivosAbiertos){
+	uint8_t fileDescriptor = 0;
+
+	bool tieneAlFD( ProcessFdNode * nodo){
+		return nodo->fd == fileDescriptor;
+	}
+
+	if(  list_size(listaDeArchivosAbiertos) ){ // SI LA LISTA ESTA VACIA, DEVUELVE EL 0
+		while( list_any_satisfy(listaDeArchivosAbiertos, tieneAlFD)){
+			fileDescriptor ++;
+		}
+	}
 
 	return fileDescriptor;
 }
@@ -711,11 +794,11 @@ GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio){
 }
 
 void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque punteroSelf, ptrGBloque punteroPadre){
-	memcpy(bloqueDeDirectorio->entries[0].fname, ".");
+	memcpy(bloqueDeDirectorio->entries[0].fname, ".", 1);
 	bloqueDeDirectorio->entries[0].file_size = 0;
 	bloqueDeDirectorio->entries[0].inode = punteroSelf;
 
-	memcpy(bloqueDeDirectorio->entries[0].fname, "..");
+	memcpy(bloqueDeDirectorio->entries[0].fname, "..", 2);
 	bloqueDeDirectorio->entries[0].file_size = 0;
 	bloqueDeDirectorio->entries[0].inode = punteroPadre;
 }
@@ -790,3 +873,20 @@ void liberarCharAsteriscoAsterisco(char** array){
 	free(array);
 	return;
 }
+
+//////////
+
+int maximo(int unNumero, int otroNumero){ // TODO VER SI FUNCIONA CON EL TIPO INT
+	if(unNumero <= otroNumero)
+		return otroNumero;
+	else
+		return unNumero;
+}
+
+uint32_t minimo(uint32_t unNumero, uint32_t otroNumero){
+	if(unNumero <= otroNumero)
+		return unNumero;
+	else
+		return otroNumero;
+}
+

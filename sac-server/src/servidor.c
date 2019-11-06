@@ -71,14 +71,14 @@ void procesar_solicitud(void *socket_cliente){
 		paquete = recibir_paquete(socket_cliente);
 	}
 
-	close(socketCliente);
+	close(socket_cliente);
 
 	return;
 }
 
 funcion_init(t_paquete paquete,int socket_fuse){
 
-	ProcessFdNode* nodoListaProcesosAbiertos = malloc(sizeof(ProcessFdNode));
+	ProcessTableNode* nodoListaProcesosAbiertos = malloc(sizeof(ProcessTableNode));
 	nodoListaProcesosAbiertos->socket = socket_fuse;
 	nodoListaProcesosAbiertos->archivos_abiertos = list_create;
 
@@ -95,7 +95,7 @@ funcion_init(t_paquete paquete,int socket_fuse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_getattr(t_paquete paquete,int socket_muse){
+funcion_getattr(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	struct stat statRetorno = obtener_string(paquete.parametros);
@@ -114,14 +114,14 @@ funcion_getattr(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_readdir(t_paquete paquete,int socket_muse){
+funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	char* buffer = obtener_string(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
 
 
-	int retorno = myReaddir(path, buffer, filler, offset, fi);
+	int retorno = myReaddir(path, buffer, filler, offset, NULL); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_READDIR,
@@ -135,7 +135,7 @@ funcion_readdir(t_paquete paquete,int socket_muse){
 
 
 }
-funcion_mknod(t_paquete paquete,int socket_muse){
+funcion_mknod(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	mode_t modo = obtener_valor(paquete.parametros);
@@ -153,12 +153,14 @@ funcion_mknod(t_paquete paquete,int socket_muse){
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 }
-funcion_open(t_paquete paquete,int socket_muse){
+
+
+funcion_open(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	int info = obtener_valor(paquete.parametros);
 
-	int retorno = abrirArchivo(path, info);
+	int retorno = abrirArchivo(path, info, socket_fuse);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,
@@ -171,29 +173,43 @@ funcion_open(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_write(t_paquete paquete,int socket_muse){
+
+
+funcion_write(t_paquete paquete,int socket_fuse){
 
 }
-funcion_read(t_paquete paquete,int socket_muse){
+
+
+funcion_read(t_paquete paquete,int socket_fuse){
+
+	char* path = obtener_string(paquete.parametros);
+	char* buffer = obtener_string(paquete.parametros);
+	size_t size = obtener_valor(paquete.parametros);
+	off_t offset = obtener_valor(paquete.parametros);
+
+
+	int retorno = leerArchivo(path, buffer, size, offset, NULL);
+
+	t_paquete paquete_respuesta = {
+			.header = FUSE_OPEN,
+			.parametros = list_create()
+	};
+
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno);
+	agregar_string(paquete_respuesta, buffer);
+	enviar_paquete(paquete_respuesta, socket_fuse);
+	///////////////////////////////////////////////////////
+
+}
+
+
+funcion_unlink(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
-
-	leerArchivo(path, buffer, size, offset, fi);
-
-	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
-			.parametros = list_create()
-	};
-
-	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno);
-	enviar_paquete(paquete_respuesta, socket_fuse);
-	///////////////////////////////////////////////////////
-
-}
-funcion_unlink(t_paquete paquete,int socket_muse){
-
+	int retorno = eliminarArchivo(path);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,
@@ -206,8 +222,14 @@ funcion_unlink(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_mkdir(t_paquete paquete,int socket_muse){
 
+
+funcion_mkdir(t_paquete paquete,int socket_fuse){
+
+	char* path = obtener_string(paquete.parametros);
+	int mode = obtener_valor(paquete.parametros);
+
+	int retorno = crearDirectorio(path, mode);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,
@@ -220,9 +242,13 @@ funcion_mkdir(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_rmdir(t_paquete paquete,int socket_muse){
 
 
+funcion_rmdir(t_paquete paquete,int socket_fuse){
+
+	char* path = obtener_valor(paquete.parametros);
+
+	int retorno = eliminarDirectorio(path);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,

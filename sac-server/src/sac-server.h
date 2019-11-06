@@ -51,6 +51,7 @@ t_bitarray* bitmap;
 int diskFD;
 t_list* tablaProcesosAbiertosGlobal;
 t_list* listaDeTablasDeArchivosPorProceso;
+pthread_mutex_t mx_tablaGlobal;
 int PUERTO;
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/Config"
@@ -116,6 +117,7 @@ typedef struct sac_process_table_node{
 } ProcessTableNode;
 
 typedef struct sac_process_fd_node{
+	uint8_t fd;
 	ptrGBloque archivo;
 } ProcessFdNode;
 

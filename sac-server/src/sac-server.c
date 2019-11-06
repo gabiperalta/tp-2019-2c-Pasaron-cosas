@@ -15,6 +15,7 @@ int main(int argc, char *argv[]){
 	cargarDisco(fileName);
 	pthread_mutex_init(&mutexBitmap, NULL);
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
+	pthread_mutex_init(&mx_tablaGlobal, NULL);
 
 
 	PUERTO = config_get_int_value(archivo_config,"PUERTO_ESCUCHA");
