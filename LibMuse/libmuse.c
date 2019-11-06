@@ -33,10 +33,22 @@ int muse_init(int id, char* ip, int puerto){
 }
 
 void muse_close(){
+
+	/*
+	 * Cuando hago un close, podria saber cuanta memoria
+	 * (del programa que hizo close) quedo sin liberar
+	 *
+	 * */
+
 	close(socket_muse);
 }
 
 uint32_t muse_alloc(uint32_t tam){
+
+	/*
+	 * AGREGAR SENAL SIGSEGV
+	 *
+	 * */
 
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,

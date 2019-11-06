@@ -26,8 +26,6 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	t_heap_metadata heap_metadata;
 	uint8_t bit_presencia = 0;
 	uint32_t tam_solicitado_real = sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size) + tam_solicitado;
-	t_pagina* pagina_nueva;
-	void* direccion_datos;
 	int posicion = 0;
 	void* buffer;
 	bool agregar_metadata_free = false;
@@ -82,11 +80,34 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 }
 
 t_pagina* crear_pagina(uint8_t bit_presencia) {
-    t_pagina* new = malloc(sizeof(t_pagina));
+	int frame_obtenido;
+
+	t_pagina* new = malloc(sizeof(t_pagina));
     //new->numeroPagina = numeroPagina;
-    //new->bit_modificado = bit_modificado;
+    new->bit_usado = 0;
+    new->bit_modificado = 0;
     new->bit_presencia = bit_presencia;
-    new->frame = obtener_frame_libre();
+    frame_obtenido = obtener_frame_libre();
+
+    if(frame_obtenido >= 0){
+    	new->frame = frame_obtenido;
+    }
+    else{
+    	// no hay espacio, por lo tanto se tiene que liberar un frame y pasarlo a swap
+    	void* buffer = ejecutar_algoritmo_clock_modificado();
+    	int frame_swap_obtenido = obtener_frame_swap_libre();
+
+    	archivo_swap = fopen(PATH_SWAP,"r+");
+
+    	fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
+    	fwrite(buffer,TAM_PAGINA,1,archivo_swap);
+
+    	new->frame = obtener_frame_libre();
+    	free(buffer);
+    	fclose(archivo_swap);
+
+    	printf("Hasta aca funciona\n");
+    }
 
     return new;
 }
@@ -123,6 +144,7 @@ void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int
 		if(flag_operacion == CREAR_DATOS){
 			pagina = crear_pagina(1);
 			list_add(tabla_paginas,pagina);
+	    	printf("Se actualizo la tabla de paginas\n");
 		}
 		else{
 			pagina = list_get(tabla_paginas,numero_pagina);
@@ -136,6 +158,7 @@ void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int
 			case GUARDAR_DATOS:
 			case CREAR_DATOS:
 				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
+		    	printf("Se copiaron los datos nuevos\n");
 				break;
 		}
 	}
@@ -150,6 +173,25 @@ int obtener_frame_libre(){
 	for(int i=0;i<cantidad_frames;i++){
 		if(!bitarray_test_bit(bitmap_upcm,i)){ // retorna el primer bit q encuentre en 0
 			bitarray_set_bit(bitmap_upcm,i);
+			return i;
+		}
+	}
+	// si no retorno, no hay frames libres, por lo tanto reviso si hay espacio libre en swap
+	/*
+	if(espacio_en_swap()){
+		ejecutar_algoritmo_clock_modificado();
+	}
+	else{
+		return -1; // no hay frames libres
+	}
+	*/
+	return -1; // no hay frames libres
+}
+
+int obtener_frame_swap_libre(){
+	for(int i=0;i<cantidad_frames_swap;i++){
+		if(!bitarray_test_bit(bitmap_swap,i)){ // retorna el primer bit q encuentre en 0
+			bitarray_set_bit(bitmap_swap,i);
 			return i;
 		}
 	}
@@ -171,6 +213,72 @@ int filtrarHeap(t_segmento* p){
 
 void liberar_frame(int numero_frame){
 	bitarray_clean_bit(bitmap_upcm,numero_frame);
+}
+
+// me va a retornar los datos de la pagina que se libera de la memoria principal
+void* ejecutar_algoritmo_clock_modificado(){
+	printf("Se ejecuta el algoritmo clock modificado\n");
+	t_proceso* proceso_obtenido;
+	t_segmento* segmento_obtenido;
+	t_pagina* pagina_obtenida;
+	int primer_frame_recorrido = algoritmo_clock_frame_recorrido;
+	int nro_vuelta = 1;
+	void* datos_pagina;
+
+	while(true){
+		for(int nro_proceso=0;nro_proceso<list_size(lista_procesos);nro_proceso++){
+			proceso_obtenido = list_get(lista_procesos,nro_proceso);
+			printf("Recorriendo proceso %d\n",nro_proceso);
+			sleep(3);
+			for(int nro_segmento=0;nro_segmento<list_size(proceso_obtenido->tabla_segmentos);nro_segmento++){
+				segmento_obtenido = list_get(proceso_obtenido->tabla_segmentos,nro_segmento);
+				printf("Recorriendo segmento %d\n",nro_segmento);
+				sleep(3);
+				for(int nro_pagina=0;nro_pagina<list_size(segmento_obtenido->tabla_paginas);nro_pagina++){
+					pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina);
+					printf("Recorriendo pagina %d\n",nro_pagina);
+					sleep(3);
+					if((algoritmo_clock_frame_recorrido == pagina_obtenida->frame) && pagina_obtenida->bit_presencia){
+						switch(nro_vuelta){
+							case 1:
+								if(!pagina_obtenida->bit_usado && !pagina_obtenida->bit_modificado){
+									datos_pagina = malloc(TAM_PAGINA);
+									memcpy(datos_pagina,&upcm[algoritmo_clock_frame_recorrido*TAM_PAGINA],TAM_PAGINA);
+									liberar_frame(algoritmo_clock_frame_recorrido);
+									algoritmo_clock_frame_recorrido++;
+									return datos_pagina;
+								}
+								break;
+							case 2:
+								if(!pagina_obtenida->bit_usado && pagina_obtenida->bit_modificado){
+									//envio la pagina a swap
+									datos_pagina = malloc(TAM_PAGINA);
+									memcpy(datos_pagina,&upcm[algoritmo_clock_frame_recorrido*TAM_PAGINA],TAM_PAGINA);
+									liberar_frame(algoritmo_clock_frame_recorrido);
+									algoritmo_clock_frame_recorrido++;
+									return datos_pagina;
+								}
+								else{
+									pagina_obtenida->bit_usado = 0;
+								}
+								break;
+						}
+
+						algoritmo_clock_frame_recorrido++;
+						if(algoritmo_clock_frame_recorrido == cantidad_frames)
+							algoritmo_clock_frame_recorrido = 0;
+						if(algoritmo_clock_frame_recorrido == primer_frame_recorrido){
+							nro_vuelta++;
+							if(nro_vuelta>2){
+								nro_vuelta = 1;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	//list_iterate(lista_procesos,(void*) analizar_segmentos);
 }
 
 void eliminar_pagina(t_pagina* pagina){

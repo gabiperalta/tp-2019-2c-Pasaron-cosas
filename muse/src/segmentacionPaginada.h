@@ -37,6 +37,7 @@ typedef struct{
 	uint16_t frame;
 	uint8_t bit_presencia;
 	uint8_t bit_modificado;
+	uint8_t bit_usado;
 }t_pagina;
 
 typedef struct{
@@ -59,12 +60,12 @@ t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
 uint32_t obtener_base(t_list* tabla_segmentos);
 void* obtener_datos_frame(t_pagina* pagina);
 int obtener_frame_libre();
-
+int obtener_frame_swap_libre();
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
-
 int filtrarHeap(t_segmento* p);
-
 void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
+
+void* ejecutar_algoritmo_clock_modificado();
 
 void liberar_frame(int numero_frame);
 void eliminar_pagina(t_pagina* pagina);

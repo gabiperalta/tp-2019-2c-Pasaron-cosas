@@ -68,6 +68,7 @@ void init_memoria(){
 	t_heap_metadata heap_metadata;
 	SIZE_HEAP_METADATA = sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
 
+	/////////////////////// UPCM ///////////////////////
 	cantidad_frames = TAM_MEMORIA / TAM_PAGINA;
 	int cantidad_frames_bytes = (int)ceil((double)cantidad_frames/8);
 	void* frames_bitmap = malloc(cantidad_frames_bytes);
@@ -75,6 +76,21 @@ void init_memoria(){
 
 	upcm = malloc(TAM_MEMORIA); // memoria principal
 	bitmap_upcm = bitarray_create_with_mode(frames_bitmap,cantidad_frames_bytes,MSB_FIRST);
+	////////////////////////////////////////////////////
+
+	/////////////////////// SWAP ///////////////////////
+	cantidad_frames_swap = TAM_SWAP / TAM_PAGINA;
+	int cantidad_frames_swap_bytes = (int)ceil((double)cantidad_frames_swap/8);
+	void* frames_swap_bitmap = malloc(cantidad_frames_swap_bytes);
+	memset(frames_swap_bitmap,NULL,cantidad_frames_swap_bytes);
+
+	bitmap_swap = bitarray_create_with_mode(frames_swap_bitmap,cantidad_frames_swap_bytes,MSB_FIRST);
+
+	archivo_swap = fopen(PATH_SWAP,"w");
+	fclose(archivo_swap);
+	////////////////////////////////////////////////////
+
+	algoritmo_clock_frame_recorrido = 0;
 }
 
 void init_threads(){
@@ -147,15 +163,12 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	t_segmento* segmento_obtenido;
 	t_segmento* segmento_siguiente;
-	t_pagina* pagina_obtenida;
 	uint32_t direccion_retornada = NULL;
-	void* direccion_frame;
 	int posicion_recorrida = 0;
 	t_heap_metadata heap_metadata;
 	void* buffer;
 	uint32_t tam_real = tam + SIZE_HEAP_METADATA;
 	uint32_t size_original;
-	uint32_t base_siguiente;
 	bool analizar_extension = true;
 
 	bool agregar_metadata_free = true;
@@ -307,6 +320,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		}
 
 		// se copian los datos en los nuevos frames
+		printf("Copiando datos en los nuevos frames\n");
 		cargar_datos(buffer_auxiliar,segmento_obtenido->tabla_paginas,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 		free(buffer_auxiliar);
@@ -365,12 +379,10 @@ void funcion_free(t_paquete paquete,int socket_muse){
 	// cuidado con esto, si se elimina proceso_encontrado, pierdo la referencia a _todo???
 	t_segmento* segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_recibida);
 	// si no se encuentra el segmento, deberia controlar el error
-	t_pagina* pagina_obtenida;
 	void* buffer = malloc(segmento_obtenido->limite);
 	t_heap_metadata heap_metadata;
 	t_heap_metadata heap_metadata_anterior;
 	int posicion_recorrida = 0;
-	void* direccion_frame;
 
 	printf("Hasta aca funciona\n");
 	printf("id_programa: %s\t",proceso_encontrado->id_programa);

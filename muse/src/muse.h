@@ -21,10 +21,15 @@
 #define IP "127.0.0.1"
 //#define PUERTO 34043
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/muse/muse.config"
+#define PATH_SWAP "archivo_swap.bin"
 
 void* upcm;
 t_bitarray* bitmap_upcm;
+t_bitarray* bitmap_swap;
 int cantidad_frames;
+int cantidad_frames_swap;
+int algoritmo_clock_frame_recorrido;
+FILE* archivo_swap;
 
 int PUERTO;
 int TAM_MEMORIA;
