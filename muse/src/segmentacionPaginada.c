@@ -21,7 +21,7 @@ t_proceso* crear_proceso(char* id_programa,int socket_creado){
 	//list_add(lista_threads,nuevo);
 }
 
-uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado) {
+uint32_t crear_segmento(int socket_proceso,uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado) {
 	int cantidad_paginas_solicitadas;
 	t_heap_metadata heap_metadata;
 	uint8_t bit_presencia = 0;
@@ -34,6 +34,7 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	nuevo->tipo_segmento = tipo;
 	nuevo->tabla_paginas = list_create();
 	nuevo->base = obtener_base(tabla_segmentos);
+	nuevo->socket_proceso = socket_proceso;
 
 	printf("Se crea un nuevo segmento\n");
 
@@ -84,11 +85,15 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	return nuevo->base + sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
 }
 
-t_pagina* crear_pagina(uint8_t bit_presencia) {
+t_pagina* crear_pagina(int socket_proceso,uint32_t base_segmento,int nro_pagina,uint8_t bit_presencia) {
 	int frame_obtenido;
 
 	t_pagina* new = malloc(sizeof(t_pagina));
-    //new->numeroPagina = numeroPagina;
+
+	new->socket_proceso = socket_proceso;
+	new->base_segmento = base_segmento;
+	new->nro_pagina = nro_pagina;
+
     new->bit_usado = 0;
     new->bit_modificado = 0;
     new->bit_presencia = bit_presencia;
@@ -134,7 +139,7 @@ t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 	t_segmento* segmento_obtenido;
 	for(int i=0;i<list_size(tabla_segmentos);i++){
 		segmento_obtenido = list_get(tabla_segmentos,i);
-		if((segmento_obtenido->base < direccion) && (segmento_obtenido->limite >= direccion)){
+		if((segmento_obtenido->base <= direccion) && (segmento_obtenido->limite >= direccion)){
 			return segmento_obtenido;
 		}
 	}
@@ -153,9 +158,10 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 
 	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){
 		if(flag_operacion == CREAR_DATOS){
-			pagina = crear_pagina(1);
+			pagina = crear_pagina(segmento->socket_proceso,segmento->base,numero_pagina,1);
 			list_add(segmento->tabla_paginas,pagina);
 			printf("Se actualizo la tabla de paginas\n");
+			agregar_frame_clock(pagina);
 		}
 		else{
 			pagina = list_get(segmento->tabla_paginas,numero_pagina);
@@ -201,6 +207,8 @@ void* obtener_datos_frame(t_pagina* pagina){
     	pagina->bit_presencia = 1;
     	pagina->bit_usado = 1;
 
+    	agregar_frame_clock(pagina);
+
     	free(buffer_pagina_upcm);
     	free(buffer_pagina_swap);
     	fclose(archivo_swap);
@@ -220,6 +228,8 @@ void* obtener_datos_frame(t_pagina* pagina){
     	pagina->bit_usado = 1;
 
     	memcpy(&upcm[pagina->frame*TAM_PAGINA],buffer_pagina_swap,TAM_PAGINA);
+
+    	agregar_frame_clock(pagina);
 
     	free(buffer_pagina_swap);
     	fclose(archivo_swap);
@@ -290,6 +300,11 @@ void liberar_frame_swap(int numero_frame_swap){
 void eliminar_pagina(t_pagina* pagina){
 	if(pagina->bit_presencia){
 		//memset(obtener_datos_frame(pagina),NULL,TAM_PAGINA);
+		int igualFrameClock(t_pagina* p) {
+			return p->socket_proceso==pagina->socket_proceso && p->nro_pagina==pagina->nro_pagina && p->base_segmento==pagina->base_segmento;
+		}
+
+		list_remove_by_condition(lista_clock,(void*) igualFrameClock);
 		liberar_frame(pagina->frame);
 	}
 	else{
@@ -311,8 +326,62 @@ t_pagina* ejecutar_algoritmo_clock_modificado(){
 	t_pagina* pagina_obtenida;
 	int primer_frame_recorrido = algoritmo_clock_frame_recorrido;
 	int nro_vuelta = 1;
-	void* datos_pagina;
 
+	while(true){
+
+		pagina_obtenida = list_get(lista_clock,algoritmo_clock_frame_recorrido);
+
+		switch(nro_vuelta){
+			case 1:
+				if(!pagina_obtenida->bit_usado && !pagina_obtenida->bit_modificado){
+					//datos_pagina = malloc(TAM_PAGINA);
+					//memcpy(datos_pagina,&upcm[algoritmo_clock_frame_recorrido*TAM_PAGINA],TAM_PAGINA);
+					liberar_frame(algoritmo_clock_frame_recorrido);
+					list_remove(lista_clock,algoritmo_clock_frame_recorrido);
+					//pagina_obtenida->bit_presencia = 0;
+					algoritmo_clock_frame_recorrido++;
+					if(algoritmo_clock_frame_recorrido == cantidad_frames){
+						algoritmo_clock_frame_recorrido = 0;
+					}
+					//return datos_pagina;
+					return pagina_obtenida;
+				}
+				break;
+			case 2:
+				if(!pagina_obtenida->bit_usado && pagina_obtenida->bit_modificado){
+					//datos_pagina = malloc(TAM_PAGINA);
+					//memcpy(datos_pagina,&upcm[algoritmo_clock_frame_recorrido*TAM_PAGINA],TAM_PAGINA);
+					liberar_frame(algoritmo_clock_frame_recorrido);
+					list_remove(lista_clock,algoritmo_clock_frame_recorrido);
+					//pagina_obtenida->bit_presencia = 0;
+					algoritmo_clock_frame_recorrido++;
+					if(algoritmo_clock_frame_recorrido == cantidad_frames){
+						algoritmo_clock_frame_recorrido = 0;
+					}
+					//return datos_pagina;
+					return pagina_obtenida;
+				}
+				else{
+					pagina_obtenida->bit_usado = 0;
+				}
+				break;
+		}
+
+		algoritmo_clock_frame_recorrido++;
+		if(algoritmo_clock_frame_recorrido == cantidad_frames){
+			algoritmo_clock_frame_recorrido = 0;
+		}
+		if(algoritmo_clock_frame_recorrido == primer_frame_recorrido){
+			nro_vuelta++;
+			if(nro_vuelta>2){
+				nro_vuelta = 1;
+			}
+			printf("vuelta nro %d\n",nro_vuelta);
+		}
+
+	}
+
+	/*
 	while(true){
 		for(int nro_proceso=0;nro_proceso<list_size(lista_procesos);nro_proceso++){
 			proceso_obtenido = list_get(lista_procesos,nro_proceso);
@@ -379,5 +448,11 @@ t_pagina* ejecutar_algoritmo_clock_modificado(){
 			}
 		}
 	}
+	*/
 	//list_iterate(lista_procesos,(void*) analizar_segmentos);
+}
+
+void agregar_frame_clock(t_pagina* pagina){
+
+	list_add_in_index(lista_clock,pagina->frame,pagina);
 }

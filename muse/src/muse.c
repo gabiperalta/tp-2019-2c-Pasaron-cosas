@@ -5,6 +5,7 @@ int main(void) {
 
 	leer_config();
 	lista_procesos = list_create();
+	lista_clock = list_create();
 
 	init_memoria();
 	init_threads();

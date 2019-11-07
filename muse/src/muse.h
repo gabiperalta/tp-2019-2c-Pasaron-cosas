@@ -38,6 +38,7 @@ int TAM_SWAP;
 uint32_t SIZE_HEAP_METADATA;
 
 t_list* lista_procesos;
+t_list* lista_clock;
 
 pthread_mutex_t mutex_acceso_upcm;
 pthread_mutex_t mutex_lista_procesos;

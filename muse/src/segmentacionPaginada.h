@@ -30,6 +30,7 @@ typedef struct{
 	uint32_t limite;
 	t_list* tabla_paginas;
 	uint8_t tipo_segmento;
+	int socket_proceso;
 }t_segmento;
 
 typedef struct{
@@ -38,6 +39,9 @@ typedef struct{
 	uint8_t bit_presencia;
 	uint8_t bit_modificado;
 	uint8_t bit_usado;
+	int socket_proceso;
+	uint32_t base_segmento;
+	int nro_pagina;
 }t_pagina;
 
 typedef struct{
@@ -50,9 +54,10 @@ typedef struct{
 	int posicion;
 }t_desplazamiento;
 
+
 t_proceso* crear_proceso(char* id_programa,int socket_creado);
-uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado);
-t_pagina* crear_pagina(uint8_t bit_presencia);
+uint32_t crear_segmento(int socket_proceso,uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado);
+t_pagina* crear_pagina(int socket_proceso,uint32_t base_segmento,int nro_pagina,uint8_t bit_presencia);
 
 t_proceso* buscar_proceso(t_list* lista,int socket_proceso);
 t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion);
@@ -71,5 +76,6 @@ void liberar_frame_swap(int numero_frame_swap);
 void eliminar_pagina(t_pagina* pagina);
 
 t_pagina* ejecutar_algoritmo_clock_modificado();
+void agregar_frame_clock(t_pagina* pagina);
 
 #endif /* SEGMENTACIONPAGINADA_H_ */

@@ -333,7 +333,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	//si no hay ningun segmento creado, se crea uno nuevo
 	if(direccion_retornada == NULL)
-		direccion_retornada = crear_segmento(SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
+		direccion_retornada = crear_segmento(socket_muse,SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
