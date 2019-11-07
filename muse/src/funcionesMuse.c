@@ -333,7 +333,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	//si no hay ningun segmento creado, se crea uno nuevo
 	if(direccion_retornada == NULL)
-		direccion_retornada = crear_segmento(socket_muse,SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
+		direccion_retornada = crear_segmento(SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
@@ -371,6 +371,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
+	printf("Inicio free\n");
 	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
 
 	// revisar si la busqueda de proceso se puede hacer directamente en procesar solicitud
@@ -414,7 +415,7 @@ void funcion_free(t_paquete paquete,int socket_muse){
 
 	// comienzo a revisar _todo el segmento para ver si tengo que unificar espacios libres
 	posicion_recorrida = 0;
-	heap_metadata_anterior.isFree = 2; // con esto indico q aun no se inicializo
+	heap_metadata_anterior.isFree = false; // con esto indico q aun no se inicializo
 	while(posicion_recorrida < segmento_obtenido->limite){
 		memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
 		posicion_recorrida += sizeof(heap_metadata.isFree);
@@ -431,6 +432,7 @@ void funcion_free(t_paquete paquete,int socket_muse){
 		////////////////////////
 
 		if((heap_metadata_anterior.isFree == true) && (heap_metadata.isFree == true)){
+			printf("La metadata actual y la anterior estan libres\n");
 			posicion_recorrida -= sizeof(heap_metadata.isFree);
 			memset(&buffer[posicion_recorrida],NULL,SIZE_HEAP_METADATA);
 			printf("posicion_recorrida : %d \n",posicion_recorrida);
@@ -444,6 +446,7 @@ void funcion_free(t_paquete paquete,int socket_muse){
 			printf("Nuevo espacio libre: %d bytes\n",heap_metadata.size);
 		}
 
+		printf("Igualo la metadata a la variable anterior\n");
 		heap_metadata_anterior.isFree = heap_metadata.isFree;
 		heap_metadata_anterior.size = heap_metadata.size;
 
@@ -514,6 +517,8 @@ void funcion_free(t_paquete paquete,int socket_muse){
 	agregar_valor(paquete_respuesta.parametros,1);
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
+
+	printf("Fin free\n");
 }
 
 void funcion_get(t_paquete paquete,int socket_muse){
