@@ -45,11 +45,6 @@ void muse_close(){
 
 uint32_t muse_alloc(uint32_t tam){
 
-	/*
-	 * AGREGAR SENAL SIGSEGV
-	 *
-	 * */
-
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,
 			.parametros = list_create()
@@ -93,10 +88,35 @@ void muse_free(uint32_t dir){
 }
 
 int muse_get(void* dst, uint32_t src, size_t n){
+
+	/*
+	 * AGREGAR SENAL SIGSEGV
+	 *
+	 * */
+
+	//raise(SIGSEGV);
+
 	return 0;
 }
 
 int muse_cpy(uint32_t dst, void* src, int n){
+
+	t_paquete paquete = {
+			.header = MUSE_CPY,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_string(paquete.parametros,"PLUG IN BABY");
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	//t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	//uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	//printf("Cpy exitoso?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
+
 	return 0;
 }
 

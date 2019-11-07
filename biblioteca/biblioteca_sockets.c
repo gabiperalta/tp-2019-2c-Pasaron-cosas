@@ -82,40 +82,6 @@ int aceptarConexion(int socketEscucha) {
 	return nuevoSocket;
 }
 
-/*
-t_datos recibirRequest(int cliente){
-
-	int bytesRecibidos;
-	t_datos datos;
-
-	void* buffer = malloc(1000); //hay que cambiar esto
-
-	bytesRecibidos = recv(cliente, buffer, sizeof(datos.header), 0);
-	datos.error = 0;
-
-	if(bytesRecibidos <= 0) {
-		perror("Se desconecto el cliente");
-		datos.error = 1;
-		return datos;
-	}
-
-	memcpy(&datos.header,buffer,sizeof(datos.header));
-
-	switch(datos.header){
-		case MUSE_ALLOC:
-
-			recv(cliente, buffer, sizeof(datos.id_proceso_hilo), 0);
-			memcpy(&datos.id_proceso_hilo,buffer,sizeof(datos.id_proceso_hilo));
-
-			break;
-	}
-
-	free(buffer);
-
-	return datos;
-}
-*/
-
 // Si no se envia la lista de parametros, inicializarla con NULL
 void enviar_paquete(t_paquete paquete,int socket_servidor){
 	void* buffer;
@@ -129,8 +95,8 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 		for(int i=0;i<cantidad_parametros;i++){
 			parametro = list_get(paquete.parametros,i);
-			tam_buffer += sizeof(parametro->valor) + sizeof(parametro->recibir_string);
-			if(parametro->recibir_string)
+			tam_buffer += sizeof(parametro->valor) + sizeof(parametro->recibir_bloque_datos);
+			if(parametro->recibir_bloque_datos)
 				tam_buffer += parametro->valor;
 		}
 	}
@@ -151,15 +117,17 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 			memcpy(&buffer[posicion],&parametro->valor,sizeof(parametro->valor));
 			posicion += sizeof(parametro->valor);
 
-			memcpy(&buffer[posicion],&parametro->recibir_string,sizeof(parametro->recibir_string));
-			posicion += sizeof(parametro->recibir_string);
+			memcpy(&buffer[posicion],&parametro->recibir_bloque_datos,sizeof(parametro->recibir_bloque_datos));
+			posicion += sizeof(parametro->recibir_bloque_datos);
 
-			if(!parametro->recibir_string){ continue; }
-			memcpy(&buffer[posicion],parametro->valor_string,parametro->valor);
+			if(!parametro->recibir_bloque_datos){ continue; }
+			memcpy(&buffer[posicion],parametro->bloque_datos,parametro->valor);
 			posicion += parametro->valor;
+
 		}
 	}
 	//printf("tamano buffer: %d\n",tam_buffer);
+	list_destroy_and_destroy_elements(paquete.parametros,(void*) destruir_parametro);
 
 	send(socket_servidor,buffer,tam_buffer,0);
 
@@ -204,15 +172,15 @@ t_paquete recibir_paquete(int socket_cliente){
 
 		recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
 		memcpy(&parametro->valor,buffer,sizeof(parametro->valor));
-		recv(socket_cliente,buffer, sizeof(parametro->recibir_string), 0);
-		memcpy(&parametro->recibir_string,buffer,sizeof(parametro->recibir_string));
+		recv(socket_cliente,buffer, sizeof(parametro->recibir_bloque_datos), 0);
+		memcpy(&parametro->recibir_bloque_datos,buffer,sizeof(parametro->recibir_bloque_datos));
 
 		////////////////////////////////////////////////////////////////////
 
-		if(parametro->recibir_string){
+		if(parametro->recibir_bloque_datos){
 			recv(socket_cliente,buffer, parametro->valor, 0);
-			parametro->valor_string = malloc(parametro->valor);
-			memcpy(parametro->valor_string,buffer,parametro->valor);
+			parametro->bloque_datos = malloc(parametro->valor);
+			memcpy(parametro->bloque_datos,buffer,parametro->valor);
 		}
 
 		list_add(paquete.parametros,parametro);

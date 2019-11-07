@@ -182,6 +182,9 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	//pthread_mutex_lock(&mutex_acceso_upcm);
 
+	printf("id_programa: %s\t",proceso_encontrado->id_programa);
+	printf("socket: %d\t\n",proceso_encontrado->socket);
+
 	for(int numero_segmento=0;numero_segmento<list_size(proceso_encontrado->tabla_segmentos);numero_segmento++){
 		segmento_obtenido = list_get(proceso_encontrado->tabla_segmentos,numero_segmento);
 		if(segmento_obtenido->tipo_segmento == SEGMENTO_MMAP)
@@ -190,7 +193,8 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		buffer = malloc(segmento_obtenido->limite);// si falla, probar declarando la variable aca mismo
 		posicion_recorrida = 0;
 
-		cargar_datos(buffer,segmento_obtenido->tabla_paginas,CARGAR_DATOS,NULL);
+		printf("Se cargan los datos en un buffer\n");
+		cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,NULL);
 
 		while(posicion_recorrida < segmento_obtenido->limite){
 			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
@@ -239,7 +243,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 				analizar_extension = false;
 
 				// se vuelven a copiar los datos en los frames correspondientes
-				cargar_datos(buffer,segmento_obtenido->tabla_paginas,GUARDAR_DATOS,NULL);
+				cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 				free(buffer);
 				break;
@@ -304,7 +308,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		posicion_recorrida -= segmento_obtenido->limite;
 
 		// se vuelven a copiar los datos en los frames correspondientes
-		cargar_datos(buffer,segmento_obtenido->tabla_paginas,GUARDAR_DATOS,NULL);
+		cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 		segmento_limite_anterior = segmento_obtenido->limite;
 		segmento_obtenido->limite += (cantidad_paginas_solicitadas * TAM_PAGINA);
@@ -321,7 +325,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 		// se copian los datos en los nuevos frames
 		printf("Copiando datos en los nuevos frames\n");
-		cargar_datos(buffer_auxiliar,segmento_obtenido->tabla_paginas,CREAR_DATOS,cantidad_paginas_solicitadas);
+		cargar_datos(buffer_auxiliar,segmento_obtenido,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 		free(buffer_auxiliar);
 		free(buffer);
@@ -389,7 +393,7 @@ void funcion_free(t_paquete paquete,int socket_muse){
 	printf("socket: %d\t\n",proceso_encontrado->socket);
 	printf("\n");
 
-	cargar_datos(buffer,segmento_obtenido->tabla_paginas,CARGAR_DATOS,NULL);
+	cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,NULL);
 
 	posicion_recorrida = direccion_recibida - segmento_obtenido->base - SIZE_HEAP_METADATA;
 	memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
@@ -473,7 +477,8 @@ void funcion_free(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
 	}
 
-	cargar_datos(buffer,segmento_obtenido->tabla_paginas,GUARDAR_DATOS,NULL);
+	//sleep(5);
+	cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
@@ -516,7 +521,9 @@ void funcion_get(t_paquete paquete,int socket_muse){
 }
 
 void funcion_cpy(t_paquete paquete,int socket_muse){
+	char* string_recibido = obtener_string(paquete.parametros);
 
+	printf("%s\n",string_recibido);
 }
 
 void funcion_map(t_paquete paquete,int socket_muse){

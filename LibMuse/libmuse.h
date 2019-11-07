@@ -26,6 +26,7 @@
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <net/if.h>
+#include <signal.h>
 #include <commons/string.h>
 #include "../biblioteca/biblioteca_sockets.h"
 

@@ -63,11 +63,13 @@ int obtener_frame_libre();
 int obtener_frame_swap_libre();
 t_desplazamiento buscar_bloque_libre(t_list* tabla_paginas,uint32_t tam);
 int filtrarHeap(t_segmento* p);
-void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
-
-void* ejecutar_algoritmo_clock_modificado();
+void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
+bool espacio_en_upcm();
 
 void liberar_frame(int numero_frame);
+void liberar_frame_swap(int numero_frame_swap);
 void eliminar_pagina(t_pagina* pagina);
+
+t_pagina* ejecutar_algoritmo_clock_modificado();
 
 #endif /* SEGMENTACIONPAGINADA_H_ */
