@@ -12,14 +12,12 @@ int myGetattr( const char *path, struct stat *statRetorno ){
 
 	punteroInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
 	if( punteroInodo ){
-		statRetorno->st_ino = punteroInodo - INODE_TABLE_START; // esto daria el numero de inodo
+		statRetorno->st_ino = (punteroInodo - INODE_TABLE_START) / BLOCK_SIZE; // esto daria el numero de inodo
 		statRetorno->st_mode = inodoArchivo->state | 0777 ; // NO SE COMO SE USA
 		statRetorno->st_size = inodoArchivo->file_size;
 		statRetorno->st_blksize = BLOCK_SIZE;
 		statRetorno->st_blocks = cantidadBloquesAsignados(inodoArchivo->blocks);
 		statRetorno->st_mtim.tv_nsec = inodoArchivo->modification_date;
-		//statRetorno->st_atim
-		//statRetorno->st_ctim =
 
 		return 0;
 	}
@@ -35,7 +33,7 @@ int myGetattr( const char *path, struct stat *statRetorno ){
 // FUNCIONES CON DIRECTORIOS
 
 // MKDIR
-int crearDirectorio(const char *path, mode_t mode){ // mode ni lo usamos
+int crearDirectorio(const char *path ){ // mode ni lo usamos
 	GFile *directorioPadre;
 	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
 	char** pathDividida = string_split(path, '/');
@@ -109,7 +107,7 @@ int eliminarDirectorio(const char *path){
 }
 
 // READDIR (LS)
-int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
+int myReaddir( const char *path, void *buffer ){
 	GFile *directorio;
 	ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL, directorio);
 	t_list *listaDeArchivos;
@@ -123,14 +121,21 @@ int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t off
 	// SI NO EXISTE EL DIRECTORIO, TIRA ERROR
 	if(punteroInodo != 0){
 
+		int posicion = 0;
+
 		listaDeArchivos = listarDirectorio(directorio);
 
 		t_list *listaDeNombres = list_map(listaDeArchivos, nombre);
 
 		archivosEnDirectorio = list_size(listaDeNombres);
 
+		buffer = malloc( MAX_FILENAME_LENGTH * archivosEnDirectorio + archivosEnDirectorio); // ESTE TAMANIO ES POR LOS NOMBRES Y LOS ";" QUE LOS SEPARAN
+
 		for(int i=0; i<archivosEnDirectorio; i++){
-			filler( buffer, list_get(archivosEnDirectorio, i), NULL, 0); // SI QUEREMOS PONER MAS DATOS, DEBEMOS REEMPLAZAR NULL POR UN STAT
+			GDirEntry* unaEntrada = list_get(archivosEnDirectorio, i);
+			memcpy(buffer + posicion, unaEntrada->fname , MAX_FILENAME_LENGTH);
+			memcpy(buffer + posicion + 1, ";", 1);
+			posicion += MAX_FILENAME_LENGTH + 1;
 		}
 		return 0;
 	}
@@ -142,7 +147,7 @@ int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t off
 
 // FUNCIONES ARCHIVOS
 // MKNOD
-int crearArchivo(const char *path, mode_t modo, dev_t dev){ // no usamos ni mode ni dev
+int crearArchivo(const char *path ){ // no usamos ni mode ni dev
 	GFile *directorioPadre;
 	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
 	char** pathDividida = string_split(path, '/');
@@ -185,7 +190,7 @@ int crearArchivo(const char *path, mode_t modo, dev_t dev){ // no usamos ni mode
 }
 
 // OPEN
-uint8_t abrirArchivo(const char *path, struct fuse_file_info * info, int socketProceso){ // debemos ver si hay que crear el archivo si no existe
+uint8_t abrirArchivo(const char *path, int socketProceso){ // debemos ver si hay que crear el archivo si no existe
 	GlobalFdNode *fdNode;
 	char** direccion = string_split(path, '/');
 	int longitudDireccion = cantidadElementosCharAsteriscoAsterisco(direccion);
@@ -234,7 +239,7 @@ int escribirArchivo(const char *path, const char *buffer, size_t size, off_t off
 
 }
 
-int leerArchivo( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
+int leerArchivo( const char *path, char *buffer, size_t size, off_t offset ){
 	int retorno = 0;
 	GFile *inodoArchivo;
 	uint32_t loQueEsLeido;

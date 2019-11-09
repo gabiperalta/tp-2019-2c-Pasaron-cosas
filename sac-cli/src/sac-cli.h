@@ -1,5 +1,3 @@
-
-
 #include <fuse.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -7,6 +5,9 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include "biblioteca_sockets.h"
 
 
 /* 	La utilidad del sac server es la de servir como comunicacion entre el proceso que quiere hacer operaciones
@@ -14,6 +15,10 @@
  * 	Filesystem centralizado del tp. De esta manera que las solicitudes al sistema realizados por el proceso seran
  * 	delegados al Sac-servidor, y este sera el encargado de resolver esta solicitud.
  */
+
+#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-cli/Config"
+
+int my_socket;
 
 // GENERALES
 static int sac_cli_getattr( const char *path, struct stat *st );
@@ -30,3 +35,8 @@ static int sac_cli_unlink(const char *path);
 
 static int sac_cli_mkdir(const char *path, mode_t mode);
 static int sac_cli_rmdir(const char *path);
+
+// FUNCIONES AUXILIARES
+
+uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
+void liberarCharAsteriscoAsterisco(char** array);

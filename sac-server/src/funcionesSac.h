@@ -9,16 +9,18 @@ int myGetattr( const char *path, struct stat *statRetorno );
 
 // FUNCIONES CON DIRECTORIOS
 
-int crearDirectorio(const char *path, mode_t mode);
+int crearDirectorio(const char *path );
 
 int eliminarDirectorio(const char *path);
 
-int myReaddir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi );
+int myReaddir( const char *path, void *buffer );
 
 // FUNCIONES CON ARCHIVOS
-int crearArchivo(const char *path, mode_t, dev_t);
+int crearArchivo(const char *path );
 
-uint8_t abrirArchivo(const char *path, struct fuse_file_info * info, int socketProceso);
+uint8_t abrirArchivo(const char *path, int socketProceso);
+
+int leerArchivo( const char *path, char *buffer, size_t size, off_t offset );
 
 int eliminarArchivo(const char *path);
 
