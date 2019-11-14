@@ -1,30 +1,38 @@
+#ifndef FUNCIONES_SAC_H_
+#define FUNCIONES_SAC_H_
+
+#include "gestorDeMemoria.h"
 #include "sac-server.h"
 
 
 //////// FUNCIONES PRINCIPALES ////////
 
+void crearDirectorioRaiz();
+
 // FUNCIONES GENERALES
 
-int myGetattr( const char *path, struct stat *statRetorno );
+int myGetattr( char *path, struct stat *statRetorno );
 
 // FUNCIONES CON DIRECTORIOS
 
-int crearDirectorio(const char *path );
+int crearDirectorio( char *path );
 
-int eliminarDirectorio(const char *path);
+int eliminarDirectorio( char *path);
 
-int myReaddir( const char *path, void *buffer );
+int myReaddir( char *path, void *buffer );
 
 // FUNCIONES CON ARCHIVOS
-int crearArchivo(const char *path );
+int crearArchivo( char *path );
 
-uint8_t abrirArchivo(const char *path, int socketProceso);
+uint8_t abrirArchivo( char *path, int socketProceso);
 
-int leerArchivo( const char *path, char *buffer, size_t size, off_t offset );
+int escribirArchivo( char *path, char *buffer, size_t size, off_t offset );
 
-int eliminarArchivo(const char *path);
+int leerArchivo( char *path, char *buffer, size_t size, off_t offset );
 
-int cerrarArchivo(const char *path); // TODAVIA NO SE QUE PARAMETROS LLEVA
+int eliminarArchivo( char *path);
+
+int cerrarArchivo( char *path, int socketProceso); // TODAVIA NO SE QUE PARAMETROS LLEVA
 
 
 //////// FUNCIONES AUXILIARES ////////
@@ -39,7 +47,7 @@ t_list* listarDirectorio(GFile *directorio);
 
 // Busca el inodo de un archivo, y retorna el puntero a su inodo. el inodo en si es devuelto en el parametro inodoDirectorio;
 // En caso de que no exista el archivo, el inodo devuelto es igual a NULL y el retorno es 0
-ptrGBloque buscarInodoArchivo(const char *path, int mode, GFile *inodoArchivo);
+ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo);
 
 ptrGBloque buscarArchivoEnDirectorio(GFile *directorio, char* archivo);
 
@@ -84,6 +92,8 @@ void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque
 // FUNCIONES AUXILIARES PARA EL MANEJO DE ARCHIVOS
 void posicionEnArchivo(uint32_t offset, FileOffset* offsetDelArchivo);
 
+void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
+
 void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
 //////////////// MANEJO char** ///////////////////
@@ -93,3 +103,5 @@ void liberarCharAsteriscoAsterisco(char** array);
 
 int maximo(int unNumero, int otroNumero);
 uint32_t minimo(uint32_t unNumero, uint32_t otroNumero);
+
+#endif /* FUNCIONES_SAC_H_ */
