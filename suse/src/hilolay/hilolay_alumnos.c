@@ -41,7 +41,7 @@
 
 		t_paquete paquete_respuesta = {
 				.header = SUSE_SCHEDULE_NEXT,
-				//.parametros = list_create()
+				.parametros = NULL
 				};
 
 		//agregar_valor(paquete_respuesta.parametros,tid);
