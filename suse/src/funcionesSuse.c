@@ -16,7 +16,7 @@ void procesar_solicitud(void* socket_cliente){
 	while(paquete.error != 1){
 		switch(paquete.header){
 			case SUSE_CREATE:
-				funcion_suse = funcion_init;
+				funcion_suse = funcion_create;
 				break;
 			case SUSE_SCHEDULE_NEXT:
 				funcion_suse = funcion_schedule_next;
@@ -44,7 +44,33 @@ void procesar_solicitud(void* socket_cliente){
 	close(socket_cliente);
 }
 
-void funcion_init(t_paquete paquete,int socket_muse){
+void funcion_create(t_paquete paquete,int socket_suse){
+
+	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint
+
+	//
+	int tid = obtener_valor(paquete.parametros);
+
+
+	//aca le das la orden a suse
+	planificate(tid)//funcion suse)(tid); //podria tener una respuesta
+
+	//en caso que tenga retorno int retorno = crearArchivo( path );
+
+
+	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
+
+	t_paquete paquete_respuesta = {
+	.header = SUSE_CREATE,
+	.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
 
 /*	char* id_programa = string_new();
 	char* ip_socket = obtener_ip_socket(socket_muse);
