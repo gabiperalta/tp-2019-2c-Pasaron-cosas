@@ -1,4 +1,15 @@
-#include <servidor.h>
+#include "servidor.h"
+
+
+
+void inicializarServidor(){
+
+	printf("socketDeEscucha: %i\n", PUERTO);
+	pthread_t hiloServidor;
+
+	pthread_create(&hiloServidor,NULL,(void*)servidor, NULL);
+	pthread_detach(hiloServidor);
+}
 
 void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
@@ -26,7 +37,6 @@ void procesar_solicitud(void* socket_cliente){
 			case SUSE_CLOSE:
 				funcion_suse = funcion_close;
 				break
-			//	return;
 		}
 
 		funcion_suse(paquete,socket_cliente);
@@ -91,6 +101,34 @@ void funcion_create(t_paquete paquete,int socket_suse){
 }
 
 
+void funcion_schedule_next(t_paquete paquete,int socket_suse){
+
+	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint
+
+	//
+
+
+	//aca le das la orden a suse
+	//tengo que mandarle un id de programa o algo?
+	retorno= dame_prox_hilo()//funcion suse)(tid); //podria tener una respuesta
+
+	//en caso que tenga retorno int retorno = crearArchivo( path );
+
+
+	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
+
+	t_paquete paquete_respuesta = {
+	.header = SUSE_CREATE,
+	.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
+}
 
 
 char* obtener_ip_socket(int s){
