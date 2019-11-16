@@ -21,11 +21,11 @@ void procesar_solicitud(void *socket_cliente);
 
 /////////  FUNCIONES SUSE  /////////
 
-void funcion_create(t_paquete paquete,int socket_fuse);
-void funcion_schedule_next(t_paquete paquete,int socket_muse);
-void funcion_wait(t_paquete paquete,int socket_muse);
-void funcion_signal(t_paquete paquete,int socket_muse);
-void funcion_join(t_paquete paquete,int socket_muse);
-void funcion_close(t_paquete paquete,int socket_muse);
+void funcion_create(t_paquete paquete,int socket_suse);
+void funcion_schedule_next(t_paquete paquete,int socket_suse);
+void funcion_wait(t_paquete paquete,int socket_suse);
+void funcion_signal(t_paquete paquete,int socket_suse);
+void funcion_join(t_paquete paquete,int socket_suse);
+void funcion_close(t_paquete paquete,int socket_suse);
 
 #endif /* SERVIDOR_H_ */
