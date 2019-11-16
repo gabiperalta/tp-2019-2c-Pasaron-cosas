@@ -17,6 +17,11 @@ int main(int argc, char *argv[]){
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
 	pthread_mutex_init(&mx_tablaGlobal, NULL);
 
+	// TODO VERIFICAR SI ESTA EL DIRECTORIO RAIZ, Y SI NO LO ESTA, CREARLO
+	GHeader* header = (GHeader*) myDisk;
+	if(!header->estaElDirectorioRaiz){
+		crearDirectorioRaiz();
+	}
 
 	PUERTO = config_get_int_value(archivo_config,"PUERTO_ESCUCHA");
 
@@ -28,11 +33,11 @@ int main(int argc, char *argv[]){
 
 	system("clear");
 
-	while(1) {
+	while(1){
 		linea = readline(">");
-		if (linea) {
+		/*if (linea) {
 			add_history(linea);
-		}
+		}*/
 		if(!strncmp(linea, "exit", 4)) {
 			free(linea);
 			break;
@@ -55,12 +60,12 @@ size_t getFileSize(char* file){
 }
 
 void cargarDisco(char* diskName){
-
+	char* inicioBitarray = (char*) NEXT_BLOCK(myDisk);
 	size_t diskSize = getFileSize(diskName);
 	diskFD = open(diskName, O_RDWR);
 	myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
-	bitmap = bitarray_create_with_mode(NEXT_BLOCK(myDisk), BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
+	bitmap = bitarray_create_with_mode( inicioBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
 
 	msync(myDisk, sizeof(bitmap), MS_SYNC);
 }

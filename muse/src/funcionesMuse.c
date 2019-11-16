@@ -526,9 +526,67 @@ void funcion_get(t_paquete paquete,int socket_muse){
 }
 
 void funcion_cpy(t_paquete paquete,int socket_muse){
-	char* string_recibido = obtener_string(paquete.parametros);
 
-	printf("%s\n",string_recibido);
+	// AGREGAR EL CONTROL ANTE UN INGRESO INVALIDO (SIGSEGV)
+
+	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
+	uint32_t tam_bloque_datos_recibido = obtener_valor(paquete.parametros);
+	void* bloque_datos_recibido = obtener_bloque_datos(paquete.parametros);
+
+	t_proceso* proceso_obtenido = buscar_proceso(lista_procesos,socket_muse);
+	t_segmento* segmento_obtenido = buscar_segmento(proceso_obtenido->tabla_segmentos,direccion_recibida);
+
+	if(segmento_obtenido == NULL){
+		// no se encontro segmento
+	}
+
+	int nro_pagina_obtenida = (direccion_recibida - segmento_obtenido->base) / TAM_PAGINA;
+	int desplazamiento_obtenido = (direccion_recibida - segmento_obtenido->base) - (nro_pagina_obtenida * TAM_PAGINA);
+	t_pagina* pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
+
+	void* direccion_datos = obtener_datos_frame(pagina_obtenida);
+	t_heap_metadata heap_metadata;
+	int posicion_recorrida = desplazamiento_obtenido - SIZE_HEAP_METADATA;
+	void* buffer;
+
+	// calculo para las paginas necesarias
+	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_recibido)/TAM_PAGINA);
+	//int cantidad_paginas_necesarias;
+
+	if((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) >= 0){
+		// tengo que obtener la pagina anterior para poder manejar la metadata
+		cantidad_paginas_necesarias++;
+		nro_pagina_obtenida--;
+		posicion_recorrida = TAM_PAGINA + desplazamiento_obtenido - SIZE_HEAP_METADATA;
+	}
+
+	for(int i=0; i<cantidad_paginas_necesarias;i++){
+		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
+		direccion_datos = obtener_datos_frame(pagina_obtenida);
+		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
+	}
+
+	// obtengo la metadata
+	memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
+	posicion_recorrida += sizeof(heap_metadata.isFree);
+	memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
+	posicion_recorrida += sizeof(heap_metadata.isFree);
+
+	if(!heap_metadata.isFree && (heap_metadata.size >= tam_bloque_datos_recibido)){
+		memcpy(&buffer[posicion_recorrida],bloque_datos_recibido,tam_bloque_datos_recibido);
+
+		// vuelvo a cargar los datos al upcm
+		for(int x=0; x<cantidad_paginas_necesarias;x++){
+			pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
+			direccion_datos = obtener_datos_frame(pagina_obtenida);
+			memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
+		}
+	}
+	else{
+		// no puedo almacenar los datos pq ingreso a una posicion invalida
+	}
+
+
 }
 
 void funcion_map(t_paquete paquete,int socket_muse){

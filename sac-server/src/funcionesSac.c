@@ -3,10 +3,31 @@
 
 //////// FUNCIONES PRINCIPALES ////////
 
+void crearDirectorioRaiz(){
+	GFile* directorioRaiz = (GFile*) obtenerBloque(INODE_TABLE_START);
+	struct timeval tiempo;
+	gettimeofday(&tiempo, NULL);
+	GDirectoryBlock* bloqueDeDirectorio;
+
+
+	directorioRaiz->state = DIRECTORIO;
+	directorioRaiz->father_block = 0;
+	directorioRaiz->file_size = 0;
+	memcpy(directorioRaiz->fname, "./", 2);
+	directorioRaiz->creation_date = tiempo.tv_usec;
+	directorioRaiz->modification_date = tiempo.tv_usec;
+
+	bloqueDeDirectorio = asignarBloqueDeDirectorio(directorioRaiz);
+
+	inicializarPrimerasEntradas(bloqueDeDirectorio, INODE_TABLE_START, 0);
+
+	return;
+}
+
 // FUNCIONES GENERALES
 
 //GETATTR
-int myGetattr( const char *path, struct stat *statRetorno ){
+int myGetattr( char *path, struct stat *statRetorno ){
 	GFile *inodoArchivo;
 	ptrGBloque punteroInodo;
 
@@ -33,22 +54,25 @@ int myGetattr( const char *path, struct stat *statRetorno ){
 // FUNCIONES CON DIRECTORIOS
 
 // MKDIR
-int crearDirectorio(const char *path ){ // mode ni lo usamos
+int crearDirectorio(char *path ){ // mode ni lo usamos
 	GFile *directorioPadre;
 	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
-	char** pathDividida = string_split(path, '/');
+	char** pathDividida = string_split(path, "/");
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
 	ptrGBloque punteroAInodo = reservarInodo(DIRECTORIO);
 	GFile *inodo;
-	struct timeval *tiempo;
+	struct timeval tiempo;
 	int hayEntradaLibre;
 	GDirectoryBlock* bloqueDeDirectorio;
 
 
 
-	gettimeofday(tiempo, NULL);
+	gettimeofday(&tiempo, NULL);
 
 	if(directorioPadre == NULL){
+		return -1;
+	}
+	if(strlen(pathDividida[longitudDePath - 1 ]) > 71){
 		return -1;
 	}
 
@@ -62,11 +86,11 @@ int crearDirectorio(const char *path ){ // mode ni lo usamos
 			}
 
 
-			inodo->creation_date = tiempo->tv_usec;
+			inodo->creation_date = tiempo.tv_usec;
 			inodo->father_block = punteroAInodoPadre;
 			inodo->file_size = 0;
 			memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
-			inodo->modification_date = tiempo->tv_usec;
+			inodo->modification_date = tiempo.tv_usec;
 			inodo->state = DIRECTORIO;
 
 			bloqueDeDirectorio = asignarBloqueDeDirectorio(inodo);
@@ -84,7 +108,7 @@ int crearDirectorio(const char *path ){ // mode ni lo usamos
 }
 
 // RMDIR
-int eliminarDirectorio(const char *path){
+int eliminarDirectorio( char *path){
 	GFile *directorio;
 	GFile *directorioPadre;
 	ptrGBloque punteroAInodo = buscarInodoArchivo(path, NORMAL, directorio);
@@ -107,14 +131,14 @@ int eliminarDirectorio(const char *path){
 }
 
 // READDIR (LS)
-int myReaddir( const char *path, void *buffer ){
+int myReaddir( char *path, void *buffer ){
 	GFile *directorio;
 	ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL, directorio);
 	t_list *listaDeArchivos;
 	int archivosEnDirectorio;
 
 	char* nombre(GDirEntry *entrada){
-		return entrada->fname;
+		return &entrada->fname;
 	}
 
 
@@ -125,15 +149,14 @@ int myReaddir( const char *path, void *buffer ){
 
 		listaDeArchivos = listarDirectorio(directorio);
 
-		t_list *listaDeNombres = list_map(listaDeArchivos, nombre);
+		t_list *listaDeNombres = list_map(listaDeArchivos, (void*)nombre);
 
 		archivosEnDirectorio = list_size(listaDeNombres);
 
 		buffer = malloc( MAX_FILENAME_LENGTH * archivosEnDirectorio + archivosEnDirectorio); // ESTE TAMANIO ES POR LOS NOMBRES Y LOS ";" QUE LOS SEPARAN
 
 		for(int i=0; i<archivosEnDirectorio; i++){
-			GDirEntry* unaEntrada = list_get(archivosEnDirectorio, i);
-			memcpy(buffer + posicion, unaEntrada->fname , MAX_FILENAME_LENGTH);
+			memcpy(buffer + posicion, list_get(listaDeNombres, i) , MAX_FILENAME_LENGTH);
 			memcpy(buffer + posicion + 1, ";", 1);
 			posicion += MAX_FILENAME_LENGTH + 1;
 		}
@@ -147,19 +170,22 @@ int myReaddir( const char *path, void *buffer ){
 
 // FUNCIONES ARCHIVOS
 // MKNOD
-int crearArchivo(const char *path ){ // no usamos ni mode ni dev
+int crearArchivo( char *path ){ // no usamos ni mode ni dev
 	GFile *directorioPadre;
 	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
-	char** pathDividida = string_split(path, '/');
+	char** pathDividida = string_split(path, "/");
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
 	ptrGBloque numeroInodo = reservarInodo(ARCHIVO);
 	GFile *inodo;
 	struct timeval tiempo;
 	int hayEntradaLibre;
 
-	gettimeofday(tiempo, NULL);
+	gettimeofday(&tiempo, NULL);
 
 	if(directorioPadre == NULL){
+		return -1;
+	}
+	if(strlen(pathDividida[longitudDePath - 1 ]) > 71){
 		return -1;
 	}
 
@@ -190,17 +216,17 @@ int crearArchivo(const char *path ){ // no usamos ni mode ni dev
 }
 
 // OPEN
-uint8_t abrirArchivo(const char *path, int socketProceso){ // debemos ver si hay que crear el archivo si no existe
+uint8_t abrirArchivo( char *path, int socketProceso){ // debemos ver si hay que crear el archivo si no existe
 	GlobalFdNode *fdNode;
-	char** direccion = string_split(path, '/');
+	char** direccion = string_split(path, "/");
 	int longitudDireccion = cantidadElementosCharAsteriscoAsterisco(direccion);
 	// REVISAR LA TABLA DE ARCHIVOS ABIERTOS A VER SI EL ARCHIVO YA LO ESTA
 	bool buscador(GlobalFdNode* nodo){ // TODO PROBAR, SI GENERA ALGUN PROBLEMA PORQUE HAY OTRO ARCHIVO CON EL MISMO NOMBRE, BUSCAR EL INODO DEL ARCHIVO Y COMPARAR POR EL PUNTERO DEL INODO
-		return !strcmp(direccion[longitudDireccion - 1 ], nodo->fname);
+		return !strcmp(direccion[longitudDireccion - 1 ], &nodo->fname);
 	}
 
 	// SI NO LO ESTA, SE CARGA EN LA LISTA, Y RECIEN AHI SE PASA LA POSICION
-	if(!list_any_satisfy(tablaProcesosAbiertosGlobal, buscador)){
+	if(!list_any_satisfy(tablaProcesosAbiertosGlobal, (void*)buscador)){
 		pthread_mutex_lock(&mx_tablaGlobal);
 		GFile *inodoArchivo;
 		ptrGBloque punteroArchivo;
@@ -221,7 +247,7 @@ uint8_t abrirArchivo(const char *path, int socketProceso){ // debemos ver si hay
 	}
 	else{
 		// SI LO ESTA, DIRECTAMENTE SE PASA LA POSICION DE SU FD DENTRO DE LA LISTA
-		fdNode = list_find(tablaProcesosAbiertosGlobal, buscador);
+		fdNode = list_find(tablaProcesosAbiertosGlobal, (void*)buscador);
 	}
 
 	uint8_t fileDescriptor = agregarAListaDeArchivosDelProceso(fdNode, socketProceso);
@@ -235,12 +261,36 @@ uint8_t abrirArchivo(const char *path, int socketProceso){ // debemos ver si hay
 
 }
 
-int escribirArchivo(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
+int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
+	GFile *inodoArchivo;
+	uint32_t hastaDondeEscribo;
+	FileOffset *offsetInicial;
+	FileOffset *offsetFinal;
 
+	// BUSCAR EL INODO DEL ARCHIVO
+	buscarInodoArchivo(path, NORMAL, inodoArchivo);
+	// VERIFICAR QUE EL OFFSET SEA MENOR AL TAMANIO MAXIMO DE UN ARCHIVO
+	if(MAX_FILE_SIZE >= offset){
+		offsetInicial = malloc(sizeof(FileOffset));
+		offsetFinal = malloc(sizeof(FileOffset));
+
+		hastaDondeEscribo = minimo(size + offset, MAX_FILE_SIZE); // USAR EL MENOR VALOR ENTRE EL (SIZE + OFFSET) Y EL TAMANIO MAXIMO DE UN ARCHIVO
+
+		posicionEnArchivo( offset, offsetInicial); // USO EL BALOR OBTENIDO Y EL OFFSET PARA DETERMINAR EL PUNTERO INICIAL
+		posicionEnArchivo( hastaDondeEscribo, offsetFinal); //Y EL FINAL RESPECTIVAMENTE
+
+		escribirBloques( inodoArchivo, buffer, offsetInicial, offsetFinal );
+
+		free( offsetFinal );
+		free( offsetInicial );
+
+		return hastaDondeEscribo;
+	}
+
+	return -1;
 }
 
-int leerArchivo( const char *path, char *buffer, size_t size, off_t offset ){
-	int retorno = 0;
+int leerArchivo( char *path, char *buffer, size_t size, off_t offset ){
 	GFile *inodoArchivo;
 	uint32_t loQueEsLeido;
 	FileOffset *offsetInicial;
@@ -254,15 +304,15 @@ int leerArchivo( const char *path, char *buffer, size_t size, off_t offset ){
 		offsetFinal = malloc(sizeof(FileOffset));
 
 		loQueEsLeido = minimo(size + offset, inodoArchivo->file_size); // USAR EL MENOR VALOR ENTRE EL (SIZE + OFFSET) Y EL TAMANIO DEL ARCHIVO
-		buffer = malloc(loQueEsLeido); // MALLOQUEO EL BUFFER CON EL TAMANIO OBTENIDO
+		buffer = malloc( loQueEsLeido ); // MALLOQUEO EL BUFFER CON EL TAMANIO OBTENIDO
 
-		posicionEnArchivo(offset, offsetInicial);// USO EL BALOR OBTENIDO Y EL OFFSET PARA DETERMINAR EL PUNTERO INICIAL
-		posicionEnArchivo(loQueEsLeido, offsetFinal); //Y EL FINAL RESPECTIVAMENTE
+		posicionEnArchivo( offset, offsetInicial );// USO EL BALOR OBTENIDO Y EL OFFSET PARA DETERMINAR EL PUNTERO INICIAL
+		posicionEnArchivo( loQueEsLeido, offsetFinal ); //Y EL FINAL RESPECTIVAMENTE
 
-		leerBloques(inodoArchivo, buffer, offsetInicial, offsetFinal);
+		leerBloques( inodoArchivo, buffer, offsetInicial, offsetFinal );
 
-		free(offsetFinal);
-		free(offsetInicial);
+		free( offsetFinal );
+		free( offsetInicial );
 
 		return loQueEsLeido;
 	}
@@ -271,20 +321,20 @@ int leerArchivo( const char *path, char *buffer, size_t size, off_t offset ){
 }
 
 // CLOSE
-int cerrarArchivo(const char *path, int socketProceso){ // TODAVIA NO SE QUE PARAMETROS LLEVA
+int cerrarArchivo( char *path, int socketProceso){ // TODAVIA NO SE QUE PARAMETROS LLEVA
 
 	GlobalFdNode *fdNode;
-	char** direccion = string_split(path, '/');
+	char** direccion = string_split(path, "/");
 	int longitudDireccion = cantidadElementosCharAsteriscoAsterisco(direccion);
 	// VERIFICO SI EL ARCHIVO ESTA EN LA TABLA GLOBAL
 	bool buscador(GlobalFdNode* nodo){ // TODO PROBAR, SI GENERA ALGUN PROBLEMA PORQUE HAY OTRO ARCHIVO CON EL MISMO NOMBRE, BUSCAR EL INODO DEL ARCHIVO Y COMPARAR POR EL PUNTERO DEL INODO
-		return !strcmp(direccion[longitudDireccion - 1 ], nodo->fname);
+		return !strcmp(direccion[longitudDireccion - 1 ], &nodo->fname);
 	}
 
 
 	// SI NO LO ESTA, SE CARGA EN LA LISTA, Y RECIEN AHI SE PASA LA POSICION
-	if(list_any_satisfy(tablaProcesosAbiertosGlobal, buscador)){
-		fdNode = list_find(tablaProcesosAbiertosGlobal, buscador);
+	if(list_any_satisfy(tablaProcesosAbiertosGlobal, (void*)buscador)){
+		fdNode = list_find(tablaProcesosAbiertosGlobal, (void*)buscador);
 
 		// VERIFICAR QUE EL ARCHIVO ESTE ABIERTO POR ESTE PROCESO ( LO HACE LA SIGUIENTE FUNCION )
 		int retorno = sacarDeLaListaDeArchivosDelProceso(fdNode, socketProceso);
@@ -296,7 +346,7 @@ int cerrarArchivo(const char *path, int socketProceso){ // TODAVIA NO SE QUE PAR
 }
 
 // UNLINK
-int eliminarArchivo(const char *path){
+int eliminarArchivo( char *path){
 
 	GFile *inodoArchivo;
 	ptrGBloque punteroAlInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
@@ -351,7 +401,7 @@ t_list* listarDirectorio(GFile *directorio){
 					}*/
 					// CREO QUE ES MEJOR ASI
 					if(!entradaVacia(bloqueDeDirectorio->entries[numeroEntrada])){
-						list_add(lista, bloqueDeDirectorio->entries[numeroEntrada]);
+						list_add(lista, &bloqueDeDirectorio->entries[numeroEntrada]); // TODO, QUE PASA ACA?
 					}
 
 					numeroEntrada ++;
@@ -407,8 +457,8 @@ t_list* listarDirectorio(GFile *directorio){
 	}
 }*/
 
-ptrGBloque buscarInodoArchivo(const char *path, int mode, GFile *inodoArchivo){
-	char** directorios = string_split(path, '/');
+ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo){
+	char** directorios = string_split(path, "/");
 	inodoArchivo = directorioRaiz();
 	ptrGBloque punteroAlInodo;
 
@@ -501,13 +551,13 @@ ptrGBloque buscarArchivoEnDirectorio(GFile *directorio, char* archivo){
 	ptrGBloque punteroAlInodo;
 
 	bool esElArchivo(GDirEntry unaEntrada){
-		return !strcmp(unaEntrada.fname, archivo);
+		return !strcmp(&unaEntrada.fname, archivo);
 	}
 
 	t_list* listaDeArchivos = listarDirectorio(directorio);
 
 	if(listaDeArchivos != NULL){
-		entrada = list_find(listaDeArchivos, esElArchivo);
+		entrada = list_find(listaDeArchivos, (void*)esElArchivo);
 		punteroAlInodo = entrada->inode;
 
 		directorio = (GFile*) obtenerBloque(punteroAlInodo);
@@ -561,23 +611,23 @@ bool entradaVacia(GDirEntry entrada){ // POSIBLEMENTE TENGA QUE CAMBIARLO POR UN
 
 GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){
 	GDirEntry *entrada;
-	ptrGBloque punteroAlInodo;
 	GFile *directorio = (GFile*) obtenerBloque(directorioPadre);
 
 	bool esElArchivo(GDirEntry *unaEntrada){
-		return !strcmp(unaEntrada->inode, archivo);
+		return unaEntrada->inode == archivo;
 	}
 	// TENGO QUE VER UNA FORMA DE QUE SI ESTOY BUSCANDO UNA ENTRADA VACIA, Y NECESITO UN NUEVO BLOQUE, SE LO ASIGNE
 
 	t_list* listaDeArchivos = listarDirectorio(directorio);
 
 	if(listaDeArchivos != NULL){
-		entrada = list_find(listaDeArchivos, esElArchivo);
+		entrada = list_find(listaDeArchivos, (void*)esElArchivo);
 
-		list_destroy(listaDeArchivos); // TODO CREO QUE DES ESTA MANERA ELIMINO LA LISTA, PERO ENTRADA SIGUE EXISTIENDO
+		list_destroy(listaDeArchivos); // TODO CREO QUE DE ESTA MANERA ELIMINO LA LISTA, PERO ENTRADA SIGUE EXISTIENDO
 										// PORQUE APUNTA DIRECTAMENTE A LA DIRECCION DEL MMAP
 		if(archivo == 0 && entrada == NULL){
-			asignarBloqueDePunteros(directorio);
+			GDirectoryBlock *bloqueDeDirectorioNuevo = asignarBloqueDeDirectorio(directorio);
+			entrada = &bloqueDeDirectorioNuevo->entries[0];
 		}
 	}
 	return entrada;
@@ -617,7 +667,7 @@ GBlock *obtenerBloque(ptrGBloque bloque){
 bool noTieneHijos(ptrGBloque punteroAInodo){
 	bool tieneAlMenosUnHijo = false;
 	GFile *inodo;
-	ptrGBloque punteroInodo = obtenerBloque(INODE_TABLE_START + 1); // IGNORAMOS EL DIRECTORIO RAIZ YA QUE NO TIENE PADRE :,(
+	inodo = (GFile*) obtenerBloque(INODE_TABLE_START + 1); // IGNORAMOS EL DIRECTORIO RAIZ YA QUE NO TIENE PADRE :,(
 	int contador = 0;
 
 	while( !tieneAlMenosUnHijo && contador < NODE_TABLE_SIZE){
@@ -641,7 +691,7 @@ void liberarBloquesAsignados(ptrGBloque blocks[]){
 		bloqueDePunteros = (GPointerBlock*) obtenerBloque(blocks[numeroBloqueDePunteros]);
 		do{
 			// LIBERAR BLOQUE DE DATOS
-			liberarBloque(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
+			liberarBloqueDeDatos(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
 			numeroBloqueDeDatos ++;
 		}while( numeroBloqueDeDatos < 1024 && bloqueDePunteros->blocks[numeroBloqueDeDatos]);
 		numeroBloqueDePunteros ++;
@@ -649,7 +699,7 @@ void liberarBloquesAsignados(ptrGBloque blocks[]){
 
 	// LIBERAR LOS BLOQUES DE PUNTEROS QUE TIENE ASIGNADO
 	for(int i; i < BloquesAsignados; i ++){
-		liberarBloque(blocks[i]);
+		liberarBloqueDeDatos(blocks[i]);
 	}
 }
 
@@ -657,10 +707,10 @@ bool estaAbierto(ptrGBloque punteroAlInodo){
 	bool condicion(GlobalFdNode *nodo){
 		return nodo->inodePointer == punteroAlInodo && nodo->numero_aperturas > 0;
 	}
-	return list_any_satisfy(tablaProcesosAbiertosGlobal, condicion);
+	return list_any_satisfy(tablaProcesosAbiertosGlobal, (void*)condicion);
 }
 
-uint8_t agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProceso){ // TODO
+uint8_t agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProceso){
 
 	uint8_t fileDescriptor;
 	ProcessFdNode *nuevoNodo;
@@ -673,10 +723,10 @@ uint8_t agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProces
 		return unNodo->archivo == fdNode->inodePointer;
 	}
 
-	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, buscadorDeNodo);
+	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, (void*)buscadorDeNodo);
 
 	// SI EL ARCHIVO YA ESTA ABIERTO POR ESTE PROCESO, NO SE HACE NADA, Y DEVUELVE EL FD QUE YA TENIA ASIGNADO
-	if(!list_any_satisfy(nodoProceso->archivos_abiertos, esElArchivo)){
+	if(!list_any_satisfy(nodoProceso->archivos_abiertos, (void*)esElArchivo)){
 		nuevoNodo = malloc(sizeof(ProcessFdNode));
 
 		fileDescriptor = obtenerFD(nodoProceso->archivos_abiertos);
@@ -686,7 +736,7 @@ uint8_t agregarAListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProces
 
 		list_add(nodoProceso->archivos_abiertos, nuevoNodo);
 	}else{
-		nuevoNodo = list_find(nodoProceso->archivos_abiertos, esElArchivo);
+		nuevoNodo = list_find(nodoProceso->archivos_abiertos, (void*)esElArchivo);
 	}
 
 	return fileDescriptor;
@@ -702,12 +752,12 @@ int sacarDeLaListaDeArchivosDelProceso(GlobalFdNode* fdNode, int socketProceso){
 		return unNodo->archivo == fdNode->inodePointer;
 	}
 
-	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, buscadorDeNodo);
+	ProcessTableNode *nodoProceso = list_find(listaDeTablasDeArchivosPorProceso, (void*)buscadorDeNodo);
 	// VERIFICAR SI EL ARCHIVO ESTA ABIERTO POR EL PORCESO
-	if( list_any_satisfy(nodoProceso->archivos_abiertos, esElArchivo) ){
+	if( list_any_satisfy(nodoProceso->archivos_abiertos, (void*)esElArchivo) ){
 		// SI LO ESTA, SE DISMINUYE EL VALOR DE aperturas DE LA TABLA GLOBAL, Y SE ELIMINA EL ELEMENTO DE LA LISTA DEL PROCESO.
 		fdNode->numero_aperturas --;
-		list_remove_and_destroy_by_condition(nodoProceso->archivos_abiertos, esElArchivo, free);
+		list_remove_and_destroy_by_condition(nodoProceso->archivos_abiertos, (void*)esElArchivo, free);
 
 		pthread_mutex_lock(&mx_tablaGlobal);
 		if(!fdNode->numero_aperturas){ 	// SI aperturas ES IGUAL A 0, SE SACA DE LA LISTA GLOBAL DICHO FD
@@ -732,7 +782,7 @@ void sacarArchivoDeTablaGlobal(GlobalFdNode* fdNode){
 		free(unNodo);
 	}
 
-	list_remove_and_destroy_by_condition(tablaProcesosAbiertosGlobal, esElNodo, sacarArchivo);
+	list_remove_and_destroy_by_condition(tablaProcesosAbiertosGlobal, (void*)esElNodo, (void*)sacarArchivo);
 }
 
 
@@ -744,7 +794,7 @@ uint8_t obtenerFD(t_list* listaDeArchivosAbiertos){
 	}
 
 	if(  list_size(listaDeArchivosAbiertos) ){ // SI LA LISTA ESTA VACIA, DEVUELVE EL 0
-		while( list_any_satisfy(listaDeArchivosAbiertos, tieneAlFD)){
+		while( list_any_satisfy(listaDeArchivosAbiertos, (void*)tieneAlFD)){
 			fileDescriptor ++;
 		}
 	}
@@ -822,6 +872,58 @@ void posicionEnArchivo(uint32_t offset, FileOffset* offsetDelArchivo){
 	offsetDelArchivo->posicionEnBloqueDeDatos = restoAnterior;
 }
 
+void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal){
+	GPointerBlock* bloqueDePunteros;
+	GBlock* bloqueDeDatos;
+	int contadorBloquePunteros = offsetInicial->bloqueDePunteros;
+	int contadorBloqueDatos = offsetInicial->bloqueDeDatos;
+	int punteroBuffer = 0;
+
+	// ESCRIBO EN EL PRIMER BLOQUE DE DATOS
+	bloqueDePunteros = (GPointerBlock*) obtenerBloque(inodoArchivo->blocks[contadorBloquePunteros]);
+	bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
+
+	// SI LO QUE QUIERO ESCRIBIR ESTA DENTRO DE UN UNICO BLOQUE. Perdon por el if horrible :(
+	if(offsetInicial->bloqueDePunteros == offsetFinal->bloqueDePunteros && offsetInicial->bloqueDeDatos == offsetFinal->bloqueDeDatos){
+		memcpy(&bloqueDeDatos->bytes[offsetInicial->posicionEnBloqueDeDatos], buffer, offsetFinal->posicionEnBloqueDeDatos - offsetInicial->posicionEnBloqueDeDatos);
+		return;
+	}
+
+	memcpy(&bloqueDeDatos->bytes[offsetInicial->posicionEnBloqueDeDatos], buffer, BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos);
+	punteroBuffer += BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos; // TODO, VER QUE PASA SI EL BUFFER ES MAS CHICO QUE ESTO. LO MISMO PARA LEER
+
+	contadorBloqueDatos ++;
+	// ESCRIBO EN LOS BLOQUES INTERMEDIOS
+	while( contadorBloquePunteros < offsetFinal->bloqueDePunteros ){
+		while( contadorBloqueDatos < 1024 ){
+			bloqueDeDatos = obtenerBloque( bloqueDePunteros->blocks[contadorBloqueDatos] );
+			memcpy(&bloqueDeDatos->bytes, buffer + punteroBuffer, BLOCK_SIZE );
+			punteroBuffer += BLOCK_SIZE;
+			contadorBloqueDatos ++;
+		}
+		contadorBloqueDatos = 0;
+		contadorBloquePunteros ++;
+		bloqueDePunteros = (GPointerBlock*) obtenerBloque(inodoArchivo->blocks[contadorBloquePunteros]);
+	}
+
+	// ESCRIBO EN LOS BLOQUES DEL ULTIMO BLOQUE DE PUNTEROS
+	while( contadorBloqueDatos < offsetFinal->bloqueDeDatos ){
+		bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
+		memcpy(&bloqueDeDatos->bytes, buffer + punteroBuffer, BLOCK_SIZE);
+		punteroBuffer += BLOCK_SIZE;
+		contadorBloqueDatos ++;
+	}
+
+	// ESCRIBO EN EL ULTIMO BLOQUE DE DATOS
+	bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
+	memcpy(&bloqueDeDatos->bytes, buffer + punteroBuffer, offsetFinal->posicionEnBloqueDeDatos);
+
+	return;
+}
+
+
+
+
 void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal){
 	GPointerBlock* bloqueDePunteros;
 	GBlock* bloqueDeDatos;
@@ -833,7 +935,13 @@ void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, F
 	bloqueDePunteros = (GPointerBlock*) obtenerBloque(inodoArchivo->blocks[contadorBloquePunteros]);
 	bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
 
-	memcpy(buffer, bloqueDeDatos->bytes[offsetInicial->posicionEnBloqueDeDatos], BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos);
+	// SI LO QUE QUIERO LEER ESTA DENTRO DE UN UNICO BLOQUE. Perdon por el if horrible :(
+	if(offsetInicial->bloqueDePunteros == offsetFinal->bloqueDePunteros && offsetInicial->bloqueDeDatos == offsetFinal->bloqueDeDatos){
+		memcpy(buffer, &bloqueDeDatos->bytes[offsetInicial->posicionEnBloqueDeDatos],  offsetFinal->posicionEnBloqueDeDatos - offsetInicial->posicionEnBloqueDeDatos);
+		return;
+	}
+
+	memcpy(buffer, &bloqueDeDatos->bytes[offsetInicial->posicionEnBloqueDeDatos], BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos);
 	punteroBuffer += BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos;
 
 	contadorBloqueDatos ++;
@@ -841,7 +949,7 @@ void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, F
 	while(contadorBloquePunteros < offsetFinal->bloqueDePunteros){
 		while(contadorBloqueDatos < 1024){
 			bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
-			memcpy(buffer + punteroBuffer, bloqueDeDatos->bytes, BLOCK_SIZE);
+			memcpy(buffer + punteroBuffer, &bloqueDeDatos->bytes, BLOCK_SIZE);
 			punteroBuffer += BLOCK_SIZE;
 			contadorBloqueDatos ++;
 		}
@@ -852,7 +960,7 @@ void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, F
 	// LEO LOS BLOQUES DE DATOS QUE CONTIENE EL BLOQUE DE PUNTEROS FINAL
 	while(contadorBloqueDatos < offsetFinal->bloqueDeDatos){
 		bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
-		memcpy(buffer + punteroBuffer, bloqueDeDatos->bytes, BLOCK_SIZE);
+		memcpy(buffer + punteroBuffer, &bloqueDeDatos->bytes, BLOCK_SIZE);
 		punteroBuffer += BLOCK_SIZE;
 		contadorBloqueDatos ++;
 	}
@@ -862,6 +970,7 @@ void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, F
 
 	memcpy(buffer + punteroBuffer, bloqueDeDatos->bytes, offsetFinal->posicionEnBloqueDeDatos);
 
+	return;
 }
 
 
@@ -874,7 +983,7 @@ uint8_t cantidadElementosCharAsteriscoAsterisco(char** array){
 }
 
 void liberarCharAsteriscoAsterisco(char** array){
-	string_iterate_lines(array, free);
+	string_iterate_lines(array, (void*)free);
 	free(array);
 	return;
 }

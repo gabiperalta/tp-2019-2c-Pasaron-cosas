@@ -1,4 +1,3 @@
-
 #include "servidor.h"
 
 
@@ -16,7 +15,7 @@ void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(PUERTO);
 
-	while((conectado=aceptarConexion(puerto_escucha))!= 1){
+	while((conectado = aceptarConexion(puerto_escucha)) != 1 ){
 
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
@@ -66,7 +65,7 @@ void procesar_solicitud(void *socket_cliente){
 			break;
 		}
 
-		funcion_muse(paquete, socket_cliente);
+		funcion_fuse(paquete, socket_cliente);
 
 		paquete = recibir_paquete(socket_cliente);
 	}
@@ -76,7 +75,7 @@ void procesar_solicitud(void *socket_cliente){
 	return;
 }
 
-funcion_init(t_paquete paquete,int socket_fuse){
+void funcion_init(t_paquete paquete,int socket_fuse){
 
 	ProcessTableNode* nodoListaProcesosAbiertos = malloc(sizeof(ProcessTableNode));
 	nodoListaProcesosAbiertos->socket = socket_fuse;
@@ -95,13 +94,14 @@ funcion_init(t_paquete paquete,int socket_fuse){
 	///////////////////////////////////////////////////////
 
 }
-funcion_getattr(t_paquete paquete,int socket_fuse){
+
+void funcion_getattr(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
-	struct stat *statRetorno = malloc(sizeof(struct stat));
+	struct stat statRetorno;
 
-	int retorno = myGetattr(path, statRetorno);
+	int retorno = myGetattr(path, &statRetorno);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_GETATTR,
@@ -110,20 +110,19 @@ funcion_getattr(t_paquete paquete,int socket_fuse){
 
 	///////////////// Parametros a enviar /////////////////
 	agregar_valor(paquete_respuesta.parametros, retorno);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_ino);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_mode);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_size);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_blksize);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_blocks);
-	agregar_valor(paquete_respuesta.parametros, statRetorno->st_mtim.tv_nsec);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_ino);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_blksize);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_blocks);
+	agregar_valor(paquete_respuesta.parametros, statRetorno.st_mtim.tv_nsec);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
-	free(statRetorno);
 
 }
 
-funcion_readdir(t_paquete paquete,int socket_fuse){
+void funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	char* buffer = obtener_string(paquete.parametros);
@@ -144,7 +143,8 @@ funcion_readdir(t_paquete paquete,int socket_fuse){
 
 
 }
-funcion_mknod(t_paquete paquete,int socket_fuse){
+
+void funcion_mknod(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
@@ -162,7 +162,7 @@ funcion_mknod(t_paquete paquete,int socket_fuse){
 }
 
 
-funcion_open(t_paquete paquete,int socket_fuse){
+void funcion_open(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
@@ -181,12 +181,27 @@ funcion_open(t_paquete paquete,int socket_fuse){
 }
 
 
-funcion_write(t_paquete paquete,int socket_fuse){
+void funcion_write(t_paquete paquete,int socket_fuse){
+	char* path = obtener_string(paquete.parametros);
+	char* buffer = obtener_string(paquete.parametros);
+	size_t size = obtener_valor(paquete.parametros);
+	off_t offset = obtener_valor(paquete.parametros);
 
+	int retorno = escribirArchivo(path, buffer, size, offset);
+
+	t_paquete paquete_respuesta = {
+			.header = FUSE_OPEN,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno);
+	enviar_paquete(paquete_respuesta, socket_fuse);
+	///////////////////////////////////////////////////////
 }
 
 
-funcion_read(t_paquete paquete,int socket_fuse){
+void funcion_read(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 	char* buffer = obtener_string(paquete.parametros);
@@ -204,14 +219,14 @@ funcion_read(t_paquete paquete,int socket_fuse){
 
 	///////////////// Parametros a enviar /////////////////
 	agregar_valor(paquete_respuesta.parametros, retorno);
-	agregar_string(paquete_respuesta, buffer);
+	agregar_string(paquete_respuesta.parametros, buffer);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
 }
 
 
-funcion_unlink(t_paquete paquete,int socket_fuse){
+void funcion_unlink(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
@@ -230,7 +245,7 @@ funcion_unlink(t_paquete paquete,int socket_fuse){
 }
 
 
-funcion_mkdir(t_paquete paquete,int socket_fuse){
+void funcion_mkdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
@@ -249,7 +264,7 @@ funcion_mkdir(t_paquete paquete,int socket_fuse){
 }
 
 
-funcion_rmdir(t_paquete paquete,int socket_fuse){
+void funcion_rmdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_valor(paquete.parametros);
 

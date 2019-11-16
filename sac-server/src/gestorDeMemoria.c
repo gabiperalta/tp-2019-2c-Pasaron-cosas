@@ -22,7 +22,6 @@ ptrGBloque bloqueLibre(){
 
 ptrGBloque inodoLibre(){
 	int nInodo = 0;
-	bool encontrado = false;
 	GFile *nodeTable = obtenerBloque(INODE_TABLE_START);
 
 	while((nodeTable+nInodo)->state == BORRADO && nInodo < NODE_TABLE_SIZE){
@@ -43,7 +42,7 @@ ptrGBloque reservarInodo(int tipoDeArchivo){
 	ptrGBloque inode;
 	GFile *nuevoInodo;
 
-	pthread_mutex_lock(mutexEscrituraInodeTable);
+	pthread_mutex_lock(&mutexEscrituraInodeTable);
 
 	inode = inodoLibre();
 
@@ -54,7 +53,7 @@ ptrGBloque reservarInodo(int tipoDeArchivo){
 		nuevoInodo->state = tipoDeArchivo;
 	}
 
-	pthread_mutex_unlock(mutexEscrituraInodeTable);
+	pthread_mutex_unlock(&mutexEscrituraInodeTable);
 
 	return inode;
 }
