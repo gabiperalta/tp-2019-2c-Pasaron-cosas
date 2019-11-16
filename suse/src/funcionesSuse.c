@@ -8,7 +8,7 @@
 #include <funcionesSuse.h>
 
 
-
+//aca no tendria que venir por parametro el tid que le mandaria suse create?
 void iniciarPlanificacion(){
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificar, NULL);
