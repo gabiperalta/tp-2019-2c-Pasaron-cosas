@@ -30,6 +30,8 @@ void agregar_bloque_datos(t_list* lista_parametros,void* bloque_datos, uint32_t 
 	parametro->valor = tam_bloque_datos;
 	parametro->bloque_datos = malloc(tam_bloque_datos);
 
+	memcpy(parametro->bloque_datos,bloque_datos,tam_bloque_datos);
+
 	list_add(lista_parametros,parametro);
 }
 
@@ -58,6 +60,9 @@ void* obtener_bloque_datos(t_list* lista_parametros){
 	void* bloque_datos_obtenido = malloc(parametro->valor);
 
 	memcpy(bloque_datos_obtenido,parametro->bloque_datos,parametro->valor);
+
+	printf("parametro->valor %d\n",parametro->valor);
+	printf("bloque_datos_obtenido biblioteca: %s\n",bloque_datos_obtenido);
 
 	list_remove_and_destroy_element(lista_parametros,0,(void*) destruir_parametro);
 

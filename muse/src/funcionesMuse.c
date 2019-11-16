@@ -523,15 +523,15 @@ void funcion_free(t_paquete paquete,int socket_muse){
 
 void funcion_get(t_paquete paquete,int socket_muse){
 
-}
-
-void funcion_cpy(t_paquete paquete,int socket_muse){
-
-	// AGREGAR EL CONTROL ANTE UN INGRESO INVALIDO (SIGSEGV)
+	printf("\nInicio muse_get\n");
 
 	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
-	uint32_t tam_bloque_datos_recibido = obtener_valor(paquete.parametros);
-	void* bloque_datos_recibido = obtener_bloque_datos(paquete.parametros);
+	printf("direccion_recibida %d\n",direccion_recibida);
+	uint32_t tam_bloque_datos_a_enviar = obtener_valor(paquete.parametros);
+	printf("tam_bloque_datos_a_enviar %d\n",tam_bloque_datos_a_enviar);
+	void* bloque_datos_a_enviar = malloc(tam_bloque_datos_a_enviar);
+
+	pthread_mutex_lock(&mutex_acceso_upcm);
 
 	t_proceso* proceso_obtenido = buscar_proceso(lista_procesos,socket_muse);
 	t_segmento* segmento_obtenido = buscar_segmento(proceso_obtenido->tabla_segmentos,direccion_recibida);
@@ -541,7 +541,82 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	}
 
 	int nro_pagina_obtenida = (direccion_recibida - segmento_obtenido->base) / TAM_PAGINA;
+	printf("nro_pagina_obtenida %d\n",nro_pagina_obtenida);
 	int desplazamiento_obtenido = (direccion_recibida - segmento_obtenido->base) - (nro_pagina_obtenida * TAM_PAGINA);
+	printf("desplazamiento_obtenido %d\n",desplazamiento_obtenido);
+
+	// creo que no es necesario este list_get
+	t_pagina* pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
+
+	void* direccion_datos = obtener_datos_frame(pagina_obtenida);
+	t_heap_metadata heap_metadata;
+	int posicion_recorrida = desplazamiento_obtenido;
+	void* buffer;
+
+	// calculo para las paginas necesarias
+	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_a_enviar)/TAM_PAGINA);
+	//int cantidad_paginas_necesarias;
+
+	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
+
+	//pthread_mutex_lock(&mutex_acceso_upcm);
+
+	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
+	for(int i=0; i<cantidad_paginas_necesarias;i++){
+		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
+		direccion_datos = obtener_datos_frame(pagina_obtenida);
+		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
+	}
+
+	// obtengo los datos solicitados
+	memcpy(bloque_datos_a_enviar,&buffer[desplazamiento_obtenido],tam_bloque_datos_a_enviar);
+
+	printf("bloque_datos antes de ser enviado: %s\n",bloque_datos_a_enviar);
+
+	free(buffer);
+	pthread_mutex_unlock(&mutex_acceso_upcm);
+
+	t_paquete paquete_respuesta = {
+			.header = MUSE_GET,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1);
+	agregar_bloque_datos(paquete_respuesta.parametros,bloque_datos_a_enviar,tam_bloque_datos_a_enviar);
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
+
+	printf("Fin muse_get\n");
+}
+
+void funcion_cpy(t_paquete paquete,int socket_muse){
+
+	// AGREGAR EL CONTROL ANTE UN INGRESO INVALIDO (SIGSEGV)
+
+	printf("\nInicio muse_cpy\n");
+
+	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
+	printf("direccion_recibida %d\n",direccion_recibida);
+	uint32_t tam_bloque_datos_recibido = obtener_valor(paquete.parametros);
+	printf("tam_bloque_datos_recibido %d\n",tam_bloque_datos_recibido);
+	void* bloque_datos_recibido = obtener_bloque_datos(paquete.parametros);
+
+	printf("bloque_datos_recibido %s\n",bloque_datos_recibido);
+
+	pthread_mutex_lock(&mutex_acceso_upcm);
+
+	t_proceso* proceso_obtenido = buscar_proceso(lista_procesos,socket_muse);
+	t_segmento* segmento_obtenido = buscar_segmento(proceso_obtenido->tabla_segmentos,direccion_recibida);
+
+	if(segmento_obtenido == NULL){
+		// no se encontro segmento
+	}
+
+	int nro_pagina_obtenida = (direccion_recibida - segmento_obtenido->base) / TAM_PAGINA;
+	printf("nro_pagina_obtenida %d\n",nro_pagina_obtenida);
+	int desplazamiento_obtenido = (direccion_recibida - segmento_obtenido->base) - (nro_pagina_obtenida * TAM_PAGINA);
+	printf("desplazamiento_obtenido %d\n",desplazamiento_obtenido);
 	t_pagina* pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
 
 	void* direccion_datos = obtener_datos_frame(pagina_obtenida);
@@ -553,13 +628,18 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_recibido)/TAM_PAGINA);
 	//int cantidad_paginas_necesarias;
 
-	if((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) >= 0){
+	if((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) < 0){
 		// tengo que obtener la pagina anterior para poder manejar la metadata
 		cantidad_paginas_necesarias++;
 		nro_pagina_obtenida--;
 		posicion_recorrida = TAM_PAGINA + desplazamiento_obtenido - SIZE_HEAP_METADATA;
 	}
 
+	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
+
+	//pthread_mutex_lock(&mutex_acceso_upcm);
+
+	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
 	for(int i=0; i<cantidad_paginas_necesarias;i++){
 		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
 		direccion_datos = obtener_datos_frame(pagina_obtenida);
@@ -570,7 +650,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
 	posicion_recorrida += sizeof(heap_metadata.isFree);
 	memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
-	posicion_recorrida += sizeof(heap_metadata.isFree);
+	posicion_recorrida += sizeof(heap_metadata.size);
 
 	if(!heap_metadata.isFree && (heap_metadata.size >= tam_bloque_datos_recibido)){
 		memcpy(&buffer[posicion_recorrida],bloque_datos_recibido,tam_bloque_datos_recibido);
@@ -586,7 +666,20 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 		// no puedo almacenar los datos pq ingreso a una posicion invalida
 	}
 
+	free(buffer);
+	pthread_mutex_unlock(&mutex_acceso_upcm);
 
+	t_paquete paquete_respuesta = {
+			.header = MUSE_CPY,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1);
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
+
+	printf("Fin muse_cpy\n");
 }
 
 void funcion_map(t_paquete paquete,int socket_muse){

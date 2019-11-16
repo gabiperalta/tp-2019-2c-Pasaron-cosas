@@ -181,6 +181,9 @@ t_paquete recibir_paquete(int socket_cliente){
 			recv(socket_cliente,buffer, parametro->valor, 0);
 			parametro->bloque_datos = malloc(parametro->valor);
 			memcpy(parametro->bloque_datos,buffer,parametro->valor);
+
+			printf("parametro->bloque_datos biblioteca: %s\n",parametro->bloque_datos);
+
 		}
 
 		list_add(paquete.parametros,parametro);
