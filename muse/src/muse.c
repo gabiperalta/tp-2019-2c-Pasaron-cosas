@@ -6,30 +6,10 @@ int main(void) {
 	leer_config();
 	lista_procesos = list_create();
 	lista_clock = list_create();
+	lista_archivos_mmap = list_create();
 
 	init_memoria();
 	init_threads();
-
-
-	/*
-	int cliente;
-	int puerto_escucha;
-	t_paquete paquete_recibido;
-
-	puerto_escucha = escuchar(PUERTO);
-	cliente = aceptarConexion(puerto_escucha);
-
-	paquete_recibido = recibir_paquete(cliente);
-
-	printf("string recibido: %s\n",obtener_string(paquete_recibido.parametros));
-
-	close(cliente);
-	*/
-
-	//printf("%d\n",PUERTO);
-	//printf("%d\n",TAM_MEMORIA);
-	//printf("%d\n",TAM_PAGINA);
-	//printf("%d\n",TAM_SWAP);
 
 	system("clear");
 	printf("---------------- MUSE ----------------\n");

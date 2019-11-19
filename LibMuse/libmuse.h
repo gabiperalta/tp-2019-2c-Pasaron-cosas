@@ -89,7 +89,6 @@ int muse_get(void* dst, uint32_t src, size_t n);
  */
 int muse_cpy(uint32_t dst, void* src, int n);
 
-
 /**
  * Devuelve un puntero a una posición mappeada de páginas por una cantidad `length` de
  * bytes el archivo del `path` dado.
@@ -119,7 +118,6 @@ int muse_sync(uint32_t addr, size_t len);
 /**
  * Borra el mappeo a un archivo hecho por muse_map.
  * @param dir Dirección a memoria mappeada.
- * @param
  * @note Esto implicará que todas las futuras utilizaciones de direcciones basadas
  * en `dir` serán accesos inválidos.
  * @note Solo se deberá cerrar el archivo mappeado una vez que todos los hilos hayan

@@ -12,12 +12,17 @@
 
 #define SEGMENTO_HEAP 0
 #define SEGMENTO_MMAP 1
+#define SEGMENTO_MMAP_EXISTENTE 2
 
 #define CARGAR_DATOS 0
 #define GUARDAR_DATOS 1
 #define CREAR_DATOS 2
 
-//#define SIZE_HEAP_METADATA sizeof(((t_heap_metadata*)0)->size) + sizeof(((t_heap_metadata*)0)->isFree)
+// usar estos dos si no esta agregada mman.h
+#define MAP_PRIVATE 0
+#define MAP_SHARED 1
+
+//#define SIZE_HEAP_METADATA_v2 sizeof((t_heap_metadata*)->size) + sizeof((t_heap_metadata*)->isFree)
 
 typedef struct{
 	char* id_programa;
@@ -30,7 +35,8 @@ typedef struct{
 	uint32_t limite;
 	t_list* tabla_paginas;
 	uint8_t tipo_segmento;
-	//int socket_proceso;
+	FILE* archivo_mmap;
+	//size_t tam_archivo_mmap;
 }t_segmento;
 
 typedef struct{
@@ -45,6 +51,12 @@ typedef struct{
 }t_pagina;
 
 typedef struct{
+	FILE* archivo;
+	t_list* tabla_paginas;
+	t_list* sockets_procesos;
+}t_archivo_mmap;
+
+typedef struct{
 	uint32_t size;
 	bool isFree;
 }t_heap_metadata;
@@ -57,7 +69,7 @@ t_pagina* crear_pagina(uint8_t bit_presencia);
 t_proceso* buscar_proceso(t_list* lista,int socket_proceso);
 t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion);
 t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
-uint32_t obtener_base(t_list* tabla_segmentos);
+uint32_t obtener_base(t_list* tabla_segmentos,uint8_t tipo_segmento,uint32_t tam_solicitado);
 void* obtener_datos_frame(t_pagina* pagina);
 int obtener_frame_libre();
 int obtener_frame_swap_libre();

@@ -126,7 +126,6 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 		}
 	}
-	//printf("tamano buffer: %d\n",tam_buffer);
 	list_destroy_and_destroy_elements(paquete.parametros,(void*) destruir_parametro);
 
 	send(socket_servidor,buffer,tam_buffer,0);
@@ -140,10 +139,8 @@ t_paquete recibir_paquete(int socket_cliente){
 	int tam_buffer;
 	void* buffer;
 	uint8_t cantidad_parametros = 0;
-	//t_parametro* parametro;
 
 	bytesRecibidos = recv(socket_cliente,&tam_buffer, sizeof(tam_buffer), 0);
-	//bytesRecibidos = recv(socket_cliente,&paquete.header, sizeof(paquete.header), 0);
 	paquete.error = 0;
 
 	if(bytesRecibidos <= 0) {
@@ -181,9 +178,6 @@ t_paquete recibir_paquete(int socket_cliente){
 			recv(socket_cliente,buffer, parametro->valor, 0);
 			parametro->bloque_datos = malloc(parametro->valor);
 			memcpy(parametro->bloque_datos,buffer,parametro->valor);
-
-			printf("parametro->bloque_datos biblioteca: %s\n",parametro->bloque_datos);
-
 		}
 
 		list_add(paquete.parametros,parametro);

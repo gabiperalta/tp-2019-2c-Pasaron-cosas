@@ -29,66 +29,93 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	int posicion = 0;
 	void* buffer;
 	bool agregar_metadata_free = false;
+	uint32_t direccion_retornada;
 
 	t_segmento* nuevo = malloc(sizeof(t_segmento));
 	nuevo->tipo_segmento = tipo;
-	nuevo->tabla_paginas = list_create();
-	nuevo->base = obtener_base(tabla_segmentos);
+	nuevo->base = obtener_base(tabla_segmentos,tipo,tam_solicitado);
 
-	printf("Se crea un nuevo segmento\n");
+	switch (tipo) {
+		case SEGMENTO_HEAP:
+			printf("Se crea un nuevo segmento heap\n");
 
-	if(tipo == SEGMENTO_HEAP)
-		bit_presencia = 1;
+			bit_presencia = 1;
 
-	if((tam_solicitado_real%TAM_PAGINA) != 0){  // si da 0, no necesito agregar la metadata para indicar FREE
-		tam_solicitado_real += sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size); //agrego la metadata para indicar FREE
-		agregar_metadata_free = true;
+			if((tam_solicitado_real%TAM_PAGINA) != 0){  // si da 0, no necesito agregar la metadata para indicar FREE
+				tam_solicitado_real += sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size); //agrego la metadata para indicar FREE
+				agregar_metadata_free = true;
+			}
+
+			cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado_real/TAM_PAGINA);
+
+			printf("cantidad paginas solicitadas %d\n",cantidad_paginas_solicitadas);
+
+			nuevo->limite = cantidad_paginas_solicitadas * TAM_PAGINA;
+
+			// comienzo a crear el buffer para luego dividirlo en paginas
+			buffer = malloc(nuevo->limite);
+
+			heap_metadata.isFree = false;
+			heap_metadata.size = tam_solicitado;
+
+			memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+			posicion += sizeof(heap_metadata.isFree);
+
+			memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
+			posicion += sizeof(heap_metadata.size) + heap_metadata.size;
+
+			if(agregar_metadata_free){
+				heap_metadata.isFree = true;
+				heap_metadata.size = nuevo->limite - posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size); // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
+
+				memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
+				posicion += sizeof(heap_metadata.isFree);
+
+				memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
+			}
+
+			list_add(tabla_segmentos,nuevo);
+
+			nuevo->tabla_paginas = list_create();
+			cargar_datos(buffer,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
+			//cargar_datos(buffer,nuevo->tabla_paginas,CREAR_DATOS,cantidad_paginas_solicitadas);
+
+			free(buffer);
+
+			direccion_retornada = nuevo->base + sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
+			break;
+		case SEGMENTO_MMAP:
+		case SEGMENTO_MMAP_EXISTENTE:
+			printf("Se crea un nuevo segmento mmap\n");
+
+			bit_presencia = 0;
+
+			cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado/TAM_PAGINA);
+			printf("cantidad paginas solicitadas %d\n",cantidad_paginas_solicitadas);
+
+			nuevo->limite = cantidad_paginas_solicitadas * TAM_PAGINA;
+			nuevo->tipo_segmento = SEGMENTO_MMAP;
+
+			list_add(tabla_segmentos,nuevo);
+
+			direccion_retornada = nuevo->base;
+
+			if(tipo == SEGMENTO_MMAP_EXISTENTE)
+				break;
+
+			nuevo->tabla_paginas = list_create();
+			cargar_datos(NULL,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
+
+			break;
 	}
 
-	cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado_real/TAM_PAGINA);
-
-	printf("cantidad paginas solicitadas %d\n",cantidad_paginas_solicitadas);
-	//pthread_mutex_lock(&mutex_acceso_upcm); // SOLO PARA PRUEBA, SACAR CUANDO TERMINE
-
-	nuevo->limite = cantidad_paginas_solicitadas * TAM_PAGINA;
-
-	// comienzo a crear el buffer para luego dividirlo en paginas
-	buffer = malloc(nuevo->limite);
-
-	heap_metadata.isFree = false;
-	heap_metadata.size = tam_solicitado;
-
-	memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
-	posicion += sizeof(heap_metadata.isFree);
-
-	memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
-	posicion += sizeof(heap_metadata.size) + heap_metadata.size;
-
-	if(agregar_metadata_free){
-		heap_metadata.isFree = true;
-		heap_metadata.size = nuevo->limite - posicion - sizeof(heap_metadata.isFree) - sizeof(heap_metadata.size); // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
-
-		memcpy(&buffer[posicion],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
-		posicion += sizeof(heap_metadata.isFree);
-
-		memcpy(&buffer[posicion],&heap_metadata.size,sizeof(heap_metadata.size));
-	}
-
-	list_add(tabla_segmentos,nuevo);
-
-	cargar_datos(buffer,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
-	//cargar_datos(buffer,nuevo->tabla_paginas,CREAR_DATOS,cantidad_paginas_solicitadas);
-
-	free(buffer);
-
-	return nuevo->base + sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
+	return direccion_retornada;
 }
 
 t_pagina* crear_pagina(uint8_t bit_presencia) {
 	int frame_obtenido;
 
 	t_pagina* new = malloc(sizeof(t_pagina));
-
     new->bit_usado = 0;
     new->bit_modificado = 0;
     new->bit_presencia = bit_presencia;
@@ -144,21 +171,50 @@ t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 	return NULL;
 }
 
+// retorno la tabla de paginas
+t_archivo_mmap* buscar_archivo_mmap(int fd_archivo){
+	//FILE* archivo = fopen(path,"r+");
+	//int fd_archivo = fileno(archivo);
+
+	int igualArchivo(t_archivo_mmap* archivo_mmap) {
+	    struct stat stat1, stat2;
+	    if((fstat(fd_archivo, &stat1) < 0) || (fstat(fileno(archivo_mmap->archivo), &stat2) < 0)) return -1;
+	    return (stat1.st_dev == stat2.st_dev) && (stat1.st_ino == stat2.st_ino);
+	}
+
+	return list_find(lista_archivos_mmap,(void*) igualArchivo);
+}
+
+void agregar_archivo_mmap(FILE* archivo,int socket_proceso,t_list* tabla_paginas){
+	t_archivo_mmap* archivo_mmap_nuevo = malloc(sizeof(t_archivo_mmap));
+	archivo_mmap_nuevo->archivo = archivo;
+	archivo_mmap_nuevo->sockets_procesos = list_create();
+	list_add(archivo_mmap_nuevo->sockets_procesos,socket_proceso);
+	archivo_mmap_nuevo->tabla_paginas = tabla_paginas;
+
+	list_add(lista_archivos_mmap,archivo_mmap_nuevo);
+}
+
 void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
 //void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
 	t_pagina* pagina;
 	void* direccion_frame;
 	int paginas_a_recorrer = cantidad_paginas_solicitadas;
+	uint8_t bit_presencia = 1;
+
+	if(segmento->tipo_segmento == SEGMENTO_MMAP)
+		bit_presencia = 0;
 
 	if(paginas_a_recorrer == NULL)
 		paginas_a_recorrer = list_size(segmento->tabla_paginas);
 
 	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){
 		if(flag_operacion == CREAR_DATOS){
-			pagina = crear_pagina(1);
+			pagina = crear_pagina(bit_presencia);
 			list_add(segmento->tabla_paginas,pagina);
 			printf("Se actualizo la tabla de paginas\n");
-
+			if(!bit_presencia)
+				continue;
 		}
 		else{
 			pagina = list_get(segmento->tabla_paginas,numero_pagina);
@@ -253,13 +309,33 @@ int obtener_frame_swap_libre(){
 	return -1; // no hay frames libres
 }
 
-uint32_t obtener_base(t_list* tabla_segmentos){
+uint32_t obtener_base(t_list* tabla_segmentos,uint8_t tipo_segmento,uint32_t tam_solicitado){
+	t_segmento* segmento_obtenido;
+
+	// si es MMAP, reviso si hay espacio entre los segmentos ya creados para meter el map nuevo
+	if(tipo_segmento == SEGMENTO_MMAP){
+		uint32_t direccion_obtenida = 0;
+		for(int nro_segmento=0;nro_segmento<list_size(tabla_segmentos);nro_segmento++){
+			segmento_obtenido = list_get(tabla_segmentos,nro_segmento);
+			if(!direccion_obtenida && ((direccion_obtenida + tam_solicitado) < segmento_obtenido->base))
+				return direccion_obtenida;
+			direccion_obtenida = segmento_obtenido->base + segmento_obtenido->limite;
+		}
+	}
+
 	// obtengo el ultimo segmento
 	if(list_size(tabla_segmentos)){
-		t_segmento* segmento_obtenido = list_get(tabla_segmentos,list_size(tabla_segmentos) - 1);
+		segmento_obtenido = list_get(tabla_segmentos,list_size(tabla_segmentos) - 1);
 		return segmento_obtenido->base + segmento_obtenido->limite;
 	}
+
 	return 0;
+}
+
+int obtener_tam_archivo(int fd_archivo){
+	struct stat st;
+	fstat(fd_archivo,&st);
+	return st.st_size;
 }
 
 bool espacio_en_upcm(){

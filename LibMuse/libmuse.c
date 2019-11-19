@@ -104,18 +104,21 @@ int muse_get(void* dst, uint32_t src, size_t n){
 	///////////////// Parametros a enviar /////////////////
 	agregar_valor(paquete.parametros,src);
 	agregar_valor(paquete.parametros,n);
-	//agregar_bloque_datos(paquete.parametros,dst,n);
 	enviar_paquete(paquete,socket_muse);
 	///////////////////////////////////////////////////////
 
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	void* bloque_datos_recibido = obtener_bloque_datos(paquete_recibido.parametros);
-	printf("Get exitoso?: %d\n",valor_recibido);
-	//printf("bloque_datos_recibido %s\n",bloque_datos_recibido);
 	///////////////////////////////////////////////////////
 
+	if(valor_recibido == 2){
+		raise(SIGSEGV);
+		return -1;
+	}
+
+	void* bloque_datos_recibido = obtener_bloque_datos(paquete_recibido.parametros);
+	printf("Get exitoso\n");
 	memcpy(dst,bloque_datos_recibido,n);
 
 	return 0;
@@ -138,13 +141,38 @@ int muse_cpy(uint32_t dst, void* src, int n){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	printf("Cpy exitoso?: %d\n",valor_recibido);
 	///////////////////////////////////////////////////////
+
+	if(valor_recibido == 2){
+		raise(SIGSEGV);
+		return -1;
+	}
+
+	printf("Cpy exitoso\n");
 
 	return 0;
 }
 
 uint32_t muse_map(char *path, size_t length, int flags){
+
+	t_paquete paquete = {
+			.header = MUSE_MAP,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_string(paquete.parametros,path);
+	agregar_valor(paquete.parametros,length);
+	agregar_valor(paquete.parametros,flags);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	printf("Map exitoso?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
+
 	return 0;
 }
 

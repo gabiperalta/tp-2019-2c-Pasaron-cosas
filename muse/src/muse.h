@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <pthread.h>
+//#include <sys/mman.h>
 #include "biblioteca_sockets.h"
 #include "commons/collections/list.h"
 #include "commons/bitarray.h"
@@ -39,6 +40,7 @@ uint32_t SIZE_HEAP_METADATA;
 
 t_list* lista_procesos;
 t_list* lista_clock;
+t_list* lista_archivos_mmap;
 
 pthread_mutex_t mutex_acceso_upcm;
 pthread_mutex_t mutex_lista_procesos;
