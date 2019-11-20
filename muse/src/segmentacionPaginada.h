@@ -9,6 +9,7 @@
 #define SEGMENTACIONPAGINADA_H_
 
 #include "muse.h"
+//#include <stdio.h>
 
 #define SEGMENTO_HEAP 0
 #define SEGMENTO_MMAP 1
@@ -73,6 +74,7 @@ uint32_t obtener_base(t_list* tabla_segmentos,uint8_t tipo_segmento,uint32_t tam
 void* obtener_datos_frame(t_pagina* pagina);
 int obtener_frame_libre();
 int obtener_frame_swap_libre();
+int obtener_tam_archivo(int fd_archivo);
 int filtrarHeap(t_segmento* p);
 void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
 bool espacio_en_upcm();

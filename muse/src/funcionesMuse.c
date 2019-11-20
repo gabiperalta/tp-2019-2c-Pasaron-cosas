@@ -724,19 +724,8 @@ void funcion_map(t_paquete paquete,int socket_muse){
 
 	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
 
-	t_segmento* segmento_encontrado;
 	t_segmento* segmento_nuevo;
 	uint32_t direccion_retornada = NULL;
-	//int posicion_recorrida = 0;
-	//t_heap_metadata heap_metadata;
-	//void* buffer;
-	//uint32_t tam_real = tam + SIZE_HEAP_METADATA;
-	//uint32_t size_original;
-	//bool analizar_extension = true;
-
-	//bool agregar_metadata_free = true;
-	//int cantidad_paginas_solicitadas;
-	//uint32_t segmento_limite_anterior;
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
@@ -774,7 +763,9 @@ void funcion_map(t_paquete paquete,int socket_muse){
 			}
 			break;
 		case MAP_PRIVATE:
+			printf("Map private\n");
 			direccion_retornada = crear_segmento(SEGMENTO_MMAP,proceso_encontrado->tabla_segmentos,length_recibido);
+			printf("direccion_retornada %d\n",direccion_retornada);
 			segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
 			if(archivo_mmap_encontrado == NULL){
 				// aun no se mapeo el archivo

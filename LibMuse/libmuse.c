@@ -169,11 +169,12 @@ uint32_t muse_map(char *path, size_t length, int flags){
 
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
-	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	printf("Map exitoso?: %d\n",valor_recibido);
+	uint32_t direccion_recibida = obtener_valor(paquete_recibido.parametros);
+	printf("Direccion recibida: %d\n",direccion_recibida);
 	///////////////////////////////////////////////////////
 
-	return 0;
+	//printf("Fin muse_map\n");
+	return direccion_recibida;
 }
 
 int muse_sync(uint32_t addr, size_t len){
