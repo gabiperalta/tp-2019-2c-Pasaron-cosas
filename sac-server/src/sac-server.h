@@ -23,7 +23,7 @@ t_list* listaDeTablasDeArchivosPorProceso;
 pthread_mutex_t mx_tablaGlobal;
 int PUERTO;
 
-#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/Config"
+#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/src/Config"
 
 ////////////////////////////////////
 

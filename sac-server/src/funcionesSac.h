@@ -96,6 +96,8 @@ void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicia
 
 void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
+GBlock *asignarBloqueDeDatos(GFile* directorio);
+
 //////////////// MANEJO char** ///////////////////
 uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
 

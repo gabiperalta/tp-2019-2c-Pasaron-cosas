@@ -7,7 +7,10 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include "biblioteca_sockets.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stddef.h>
 
 
 /* 	La utilidad del sac server es la de servir como comunicacion entre el proceso que quiere hacer operaciones
@@ -25,10 +28,10 @@ static int sac_cli_getattr( const char *path, struct stat *st );
 static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi );
 
 // ARCHIVOS
-static int sac_cli_mknod(const char *, mode_t, dev_t);
-static int sac_cli_open(const char *, struct fuse_file_info *);
-static int sac_cli_write(const char *, const char *, size_t, off_t, struct fuse_file_info *);
-static int sac_cli_read( const char *, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ); // aqui no tendria que tener como parametro un FD?
+static int sac_cli_mknod( const char *path, mode_t mode, dev_t dev );
+static int sac_cli_open( const char *path, struct fuse_file_info *fi );
+static int sac_cli_write( const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi );
+static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ); // aqui no tendria que tener como parametro un FD?
 static int sac_cli_unlink(const char *path);
 
 // DIRECTORIOS

@@ -279,6 +279,15 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 		posicionEnArchivo( offset, offsetInicial); // USO EL BALOR OBTENIDO Y EL OFFSET PARA DETERMINAR EL PUNTERO INICIAL
 		posicionEnArchivo( hastaDondeEscribo, offsetFinal); //Y EL FINAL RESPECTIVAMENTE
 
+		// ASIGNAR TODOS LOS BLOQUES DE DATOS QUE SEAN NECESARIOS PARA REALIZAR LA ESCRITURA
+		if(offset+size > inodoArchivo->file_size){
+			int bloquesQueNecesita = (offset + size - inodoArchivo->file_size) / BLOCK_SIZE;
+			for(int i = 0; i < bloquesQueNecesita; i++){ // TODO, NO SE SI NECESITA SER < O <=
+
+			}
+
+		}
+
 		escribirBloques( inodoArchivo, buffer, offsetInicial, offsetFinal );
 
 		free( offsetFinal );
@@ -807,9 +816,14 @@ GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio){
 	GPointerBlock *bloqueDePunteros;
 	GDirectoryBlock *bloqueDeDirectorio;
 	int numeroBloqueDeDatos = 0;
-	int ultimoBloqueDePunteros = cantidadBloquesAsignados(directorio->blocks) - 1;
+	int ultimoBloqueDePunteros = minimo(cantidadBloquesAsignados(directorio->blocks) - 1, 0);
+
 
 	if(directorio->file_size <= MAX_FILE_SIZE){
+
+		if(!directorio->blocks[ultimoBloqueDePunteros]){
+			directorio->blocks[ultimoBloqueDePunteros] = bloqueLibre();
+		}
 		// OBTENER ULTIMO BLOQUE DE PUNTEROS
 		bloqueDePunteros = (GPointerBlock*) obtenerBloque(directorio->blocks[ultimoBloqueDePunteros]);
 
@@ -841,6 +855,7 @@ GDirectoryBlock *asignarBloqueDeDirectorio(GFile* directorio){
 			bloqueDeDirectorio->entries[i].inode = 0;
 		}
 
+		directorio->file_size += BLOCK_SIZE;
 
 		return bloqueDeDirectorio;
 	}
@@ -971,6 +986,53 @@ void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, F
 	memcpy(buffer + punteroBuffer, bloqueDeDatos->bytes, offsetFinal->posicionEnBloqueDeDatos);
 
 	return;
+}
+
+GBlock *asignarBloqueDeDatos(GFile* archivo){
+	GPointerBlock *bloqueDePunteros;
+	GBlock *bloqueDeDatos;
+	int numeroBloqueDeDatos = 0;
+	int ultimoBloqueDePunteros = minimo(cantidadBloquesAsignados(archivo->blocks) - 1, 0);
+
+	printf("ultimoBloqueDePunteros: %i\n", ultimoBloqueDePunteros);
+
+	if(archivo->file_size <= MAX_FILE_SIZE){
+
+		if(!archivo->blocks[ultimoBloqueDePunteros]){
+			archivo->blocks[ultimoBloqueDePunteros] = bloqueLibre();
+		}
+		// OBTENER ULTIMO BLOQUE DE PUNTEROS
+		bloqueDePunteros = (GPointerBlock*) obtenerBloque(archivo->blocks[ultimoBloqueDePunteros]);
+
+		// BUSCAR SI TIENE ALGUNA ENTRADA VACIA (CERO)
+		while(bloqueDePunteros->blocks[numeroBloqueDeDatos] != 0 && numeroBloqueDeDatos < 1024){
+			numeroBloqueDeDatos ++;
+		}
+
+		// SI LA TIENE, A ESA ENTRADA SE LE ASIGNA EL NUEVO BLOQUE DE archivo
+		if(bloqueDePunteros->blocks[numeroBloqueDeDatos] == 0){
+			bloqueDePunteros->blocks[numeroBloqueDeDatos] = bloqueLibre();
+
+			bloqueDeDatos = (GBlock*) obtenerBloque(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
+
+		}else{ 	// SI NO LA TIENE, DEBO ASIGNARLE UN NUEVO BLOQUE DE PUNTEROS
+			ultimoBloqueDePunteros ++;
+			archivo->blocks[ultimoBloqueDePunteros] = bloqueLibre();
+
+			bloqueDePunteros = (GPointerBlock*) obtenerBloque(archivo->blocks[ultimoBloqueDePunteros]);
+
+			// Y EN LA PRIMER ENTRADA DE DICHO BLOQUE ASIGNALE UN NUEVO BLOQUE DE archivo
+			bloqueDePunteros->blocks[0] = bloqueLibre();
+
+			bloqueDeDatos = (GBlock*) obtenerBloque(bloqueDePunteros->blocks[0]);
+
+		}
+
+		archivo->file_size += BLOCK_SIZE;
+
+		return bloqueDeDatos;
+	}
+	return NULL;
 }
 
 

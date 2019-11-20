@@ -1,18 +1,21 @@
 #include "gestorDeMemoria.h"
 
 ptrGBloque bloqueLibre(){
-	ptrGBloque bloque = 0;
+	ptrGBloque bloque = DATA_BLOCKS_START;
 	bool ocupado;
 	int tamanioBitarray;
+
 
 	pthread_mutex_lock(&mutexBitmap);
 
 	ocupado = bitarray_test_bit(bitmap, bloque);
 	tamanioBitarray = bitarray_get_max_bit(bitmap);
+
 	while((bloque < tamanioBitarray) && ocupado ){
 		bloque++;
 		ocupado = bitarray_test_bit(bitmap, bloque);
 	}
+
 	bitarray_set_bit(bitmap, bloque);
 
 	pthread_mutex_unlock(&mutexBitmap);
