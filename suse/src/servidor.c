@@ -47,6 +47,11 @@ void procesar_solicitud(void* socket_cliente){
 	close(socket_cliente);
 }
 
+void funcion_wait(t_paquete paquete,int socket_suse){
+
+
+}
+
 void funcion_create(t_paquete paquete,int socket_suse){
 
 	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint

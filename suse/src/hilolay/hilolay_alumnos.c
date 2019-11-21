@@ -6,6 +6,14 @@
  */
 
 
+
+
+
+// en hilolay_init abro la conexión del socket y quedaria algo asi:
+
+//socket_suse = conectarseA(ip,puerto);
+//	if(socket_suse == 0){ return -1;}
+
 	typedef struct hilolay_operations {
 		.suse_create= me_create,
 		.suse_schedule_next = me_schedule_next,
@@ -15,6 +23,19 @@
 		.suse_close = me_close,
 	} hilolay_operations;
 
+
+
+	int me_wait(int , char *){
+
+	}
+
+	int me_signal(int, char *){
+
+	}
+
+	int me_join(int){
+
+	}
 
 	int me_create(int tid){
 

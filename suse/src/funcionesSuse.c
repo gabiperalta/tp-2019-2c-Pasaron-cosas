@@ -9,11 +9,15 @@
 
 
 //aca no tendria que venir por parametro el tid que le mandaria suse create?
+//tendria que retornar un 0 o -1 dependiendo si pudo recibir bien el hilo o algo asi que sirva para el retorno de la conexión
 void iniciarPlanificacion(){
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificar, NULL);
 	pthread_detach(hilo);
 }
+
+
+//necesito poder tener el proximo hilo a ejecutar
 
 void planificar(){
 	while(1){
