@@ -16,6 +16,49 @@ void iniciarPlanificacion(){
 	pthread_detach(hilo);
 }
 
+//tid y id del semaforo
+void wait(int tid, char * semaforo){
+
+	if(semaforo>0){
+		semaforo-=1;
+	}
+	else{
+		//paso el thread a la cola de bloqueado
+	}
+
+}
+
+void signal(int tid, char * semaforo){
+
+
+}
+
+void close(int tid){
+
+	//eliminar tid
+	//si no hay hilo se liberan las conexiones
+
+}
+
+void crear(int tid){
+
+	//crea el hilo y lo mete en el programa que le corresponda
+	//el id del programa lo tomo por el socket, quizas deberia venir por parametro algun dato de eso
+}
+
+void join(int tid){
+
+	//hay que bloquear el thread que se esta ejecutando
+	//esperar a que termine el tid que envio por paramtro
+
+}
+
+//TODO: wait y signal, claro miras el numero si esta >0 le restas uno y si esta <=0 lo bloqueasl, lo pasas a esa cola
+//signal tenes que desbloquear el hilo, dentro de cada semafoto ver que hilos bloqueo y liberas fifo. te pasa el tid del actual y tenes que desb loquear el de otro, entonces agarras el algoritmo que quieras
+
+//close lo borra y crear hilo de usuario mete un hilo del programa
+
+//join, bloquea el thread actual en le que esta (mirar el que esta ejecutando) y espera a que termine el thread que le pasas por parametro. El tid que te pasa el join es el que vas a esperar.
 
 //necesito poder tener el proximo hilo a ejecutar
 

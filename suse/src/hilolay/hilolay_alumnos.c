@@ -9,10 +9,17 @@
 
 
 
-// en hilolay_init abro la conexión del socket y quedaria algo asi:
+// en hilolay_init abro la conexión del socket
 
-//socket_suse = conectarseA(ip,puerto);
-//	if(socket_suse == 0){ return -1;}
+ 	 void hilolay_init(){
+ 		 socket_suse = conectarseA(ip,puerto);
+ 		 	 if(socket_suse == 0){
+ 		 		 return -1;
+ 		 	 }
+ 		 init_internal(hilolay_operations);
+
+	}
+
 
 	typedef struct hilolay_operations {
 		.suse_create= me_create,
@@ -24,7 +31,7 @@
 	} hilolay_operations;
 
 
-
+// le paso el tid y el id del semaforo a suse
 	int me_wait(int , char *){
 
 	}
