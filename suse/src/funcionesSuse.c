@@ -10,6 +10,8 @@
 
 //aca no tendria que venir por parametro el tid que le mandaria suse create?
 //tendria que retornar un 0 o -1 dependiendo si pudo recibir bien el hilo o algo asi que sirva para el retorno de la conexión
+
+
 void iniciarPlanificacion(){
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificar, NULL);
@@ -29,6 +31,13 @@ void wait(thread* hilo, semaforos_suse* semaforo){
 
 }
 
+//aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
+int next_tid(){
+
+
+
+}
+
 void signal(int tid, char * semaforo){
 
 
@@ -41,6 +50,7 @@ void close(int tid){
 
 }
 
+//cuando no es hilo principal
 void crear(int tid){
 
 	//crea el hilo y lo mete en el programa que le corresponda

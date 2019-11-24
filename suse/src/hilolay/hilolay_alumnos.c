@@ -10,7 +10,9 @@
 
 int socket_suse;
 
-
+t_config* archivo_config = config_create(PATH_CONFIG);
+char* ip = config_get_string_value(archivo_config, "IP");
+int puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
 
 
 typedef struct hilolay_operations {
@@ -38,7 +40,7 @@ void hilolay_init(){
 
 
 // le paso el tid y el id del semaforo a suse
-int me_wait(int tid , char *){
+int me_wait(int tid , char * semaforo){
 
 
 	t_paquete paquete_solicitud = {
@@ -48,7 +50,7 @@ int me_wait(int tid , char *){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	agregar_valor(paquete_solicitud.parametros,//agregar el semaforo);
+	agregar_valor(paquete_solicitud.parametros, semaforo);
 
 	enviar_paquete(paquete_solicitud,socket_suse);
 
@@ -59,7 +61,7 @@ int me_wait(int tid , char *){
 	return retorno;
 }
 
-int me_signal(int tid, char *){
+int me_signal(int tid, char * semaforo){
 
 
 	t_paquete paquete_solicitud = {
