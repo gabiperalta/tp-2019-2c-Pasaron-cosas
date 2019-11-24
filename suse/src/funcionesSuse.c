@@ -17,13 +17,14 @@ void iniciarPlanificacion(){
 }
 
 //tid y id del semaforo
-void wait(int tid, char * semaforo){
-
+void wait(thread* hilo, semaforos_suse* semaforo){
+	uint8_t tid = hilo->tid;
+	char* inicializacion
 	if(semaforo>0){
 		semaforo-=1;
 	}
 	else{
-		//paso el thread a la cola de bloqueado
+		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
 	}
 
 }
@@ -46,9 +47,9 @@ void crear(int tid){
 	//el id del programa lo tomo por el socket, quizas deberia venir por parametro algun dato de eso
 }
 
-void join(int tid){
-
-	//hay que bloquear el thread que se esta ejecutando
+void join(thread* hilo){
+	uint8_t tid = hilo->tid;
+	list_add(hilos_blocked, tid);//hay que bloquear el thread que se esta ejecutando
 	//esperar a que termine el tid que envio por paramtro
 
 }
@@ -125,6 +126,9 @@ void leer_config(){
 	grado_multiprogramacion= config_get_int_value(archivo_config,"MAX_MULTIPROG");
 	tiempo_metricas = config_get_int_value(archivo_config,"METRICS_TIMER");
 	alpha_planificacion = config_get_int_value(archivo_config,"ALPHA_SJF");
+	ids_sem = config_get_array_value(archivo_config,"SEM_IDS");
+	inicio_sem = config_get_array_value(archivo_config, "SEM_INIT");
+	max_sem = config_get_array_value(archivo_config, "SEM_MAX");
 	config_destroy(archivo_config);
 }
 

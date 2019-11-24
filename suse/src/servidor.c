@@ -36,7 +36,7 @@ void procesar_solicitud(void* socket_cliente){
 				break;
 			case SUSE_CLOSE:
 				funcion_suse = funcion_close;
-				break
+				break;
 		}
 
 		funcion_suse(paquete,socket_cliente);

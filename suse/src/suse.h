@@ -23,6 +23,7 @@
 #include <semaphore.h>
 #include <time.h>
 #include <signal.h>
+#include <readline/readline.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 
@@ -32,6 +33,9 @@ int PUERTO;
 int grado_multiprogramacion;
 int tiempo_metricas;
 int alpha_planificacion;
+t_list* ids_sem;
+t_list* inicio_sem;
+t_list* max_sem;
 int estimacion_inicial = 0;
 
 
@@ -45,7 +49,7 @@ t_list* hilos_exit;
 
 typedef struct{
 	uint8_t pid; //id del proceso
-	t_list* hilos_ready = list_create();
+	t_list* hilos_ready;
 	thread* hilo_exec;
 }process;
 
@@ -58,6 +62,7 @@ typedef struct{
 }thread;
 
 typedef struct{
+	char* id;
 	int cant_instancias_disponibles;
 	t_list * hilos_bloqueados;
 }semaforos_suse;
