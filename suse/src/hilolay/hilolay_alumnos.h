@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include "biblioteca_sockets.h"
 
 #ifndef hilolay_alumnos_h__
 	#define hilolay_alumnos_h__

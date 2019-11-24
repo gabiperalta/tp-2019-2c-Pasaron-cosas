@@ -6,7 +6,7 @@
  */
 
 #include "hilolay_alumnos.h"
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
+#include "biblioteca_sockets.h"
 
 int socket_suse;
 
@@ -40,13 +40,64 @@ void hilolay_init(){
 // le paso el tid y el id del semaforo a suse
 int me_wait(int tid , char *){
 
+
+	t_paquete paquete_solicitud = {
+				.header = SUSE_WAIT,
+				.parametros = list_create()
+	};
+
+	agregar_valor(paquete_solicitud.parametros,tid);
+
+	agregar_valor(paquete_solicitud.parametros,//agregar el semaforo);
+
+	enviar_paquete(paquete_solicitud,socket_suse);
+
+	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
+
+	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+
+	return retorno;
 }
 
-int me_signal(int, char *){
+int me_signal(int tid, char *){
+
+
+	t_paquete paquete_solicitud = {
+				.header = SUSE_SIGNAL,
+				.parametros = list_create()
+	};
+
+	agregar_valor(paquete_solicitud.parametros,tid);
+
+	agregar_valor(paquete_solicitud.parametros,//agregar el semaforo);
+
+	enviar_paquete(paquete_solicitud,socket_suse);
+
+	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
+
+	int retorno = obtener_valor(paquete_respuesta.parametros);
+
+	return retorno;
+
 
 }
 
 int me_join(int tid){
+
+	t_paquete paquete_solicitud = {
+				.header = SUSE_JOIN,
+				.parametros = list_create()
+	};
+
+	agregar_valor(paquete_solicitud.parametros,tid);
+
+	enviar_paquete(paquete_solicitud,socket_suse);
+
+	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
+
+	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+
+	return retorno;
 
 }
 
