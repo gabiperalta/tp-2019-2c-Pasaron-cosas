@@ -748,6 +748,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				direccion_retornada = crear_segmento(SEGMENTO_MMAP,proceso_encontrado->tabla_segmentos,length_recibido);
 				segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
 				segmento_nuevo->archivo_mmap = archivo_solicitado;
+				segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
 				agregar_archivo_mmap(archivo_solicitado,socket_muse,segmento_nuevo->tabla_paginas);
 
 				// AGREGAR MEMSET DE \0 AL FINAL DEL ARCHIVO SI ES NECESARIO EXTENDER
@@ -758,6 +759,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
 				segmento_nuevo->tabla_paginas = archivo_mmap_encontrado->tabla_paginas;
 				segmento_nuevo->archivo_mmap = archivo_mmap_encontrado->archivo;
+				segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
 				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
 				fclose(archivo_solicitado);
 			}
@@ -767,6 +769,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 			direccion_retornada = crear_segmento(SEGMENTO_MMAP,proceso_encontrado->tabla_segmentos,length_recibido);
 			printf("direccion_retornada %d\n",direccion_retornada);
 			segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+			segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
 			if(archivo_mmap_encontrado == NULL){
 				// aun no se mapeo el archivo
 				segmento_nuevo->archivo_mmap = archivo_solicitado;
@@ -790,6 +793,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
 		printf("segmento nro %d\t",s);
 		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("tam archivo: %d\t",segmento_mostrado->tam_archivo_mmap);
 		printf("base: %d\t",segmento_mostrado->base);
 		printf("limite: %d\t\n",segmento_mostrado->limite);
 

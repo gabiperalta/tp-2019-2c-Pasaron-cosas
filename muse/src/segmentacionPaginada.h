@@ -37,7 +37,7 @@ typedef struct{
 	t_list* tabla_paginas;
 	uint8_t tipo_segmento;
 	FILE* archivo_mmap;
-	//size_t tam_archivo_mmap;
+	int tam_archivo_mmap;
 }t_segmento;
 
 typedef struct{

@@ -13,6 +13,7 @@
 #include <readline/readline.h>
 #include <pthread.h>
 //#include <sys/mman.h>
+#include <sys/stat.h>
 #include "biblioteca_sockets.h"
 #include "commons/collections/list.h"
 #include "commons/bitarray.h"
