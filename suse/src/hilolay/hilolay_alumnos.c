@@ -69,7 +69,7 @@ int me_signal(int tid, char *){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	agregar_valor(paquete_solicitud.parametros,//agregar el semaforo);
+	agregar_valor(paquete_solicitud.parametros,semaforo); //agregar el semaforo al paramtro
 
 	enviar_paquete(paquete_solicitud,socket_suse);
 
