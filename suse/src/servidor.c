@@ -11,6 +11,18 @@ void inicializarServidor(){
 	pthread_detach(hiloServidor);
 }
 
+void servidor(){
+	void * conectado;
+	int puerto_escucha = escuchar(PUERTO);
+
+	while((conectado=aceptarConexion(puerto_escucha))!= 1){
+		// agrega procesos
+		//printf("Se acepto conexion\n");
+		pthread_t thread_solicitud;
+		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
+		pthread_detach(thread_solicitud);
+	}
+}
 void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_suse)(t_paquete,int);
@@ -258,15 +270,3 @@ char* obtener_ip_socket(int s){
 
 
 
-void servidor(){
-	void * conectado;
-	int puerto_escucha = escuchar(PUERTO);
-
-	while((conectado=aceptarConexion(puerto_escucha))!= 1){
-		// agrega procesos
-		//printf("Se acepto conexion\n");
-		pthread_t thread_solicitud;
-		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
-		pthread_detach(thread_solicitud);
-	}
-}

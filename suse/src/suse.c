@@ -8,6 +8,7 @@ int main(){
 	hilos_blocked = list_create();
 	hilos_exit = list_create();
 	semaforos = list_create();
+	sem_init(sem_planificacion,0, grado_multiprogramacion);
 	iniciarPlanificacion();
 	system("clear");
 	printf("---------------- SUSE ----------------\n");

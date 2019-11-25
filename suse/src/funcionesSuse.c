@@ -14,45 +14,49 @@
 
 void iniciarPlanificacion(){
 	pthread_t hilo;
-	pthread_create(&hilo, NULL, (void *) planificar, NULL);
+	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
+	pthread_create(&hilo,NULL, (void*) planificarCortoPlazo, NULL);
 	pthread_detach(hilo);
 }
 
 //tid y id del semaforo
-void wait(thread* hilo, semaforos_suse* semaforo){ // cambiar por char* id y hacer list_find
+void wait(thread* hilo, char* id_sem){
 	uint8_t tid = hilo->tid;
+	bool buscador(semaforos_suse* semaforo){
+		return !strcmp(semaforo->id, id_sem);
+	}
+	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
+
 	if(semaforo->cant_instancias_disponibles >0){
 		semaforo->cant_instancias_disponibles -=1;
 	}
 	else{
+		list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
 		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
 	}
 
 }
 
-<<<<<<< HEAD
-void signal(thread* hilo, semaforos_suse * semaforo){
+void signal(thread* hilo, char* id_sem){
 	uint8_t tid = hilo->tid;
+	bool buscador(semaforos_suse* semaforo){
+			return !strcmp(semaforo->id, id_sem);
+	}
+	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 	if(semaforo->cant_instancias_disponibles >= 0){
-		thread* hilo_desbloqueado = list_get(hilos_blocked,tid);
+		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
+		list_remove(hilos_blocked, tid);
 	}
 	else{
 		semaforo->cant_instancias_disponibles +=1;
 	}
-=======
+
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
 int next_tid(){
 
 
-
-}
-
-void signal(int tid, char * semaforo){
-
-
->>>>>>> d46abb4c1253c70eb12766a14fb95db81c17f3e5
 }
 
 void close(int tid){
@@ -85,14 +89,22 @@ void join(thread* hilo){
 
 //necesito poder tener el proximo hilo a ejecutar
 
-void planificar(){ // tendria que planificar cuando llega el proximo hilo
+void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo hilo
 	while(1){
 		int i = 0;
 		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){
+			sem_wait(sem_planificacion);
 			aplicarFIFO();
 			i++;
 		}
 	}
+}
+
+void planificarCortoPlazo(){
+		thread* hilo = next_tid();
+		process* proceso = obtener_proceso_asociado(hilo);
+		aplicarSJF(proceso);
+		sem_post(sem_planificacion);
 }
 
 void aplicarFIFO(){
@@ -100,7 +112,6 @@ void aplicarFIFO(){
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
 		t_list* hilos_listos = proceso->hilos_ready;
 		list_add(hilos_listos,hilo_elegido);
-		aplicarSJF(proceso);
 	}
 
 void aplicarSJF(process* proceso){
@@ -124,6 +135,7 @@ void aplicarSJFConDesalojo(process* proceso) {
 		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready,index);
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
+		list_add(hilos_exit,hilo_a_ejecutar);
 	}
 
 }

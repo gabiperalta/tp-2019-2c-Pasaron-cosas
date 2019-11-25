@@ -47,6 +47,7 @@ t_list* hilos_new;
 t_list* hilos_blocked;
 t_list* hilos_exit;
 t_list* semaforos;
+sem_t sem_planificacion;
 
 typedef struct{
 	uint8_t pid; //id del proceso
