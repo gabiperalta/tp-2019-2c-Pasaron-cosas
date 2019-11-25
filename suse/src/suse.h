@@ -33,9 +33,9 @@ int PUERTO;
 int grado_multiprogramacion;
 int tiempo_metricas;
 int alpha_planificacion;
-t_list* ids_sem;
-t_list* inicio_sem;
-t_list* max_sem;
+char** ids_sem;
+char** inicio_sem;
+char** max_sem;
 int estimacion_inicial = 0;
 
 
@@ -46,6 +46,7 @@ t_config* archivo_config;
 t_list* hilos_new;
 t_list* hilos_blocked;
 t_list* hilos_exit;
+t_list* semaforos;
 
 typedef struct{
 	uint8_t pid; //id del proceso
@@ -64,10 +65,9 @@ typedef struct{
 typedef struct{
 	char* id;
 	int cant_instancias_disponibles;
+	int max_valor;
 	t_list * hilos_bloqueados;
 }semaforos_suse;
 
-								/*FUNCIONES*/
-void destructor_de_procesos(process* proceso);
-void destructor_de_hilos(thread* hilo);
+
 #endif /* SUSE_H_ */

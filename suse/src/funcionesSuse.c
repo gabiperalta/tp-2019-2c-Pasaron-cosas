@@ -17,11 +17,10 @@ void iniciarPlanificacion(){
 }
 
 //tid y id del semaforo
-void wait(thread* hilo, semaforos_suse* semaforo){
+void wait(thread* hilo, semaforos_suse* semaforo){ // cambiar por char* id y hacer list_find
 	uint8_t tid = hilo->tid;
-	char* inicializacion
-	if(semaforo>0){
-		semaforo-=1;
+	if(semaforo->cant_instancias_disponibles >0){
+		semaforo->cant_instancias_disponibles -=1;
 	}
 	else{
 		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
@@ -29,9 +28,16 @@ void wait(thread* hilo, semaforos_suse* semaforo){
 
 }
 
-void signal(int tid, char * semaforo){
-
-
+void signal(thread* hilo, semaforos_suse * semaforo){
+	uint8_t tid = hilo->tid;
+	if(semaforo->cant_instancias_disponibles >= 0){
+		thread* hilo_desbloqueado = list_get(hilos_blocked,tid);
+		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
+		list_add(proceso->hilos_ready,hilo_desbloqueado);
+	}
+	else{
+		semaforo->cant_instancias_disponibles +=1;
+	}
 }
 
 void close(int tid){
@@ -63,7 +69,7 @@ void join(thread* hilo){
 
 //necesito poder tener el proximo hilo a ejecutar
 
-void planificar(){
+void planificar(){ // tendria que planificar cuando llega el proximo hilo
 	while(1){
 		int i = 0;
 		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){
@@ -129,10 +135,23 @@ void leer_config(){
 	ids_sem = config_get_array_value(archivo_config,"SEM_IDS");
 	inicio_sem = config_get_array_value(archivo_config, "SEM_INIT");
 	max_sem = config_get_array_value(archivo_config, "SEM_MAX");
+	for(int i = 0; i< strlen(ids_sem); i++){
+		semaforos_suse* aux = sizeof(semaforos_suse);
+		aux->id = malloc(strlen(ids_sem[i]));
+		strcpy(aux->id, ids_sem[i]);
+		aux->cant_instancias_disponibles = atoi(inicio_sem[i]);
+		aux->max_valor = atoi(max_sem[i]);
+		list_add(semaforos,aux);
+	}
 	config_destroy(archivo_config);
 }
 
 void destructor_de_procesos(process* proceso){
 	list_destroy(proceso->hilos_ready);
 	free(proceso->hilo_exec);
+}
+
+void destructor_de_semaforos(semaforos_suse* semaforo){
+	list_destroy(semaforo->hilos_bloqueados);
+	free(semaforo->id);
 }

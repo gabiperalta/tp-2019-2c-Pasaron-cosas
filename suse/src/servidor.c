@@ -61,7 +61,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 
 	//aca le das la orden a suse
-	retorno = planificate(tid)//funcion suse)(tid); //podria tener una respuesta
+	retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
