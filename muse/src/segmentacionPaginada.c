@@ -34,6 +34,7 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	t_segmento* nuevo = malloc(sizeof(t_segmento));
 	nuevo->tipo_segmento = tipo;
 	nuevo->base = obtener_base(tabla_segmentos,tipo,tam_solicitado);
+	nuevo->archivo_mmap = NULL; //lo inicializo para los segmentos q no son mmap
 
 	switch (tipo) {
 		case SEGMENTO_HEAP:
@@ -112,38 +113,47 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 	return direccion_retornada;
 }
 
-t_pagina* crear_pagina(uint8_t bit_presencia) {
+t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento) {
 	int frame_obtenido;
 
 	t_pagina* new = malloc(sizeof(t_pagina));
     new->bit_usado = 0;
     new->bit_modificado = 0;
     new->bit_presencia = bit_presencia;
-    frame_obtenido = obtener_frame_libre();
+    new->tipo_segmento = tipo_segmento;
+    new->frame = 0;
 
+    if(!bit_presencia)
+    	return new;
+
+    frame_obtenido = obtener_frame_libre();
     if(frame_obtenido >= 0){
     	new->frame = frame_obtenido;
     }
     else{
     	// no hay espacio, por lo tanto se tiene que liberar un frame y pasarlo a swap
+    	// revisar q pasa si no hay espacio en swap, igualmente
+    	// a la hora de crear el segmento
     	t_pagina* pagina_a_reemplazar = ejecutar_algoritmo_clock_modificado();
-
-    	void* buffer = malloc(TAM_PAGINA);
-    	int frame_swap_obtenido = obtener_frame_swap_libre();
-
-    	memcpy(buffer,&upcm[pagina_a_reemplazar->frame*TAM_PAGINA],TAM_PAGINA);
-
-    	archivo_swap = fopen(PATH_SWAP,"r+");
-
-    	fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
-    	fwrite(buffer,TAM_PAGINA,1,archivo_swap);
-
     	pagina_a_reemplazar->bit_presencia = 0;
-    	pagina_a_reemplazar->frame = frame_swap_obtenido;
+		new->frame = obtener_frame_libre();
 
-    	new->frame = obtener_frame_libre();
-    	free(buffer);
-    	fclose(archivo_swap);
+    	if(pagina_a_reemplazar->tipo_segmento == SEGMENTO_HEAP){
+			void* buffer = malloc(TAM_PAGINA);
+			int frame_swap_obtenido = obtener_frame_swap_libre();
+
+			memcpy(buffer,&upcm[pagina_a_reemplazar->frame*TAM_PAGINA],TAM_PAGINA);
+
+			archivo_swap = fopen(PATH_SWAP,"r+");
+
+			fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
+			fwrite(buffer,TAM_PAGINA,1,archivo_swap);
+
+			pagina_a_reemplazar->frame = frame_swap_obtenido;
+
+			free(buffer);
+			fclose(archivo_swap);
+    	}
     }
 
     agregar_frame_clock(new);
@@ -210,7 +220,7 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 
 	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){
 		if(flag_operacion == CREAR_DATOS){
-			pagina = crear_pagina(bit_presencia);
+			pagina = crear_pagina(bit_presencia,segmento->tipo_segmento);
 			list_add(segmento->tabla_paginas,pagina);
 			printf("Se actualizo la tabla de paginas\n");
 			if(!bit_presencia)
@@ -235,7 +245,6 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 }
 
 void* obtener_datos_frame(t_pagina* pagina){
-	// Tambien deberia chequear si el frame se encuentra en memoria o no
 	if(!pagina->bit_presencia && !espacio_en_upcm()){
     	t_pagina* pagina_upcm = ejecutar_algoritmo_clock_modificado();
 
@@ -288,6 +297,73 @@ void* obtener_datos_frame(t_pagina* pagina){
 
 	return (char*) upcm + (pagina->frame * TAM_PAGINA);
 }
+
+
+void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pagina){
+	if(!pagina->bit_presencia && !espacio_en_upcm()){
+    	t_pagina* pagina_upcm = ejecutar_algoritmo_clock_modificado();
+
+    	void* buffer_pagina_upcm = malloc(TAM_PAGINA);
+    	void* buffer_pagina_mmap = malloc(TAM_PAGINA);
+    	int frame_swap_obtenido = obtener_frame_swap_libre();
+
+    	memcpy(buffer_pagina_upcm,&upcm[pagina_upcm->frame*TAM_PAGINA],TAM_PAGINA);
+
+		archivo_swap = fopen(PATH_SWAP,"r+");
+
+		fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
+		fwrite(buffer_pagina_upcm,TAM_PAGINA,1,archivo_swap);
+
+		pagina_upcm->frame = frame_swap_obtenido;
+    	pagina_upcm->bit_presencia = 0;
+
+      	pagina->frame = obtener_frame_libre();
+    	pagina->bit_presencia = 1;
+    	pagina->bit_usado = 1;
+
+    	// si este metodo no sirve, agregar un campo length_mmap en t_segmento
+    	if((nro_pagina*TAM_PAGINA) <= segmento->tam_archivo_mmap){
+    		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
+
+    		int bytes_a_leer = (int)fmin(TAM_PAGINA,((nro_pagina*TAM_PAGINA) + TAM_PAGINA) - segmento->tam_archivo_mmap);
+
+    		fread(buffer_pagina_mmap,bytes_a_leer,1,segmento->archivo_mmap);
+    		memcpy(&upcm[pagina->frame*TAM_PAGINA],buffer_pagina_mmap,bytes_a_leer);
+
+    		if(TAM_PAGINA > bytes_a_leer)
+    			memset(&upcm[pagina->frame*bytes_a_leer],'\0',TAM_PAGINA - bytes_a_leer);
+    	}
+    	else{
+    		// el primer byte a leer supera el tamano del archivo
+    		memset(&upcm[pagina->frame*TAM_PAGINA],'\0',TAM_PAGINA);
+    	}
+
+    	agregar_frame_clock(pagina);
+
+    	free(buffer_pagina_upcm);
+    	free(buffer_pagina_mmap);
+    	fclose(archivo_swap);
+	}
+	else if(!pagina->bit_presencia && espacio_en_upcm()){
+    	void* buffer_pagina_mmap = malloc(TAM_PAGINA);
+
+    	pagina->frame = obtener_frame_libre();
+    	pagina->bit_presencia = 1;
+    	pagina->bit_usado = 1;
+
+		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
+		fread(buffer_pagina_mmap,TAM_PAGINA,1,segmento->archivo_mmap);
+
+    	memcpy(&upcm[pagina->frame*TAM_PAGINA],buffer_pagina_mmap,TAM_PAGINA);
+
+    	agregar_frame_clock(pagina);
+
+    	free(buffer_pagina_mmap);
+	}
+
+	return (char*) upcm + (pagina->frame * TAM_PAGINA);
+}
+
 
 int obtener_frame_libre(){
 	for(int i=0;i<cantidad_frames;i++){

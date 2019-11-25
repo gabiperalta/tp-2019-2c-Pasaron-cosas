@@ -7,6 +7,7 @@ int main(){
 	hilos_new = list_create();
 	hilos_blocked = list_create();
 	hilos_exit = list_create();
+	semaforos = list_create();
 	iniciarPlanificacion();
 	system("clear");
 	printf("---------------- SUSE ----------------\n");
@@ -26,5 +27,6 @@ int main(){
 	list_destroy(hilos_new);
 	list_destroy(hilos_blocked);
 	list_destroy(hilos_exit);
+	list_destroy_and_destroy_elements(semaforos,(void*)destructor_de_semaforos);
 	return 0;
 }

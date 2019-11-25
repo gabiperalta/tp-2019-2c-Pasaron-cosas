@@ -47,7 +47,96 @@ void procesar_solicitud(void* socket_cliente){
 	close(socket_cliente);
 }
 
+void funcion_join(t_paquete paquete,int socket_suse){
+
+	int tid = obtener_valor(paquete.parametros);
+
+	int retorno = join(tid);
+
+	t_paquete paquete_respuesta = {
+		.header = SUSE_JOIN,
+		.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
+
+
+}
+
+void funcion_close(t_paquete paquete,int socket_suse){
+
+	int tid = obtener_valor(paquete.parametros);
+
+	int retorno = close(tid);
+
+	t_paquete paquete_respuesta = {
+	.header = SUSE_CLOSE,
+	.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
+
+}
+
+void funcion_signal(t_paquete paquete,int socket_suse){
+
+	int tid = obtener_valor(paquete.parametros);
+	char* semaforo= obtener_valor(paquete.parametros);
+
+	//aca le das la orden a suse
+	int retorno = signal(tid, semaforo);
+
+	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
+
+	t_paquete paquete_respuesta = {
+	.header = SUSE_SIGNAL,
+	.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
+
+
+
+}
+
+
+
 void funcion_wait(t_paquete paquete,int socket_suse){
+
+	int tid = obtener_valor(paquete.parametros);
+	char* semaforo= obtener_valor(paquete.parametros);
+
+	//aca le das la orden a suse
+	int retorno = wait(tid, semaforo);
+
+	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
+
+	t_paquete paquete_respuesta = {
+	.header = SUSE_WAIT,
+	.parametros = list_create()
+	};
+
+	// agregas valor al paquete de respuesta
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	enviar_paquete(paquete_respuesta, socket_suse);
+	///////////////////////////////////////////////////////
 
 
 }
@@ -61,7 +150,11 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 
 	//aca le das la orden a suse
+<<<<<<< HEAD
 	retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
+=======
+	int retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
+>>>>>>> d46abb4c1253c70eb12766a14fb95db81c17f3e5
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -115,7 +208,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
-	retorno= dame_prox_hilo()//funcion suse)(tid); //podria tener una respuesta
+	int retorno= dame_prox_hilo()//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -123,7 +216,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
 
 	t_paquete paquete_respuesta = {
-	.header = SUSE_CREATE,
+	.header = SUSE_SCHEDULE_NEXT,
 	.parametros = list_create()
 	};
 
