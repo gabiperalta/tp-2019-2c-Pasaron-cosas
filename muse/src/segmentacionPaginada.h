@@ -46,6 +46,7 @@ typedef struct{
 	uint8_t bit_presencia;
 	uint8_t bit_modificado;
 	uint8_t bit_usado;
+	uint8_t tipo_segmento;
 	//int socket_proceso;
 	//uint32_t base_segmento;
 	//int nro_pagina;
@@ -65,13 +66,14 @@ typedef struct{
 
 t_proceso* crear_proceso(char* id_programa,int socket_creado);
 uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solicitado);
-t_pagina* crear_pagina(uint8_t bit_presencia);
+t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento);
 
 t_proceso* buscar_proceso(t_list* lista,int socket_proceso);
 t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion);
 t_segmento* obtener_segmento_disponible(t_list lista,uint32_t tam_solicitado);
 uint32_t obtener_base(t_list* tabla_segmentos,uint8_t tipo_segmento,uint32_t tam_solicitado);
 void* obtener_datos_frame(t_pagina* pagina);
+void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pagina);
 int obtener_frame_libre();
 int obtener_frame_swap_libre();
 int obtener_tam_archivo(int fd_archivo);

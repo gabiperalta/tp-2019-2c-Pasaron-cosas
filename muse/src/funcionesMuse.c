@@ -561,25 +561,28 @@ void funcion_get(t_paquete paquete,int socket_muse){
 	printf("desplazamiento_obtenido %d\n",desplazamiento_obtenido);
 
 	// creo que no es necesario este list_get
-	t_pagina* pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
+	t_pagina* pagina_obtenida;
 
-	void* direccion_datos = obtener_datos_frame(pagina_obtenida);
+	void* direccion_datos;
 	t_heap_metadata heap_metadata;
 	int posicion_recorrida = desplazamiento_obtenido;
 	void* buffer;
 
 	// calculo para las paginas necesarias
 	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_a_enviar)/TAM_PAGINA);
-	//int cantidad_paginas_necesarias;
 
 	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
-
-	//pthread_mutex_lock(&mutex_acceso_upcm);
 
 	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
 	for(int i=0; i<cantidad_paginas_necesarias;i++){
 		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
-		direccion_datos = obtener_datos_frame(pagina_obtenida);
+		if(segmento_obtenido->tipo_segmento == SEGMENTO_HEAP){
+			direccion_datos = obtener_datos_frame(pagina_obtenida);
+		}
+		else{
+			direccion_datos = obtener_datos_frame_mmap(segmento_obtenido,pagina_obtenida,i + nro_pagina_obtenida);
+		}
+
 		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
 	}
 
