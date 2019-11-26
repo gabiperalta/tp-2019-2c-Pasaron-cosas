@@ -13,6 +13,7 @@
 
 
 void iniciarPlanificacion(){
+	log_info(logger,"Se inicia planificacion");
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
 	pthread_create(&hilo,NULL, (void*) planificarCortoPlazo, NULL);
@@ -21,6 +22,7 @@ void iniciarPlanificacion(){
 
 //tid y id del semaforo
 void wait(thread* hilo, char* id_sem){
+
 	uint8_t tid = hilo->tid;
 	bool buscador(semaforos_suse* semaforo){
 		return !strcmp(semaforo->id, id_sem);
@@ -33,6 +35,7 @@ void wait(thread* hilo, char* id_sem){
 	else{
 		list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
 		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
+		log_info(logger,"Bloqueo thread en wait");
 	}
 
 }
@@ -48,6 +51,7 @@ void signal(thread* hilo, char* id_sem){
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
 		list_remove(hilos_blocked, tid);
+		log_info(logger,"desbloqueo hilo en signal");
 	}
 	else{
 		semaforo->cant_instancias_disponibles +=1;
@@ -106,7 +110,7 @@ void join(int tid){ // bloquea el hilo de exec hasta que termine el hilo que rec
 void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo hilo
 	while(1){
 		int i = 0;
-		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){
+		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){ //VER: esto seria cuando planificar? Solo cuando pedimos next_tid, no es necesario
 			sem_wait(sem_planificacion);
 			aplicarFIFO();
 			i++;
@@ -190,11 +194,13 @@ void leer_config(){
 }
 
 void destructor_de_procesos(process* proceso){
+	log_info(logger,"destruyo proceso");
 	list_destroy(proceso->hilos_ready);
 	free(proceso->hilo_exec);
 }
 
 void destructor_de_semaforos(semaforos_suse* semaforo){
+	log_info(logger,"destruyo semaforo");
 	list_destroy(semaforo->hilos_bloqueados);
 	free(semaforo->id);
 }

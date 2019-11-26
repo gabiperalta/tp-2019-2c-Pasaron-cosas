@@ -9,6 +9,7 @@
 #define FUNCIONESSUSE_H_
 
 #include <suse.h>
+#include <logs.h>
 
 void iniciarPlanificacion();
 
