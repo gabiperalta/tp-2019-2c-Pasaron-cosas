@@ -48,6 +48,7 @@ t_list* hilos_blocked;
 t_list* hilos_exit;
 t_list* semaforos;
 sem_t sem_planificacion;
+sem_t sem_join;
 
 typedef struct{
 	uint8_t pid; //id del proceso
@@ -60,7 +61,7 @@ typedef struct{
 	uint8_t tid; // id del hilo
 	uint8_t pid; // proceso en el que esta el hilo
 	double rafagas_estimadas;
-	double rafagas_ejecutadas;
+	int rafagas_ejecutadas;
 }thread;
 
 typedef struct{

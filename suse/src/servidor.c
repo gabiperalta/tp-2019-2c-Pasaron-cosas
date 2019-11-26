@@ -118,7 +118,7 @@ void funcion_signal(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -162,11 +162,8 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 
 	//aca le das la orden a suse
-<<<<<<< HEAD
-	retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
-=======
+
 	int retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
->>>>>>> d46abb4c1253c70eb12766a14fb95db81c17f3e5
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -220,7 +217,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
-	int retorno= dame_prox_hilo()//funcion suse)(tid); //podria tener una respuesta
+	int retorno= dame_prox_hilo();//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -235,7 +232,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 }

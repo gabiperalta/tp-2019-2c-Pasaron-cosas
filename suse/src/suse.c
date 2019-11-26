@@ -9,6 +9,7 @@ int main(){
 	hilos_exit = list_create();
 	semaforos = list_create();
 	sem_init(sem_planificacion,0, grado_multiprogramacion);
+	inicializarServidor();
 	iniciarPlanificacion();
 	system("clear");
 	printf("---------------- SUSE ----------------\n");

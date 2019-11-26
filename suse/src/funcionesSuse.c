@@ -55,8 +55,8 @@ void signal(thread* hilo, char* id_sem){
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
 int next_tid(){
-
-
+	thread* hilo_siguiente = aplicarFIFO();
+	return hilo_siguiente->tid;
 }
 
 void close(int tid){
@@ -73,9 +73,20 @@ void crear(int tid){
 	//el id del programa lo tomo por el socket, quizas deberia venir por parametro algun dato de eso
 }
 
-void join(thread* hilo){
+void join(thread* hilo){ // bloquea el hilo de exec hasta que termine el hilo que recibe
 	uint8_t tid = hilo->tid;
-	list_add(hilos_blocked, tid);//hay que bloquear el thread que se esta ejecutando
+	process* proceso = obtener_proceso_asociado(hilo);
+	thread* hilo_en_ejecucion = proceso->hilo_exec;
+	uint8_t tid_ejecucion = hilo_en_ejecucion->tid;
+	list_add(hilos_blocked, tid);
+	sem_init(sem_join,NULL,hilo_en_ejecucion->rafagas_ejecutadas);
+	sem_wait(sem_join);
+	int indice_tid = list_find(hilos_blocked,(void*)buscador);
+	bool buscador(thread* hilo_buscado){
+		return !strcmp(hilo_buscado->tid, hilo->tid);
+	}
+	list_remove(hilos_blocked,indice_tid);
+	//hay que bloquear el thread que se esta ejecutando
 	//esperar a que termine el tid que envio por paramtro
 
 }
@@ -101,27 +112,23 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 }
 
 void planificarCortoPlazo(){
-		thread* hilo = next_tid();
+		thread* hilo = next_tid(); // esto no se si esta bien
 		process* proceso = obtener_proceso_asociado(hilo);
-		aplicarSJF(proceso);
+		t_list* hilos_listos = proceso->hilos_ready;
+		while(!list_is_empty(hilos_listos)){
+			aplicarSJFConDesalojo(proceso);// sockets
+		}
 		sem_post(sem_planificacion);
 }
 
-void aplicarFIFO(){
+thread* aplicarFIFO(){
 		thread* hilo_elegido = list_remove(hilos_new,0);
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
+		proceso->hilos_ready = list_create();
 		t_list* hilos_listos = proceso->hilos_ready;
 		list_add(hilos_listos,hilo_elegido);
+		return hilo_elegido;
 	}
-
-void aplicarSJF(process* proceso){
-	t_list* hilos_listos = proceso->hilos_ready;
-	while(!list_is_empty(hilos_listos)){
-		aplicarSJFConDesalojo(proceso); // sockets
-	}
-	//sem_wait() del semaforo del proceso
-		 // finalizar proceso
-}
 
 void aplicarSJFConDesalojo(process* proceso) {
 		t_list* aux = list_map(proceso->hilos_ready, (void*) CalcularEstimacion);
@@ -129,16 +136,16 @@ void aplicarSJFConDesalojo(process* proceso) {
 		thread* hilo_aux = (thread*) list_remove(aux, 0);
 		bool comparator(thread* unHilo, thread* otroHIlo){
 			return !strcmp(unHilo->tid, otroHIlo->tid);
-
+		}
 
 		int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
 		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready,index);
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
-		list_add(hilos_exit,hilo_a_ejecutar);
+		sem_post(sem_join);
 	}
 
-}
+// de exec pasa a blocked? como hago eso con el planificador a corto/largo plazo, de exec pasa a exit?
 
 thread* CalcularEstimacion(thread* unHilo) {
 	unHilo->rafagas_estimadas = (alpha_planificacion  * estimacion_inicial)
@@ -169,6 +176,7 @@ void leer_config(){
 		strcpy(aux->id, ids_sem[i]);
 		aux->cant_instancias_disponibles = atoi(inicio_sem[i]);
 		aux->max_valor = atoi(max_sem[i]);
+		aux->hilos_bloqueados = list_create();
 		list_add(semaforos,aux);
 	}
 	config_destroy(archivo_config);
