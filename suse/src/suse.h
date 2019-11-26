@@ -49,6 +49,7 @@ t_list* hilos_exit;
 t_list* semaforos;
 sem_t sem_planificacion;
 sem_t sem_join;
+sem_t sem_close;
 
 typedef struct{
 	uint8_t pid; //id del proceso
