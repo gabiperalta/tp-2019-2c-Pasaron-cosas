@@ -11,13 +11,17 @@
 //aca no tendria que venir por parametro el tid que le mandaria suse create?
 //tendria que retornar un 0 o -1 dependiendo si pudo recibir bien el hilo o algo asi que sirva para el retorno de la conexión
 
-
+//debe ser int no void
 void iniciarPlanificacion(){
 	log_info(logger,"Se inicia planificacion");
+
+	//esto de crear un hilo no entiendo para que
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
 	pthread_create(&hilo,NULL, (void*) planificarCortoPlazo, NULL);
 	pthread_detach(hilo);
+
+	//de alguna forma deberia quedar return prox_hilo_ejecutar
 }
 
 //tid y id del semaforo
@@ -55,13 +59,16 @@ void signal(thread* hilo, char* id_sem){
 	}
 	else{
 		semaforo->cant_instancias_disponibles +=1;
-	}
+	}}
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
 	//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
-int next_tid(){
 
+int next_tid(){
+	log_info(logger,"Se planifica y se devuelve el next_tid");
+	return iniciarPlanificacion();
 }
+
 
 void close(int tid){
 	sem_wait(sem_ejecute);
@@ -80,8 +87,7 @@ void close(int tid){
 //cuando no es hilo principal
 void crear(int tid){
 
-	//crea el hilo y lo mete en el programa que le corresponda
-	//el id del programa lo tomo por el socket, quizas deberia venir por parametro algun dato de eso
+	// crear un hilo con ese tid? meterlo en la cola new? Asignarle el programa que le corresponde por socket?
 }
 
 void join(int tid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
