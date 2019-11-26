@@ -9,6 +9,8 @@ int main(){
 	hilos_exit = list_create();
 	semaforos = list_create();
 	sem_init(sem_planificacion,0, grado_multiprogramacion);
+	sem_init(sem_join,NULL,1);
+	sem_init(sem_close,NULL,1);
 	inicializarServidor();
 	iniciarPlanificacion();
 	system("clear");

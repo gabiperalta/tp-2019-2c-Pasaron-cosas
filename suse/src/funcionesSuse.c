@@ -55,12 +55,18 @@ void signal(thread* hilo, char* id_sem){
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
 int next_tid(){
-	thread* hilo_siguiente = aplicarFIFO();
-	return hilo_siguiente->tid;
+
 }
 
 void close(int tid){
-
+	sem_wait(sem_close);
+	thread* hilo = list_find(lista_procesos,(void*) buscador);
+	bool buscador(process* proceso){
+		return !strcmp(proceso->hilo_exec->tid, tid); //estan mal los tipos
+	}
+	process* proceso = obtener_proceso_asociado(hilo);
+	thread* hilo_ejecutando = proceso->hilo_exec;
+	list_add(hilos_exit,hilo_ejecutando);
 	//eliminar tid
 	//si no hay hilo se liberan las conexiones
 
@@ -73,19 +79,15 @@ void crear(int tid){
 	//el id del programa lo tomo por el socket, quizas deberia venir por parametro algun dato de eso
 }
 
-void join(thread* hilo){ // bloquea el hilo de exec hasta que termine el hilo que recibe
-	uint8_t tid = hilo->tid;
-	process* proceso = obtener_proceso_asociado(hilo);
-	thread* hilo_en_ejecucion = proceso->hilo_exec;
-	uint8_t tid_ejecucion = hilo_en_ejecucion->tid;
-	list_add(hilos_blocked, tid);
-	sem_init(sem_join,NULL,hilo_en_ejecucion->rafagas_ejecutadas);
-	sem_wait(sem_join);
-	int indice_tid = list_find(hilos_blocked,(void*)buscador);
-	bool buscador(thread* hilo_buscado){
-		return !strcmp(hilo_buscado->tid, hilo->tid);
+void join(int tid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
+	thread* hilo_ejecutando = list_find(lista_procesos,(void*)buscador);
+	bool buscador(process* proceso){
+		return !strcmp(proceso->hilo_exec->tid, tid);
 	}
-	list_remove(hilos_blocked,indice_tid);
+	list_add(hilos_blocked, hilo_ejecutando);
+	sem_wait(sem_join);
+	list_remove(hilos_blocked, hilo_ejecutando);
+
 	//hay que bloquear el thread que se esta ejecutando
 	//esperar a que termine el tid que envio por paramtro
 
@@ -121,13 +123,12 @@ void planificarCortoPlazo(){
 		sem_post(sem_planificacion);
 }
 
-thread* aplicarFIFO(){
+void aplicarFIFO(){
 		thread* hilo_elegido = list_remove(hilos_new,0);
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
 		proceso->hilos_ready = list_create();
 		t_list* hilos_listos = proceso->hilos_ready;
 		list_add(hilos_listos,hilo_elegido);
-		return hilo_elegido;
 	}
 
 void aplicarSJFConDesalojo(process* proceso) {
@@ -143,6 +144,7 @@ void aplicarSJFConDesalojo(process* proceso) {
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
 		sem_post(sem_join);
+		sem_post(sem_close);
 	}
 
 // de exec pasa a blocked? como hago eso con el planificador a corto/largo plazo, de exec pasa a exit?
