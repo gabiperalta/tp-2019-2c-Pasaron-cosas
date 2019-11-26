@@ -178,6 +178,30 @@ uint32_t muse_map(char *path, size_t length, int flags){
 }
 
 int muse_sync(uint32_t addr, size_t len){
+
+	t_paquete paquete = {
+			.header = MUSE_SYNC,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros,addr);
+	agregar_valor(paquete.parametros,len);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	///////////////////////////////////////////////////////
+
+	if(valor_recibido == 2){
+		raise(SIGSEGV);
+		return -1;
+	}
+
+	printf("Sync exitoso\n");
+
 	return 0;
 }
 

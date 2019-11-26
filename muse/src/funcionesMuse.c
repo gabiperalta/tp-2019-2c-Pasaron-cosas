@@ -824,6 +824,89 @@ void funcion_map(t_paquete paquete,int socket_muse){
 
 void funcion_sync(t_paquete paquete,int socket_muse){
 
+	uint32_t resultado_sync = 1;
+	printf("\nInicio muse_sync\n");
+
+	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
+	printf("direccion_recibida %d\n",direccion_recibida);
+	uint32_t length_recibido = obtener_valor(paquete.parametros);
+	printf("length_recibido %d\n",length_recibido);
+
+	pthread_mutex_lock(&mutex_acceso_upcm);
+
+	t_proceso* proceso_obtenido = buscar_proceso(lista_procesos,socket_muse);
+	t_segmento* segmento_obtenido = buscar_segmento(proceso_obtenido->tabla_segmentos,direccion_recibida);
+
+	// calculo para las paginas necesarias
+	int cantidad_paginas_necesarias = (int)ceil((double)length_recibido/TAM_PAGINA);
+	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
+
+	if(segmento_obtenido == NULL){
+		resultado_sync = 2; // indico que debe producirse segmentation fault
+	}
+	else if(cantidad_paginas_necesarias > list_size(segmento_obtenido->tabla_paginas)){
+		resultado_sync = 2; // indico que debe producirse segmentation fault
+	}
+	else if((segmento_obtenido->tipo_segmento != SEGMENTO_MMAP) || (direccion_recibida%TAM_PAGINA != 0)){
+		resultado_sync = 3; // indico que debe retornar -1
+	}
+
+	if(resultado_sync > 1){
+		// no se encontro segmento
+		t_paquete paquete_respuesta = {
+				.header = MUSE_SYNC,
+				.parametros = list_create()
+		};
+
+		///////////////// Parametros a enviar /////////////////
+		agregar_valor(paquete_respuesta.parametros,resultado_sync);
+		enviar_paquete(paquete_respuesta,socket_muse);
+		///////////////////////////////////////////////////////
+
+		pthread_mutex_unlock(&mutex_acceso_upcm);
+
+		return;
+	}
+
+	int nro_pagina_obtenida = (direccion_recibida - segmento_obtenido->base) / TAM_PAGINA;
+	printf("nro_pagina_obtenida %d\n",nro_pagina_obtenida);
+
+	t_pagina* pagina_obtenida;
+	void* direccion_datos;
+	int posicion_recorrida;
+	void* buffer;
+
+	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
+	for(int i=0; i<cantidad_paginas_necesarias;i++){
+		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
+		direccion_datos = obtener_datos_frame_mmap(segmento_obtenido,pagina_obtenida,i + nro_pagina_obtenida);
+		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
+	}
+
+	if((nro_pagina_obtenida*TAM_PAGINA) <= segmento_obtenido->tam_archivo_mmap){
+		fseek(segmento_obtenido->archivo_mmap,nro_pagina_obtenida*TAM_PAGINA,SEEK_SET);
+		int bytes_a_escribir = (int)fmin(length_recibido,((nro_pagina_obtenida*TAM_PAGINA) + length_recibido) - segmento_obtenido->tam_archivo_mmap);
+		fwrite(buffer,bytes_a_escribir,1,segmento_obtenido->archivo_mmap);
+	}
+	else{
+		// el primer byte a escribir supera el tamano del archivo
+		resultado_sync = 3;
+	}
+
+	free(buffer);
+	pthread_mutex_unlock(&mutex_acceso_upcm);
+
+	t_paquete paquete_respuesta = {
+			.header = MUSE_SYNC,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,resultado_sync);
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
+
+	printf("Fin muse_sync\n");
 }
 
 void funcion_unmap(t_paquete paquete,int socket_muse){
@@ -842,12 +925,13 @@ char* obtener_ip_socket(int s){
 	getpeername(s, (struct sockaddr*)&addr, &len);
 
 	// deal with both IPv4 and IPv6:
-	if (addr.ss_family == AF_INET) {
+	if(addr.ss_family == AF_INET){
 	    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
 	    //port = ntohs(s->sin_port);
 	    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
-	} else { // AF_INET6
-	    struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+	}
+	else{ // AF_INET6
+		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
 	    //port = ntohs(s->sin6_port);
 	    inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
