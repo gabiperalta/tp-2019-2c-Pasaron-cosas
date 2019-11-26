@@ -19,9 +19,10 @@
  * 	delegados al Sac-servidor, y este sera el encargado de resolver esta solicitud.
  */
 
-#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-cli/Config"
+#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-cli/src/Config"
 
 int my_socket;
+int path_length;
 
 // GENERALES
 static int sac_cli_getattr( const char *path, struct stat *st );
