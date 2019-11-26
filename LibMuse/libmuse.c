@@ -197,6 +197,11 @@ int muse_sync(uint32_t addr, size_t len){
 
 	if(valor_recibido == 2){
 		raise(SIGSEGV);
+		return -1; // creo que es innecesario este return
+	}
+	else if (valor_recibido == 3){
+		//raise(SIG_ERR);
+		perror("Fallo en muse_sync\n");
 		return -1;
 	}
 

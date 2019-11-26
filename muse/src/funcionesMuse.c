@@ -651,9 +651,9 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	printf("nro_pagina_obtenida %d\n",nro_pagina_obtenida);
 	int desplazamiento_obtenido = (direccion_recibida - segmento_obtenido->base) - (nro_pagina_obtenida * TAM_PAGINA);
 	printf("desplazamiento_obtenido %d\n",desplazamiento_obtenido);
-	t_pagina* pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
+	t_pagina* pagina_obtenida;// = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
 
-	void* direccion_datos = obtener_datos_frame(pagina_obtenida);
+	void* direccion_datos;// = obtener_datos_frame(pagina_obtenida);
 	t_heap_metadata heap_metadata;
 	int posicion_recorrida = desplazamiento_obtenido - SIZE_HEAP_METADATA;
 	void* buffer;
@@ -662,7 +662,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_recibido)/TAM_PAGINA);
 	//int cantidad_paginas_necesarias;
 
-	if((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) < 0){
+	if((segmento_obtenido->tipo_segmento == SEGMENTO_HEAP) && ((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) < 0)){
 		// tengo que obtener la pagina anterior para poder manejar la metadata
 		cantidad_paginas_necesarias++;
 		nro_pagina_obtenida--;
@@ -677,29 +677,54 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
 	for(int i=0; i<cantidad_paginas_necesarias;i++){
 		pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,i + nro_pagina_obtenida);
-		direccion_datos = obtener_datos_frame(pagina_obtenida);
+		if(segmento_obtenido->tipo_segmento == SEGMENTO_HEAP){
+			direccion_datos = obtener_datos_frame(pagina_obtenida);
+		}
+		else{
+			direccion_datos = obtener_datos_frame_mmap(segmento_obtenido,pagina_obtenida,i + nro_pagina_obtenida);
+		}
 		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
 	}
 
-	// obtengo la metadata
-	memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
-	posicion_recorrida += sizeof(heap_metadata.isFree);
-	memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
-	posicion_recorrida += sizeof(heap_metadata.size);
+	switch(segmento_obtenido->tipo_segmento){
+		case SEGMENTO_HEAP:
+			// obtengo la metadata
+			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
+			posicion_recorrida += sizeof(heap_metadata.isFree);
+			memcpy(&heap_metadata.size,&buffer[posicion_recorrida],sizeof(heap_metadata.size));
+			posicion_recorrida += sizeof(heap_metadata.size);
 
-	if(!heap_metadata.isFree && (heap_metadata.size >= tam_bloque_datos_recibido)){
-		memcpy(&buffer[posicion_recorrida],bloque_datos_recibido,tam_bloque_datos_recibido);
+			if(!heap_metadata.isFree && (heap_metadata.size >= tam_bloque_datos_recibido)){
+				memcpy(&buffer[posicion_recorrida],bloque_datos_recibido,tam_bloque_datos_recibido);
 
-		// vuelvo a cargar los datos al upcm
-		for(int x=0; x<cantidad_paginas_necesarias;x++){
-			pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
-			direccion_datos = obtener_datos_frame(pagina_obtenida);
-			memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
-		}
-	}
-	else{
-		// no puedo almacenar los datos pq ingreso a una posicion invalida
-		resultado_cpy = 2;
+				// vuelvo a cargar los datos al upcm
+				for(int x=0; x<cantidad_paginas_necesarias;x++){
+					pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
+					direccion_datos = obtener_datos_frame(pagina_obtenida);
+					memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
+				}
+			}
+			else{
+				// no puedo almacenar los datos pq ingreso a una posicion invalida
+				resultado_cpy = 2;
+			}
+			break;
+		case SEGMENTO_MMAP:
+			if((desplazamiento_obtenido + (nro_pagina_obtenida*TAM_PAGINA)) >= tam_bloque_datos_recibido){
+				memcpy(&buffer[desplazamiento_obtenido],bloque_datos_recibido,tam_bloque_datos_recibido);
+
+				// vuelvo a cargar los datos al upcm
+				for(int x=0; x<cantidad_paginas_necesarias;x++){
+					pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
+					direccion_datos = obtener_datos_frame_mmap(segmento_obtenido,pagina_obtenida,x + nro_pagina_obtenida);
+					memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
+				}
+			}
+			else{
+				// no puedo almacenar los datos pq ingreso a una posicion invalida
+				resultado_cpy = 2;
+			}
+			break;
 	}
 
 	free(buffer);
