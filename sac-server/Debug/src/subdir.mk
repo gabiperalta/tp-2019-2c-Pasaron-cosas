@@ -4,20 +4,35 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/sac-server.c 
+../src/funcionesSac.c \
+../src/gestorDeMemoria.c \
+../src/pruebas.c \
+../src/sac-server.c \
+../src/sac_formatter.c \
+../src/servidor.c 
 
 OBJS += \
-./src/sac-server.o 
+./src/funcionesSac.o \
+./src/gestorDeMemoria.o \
+./src/pruebas.o \
+./src/sac-server.o \
+./src/sac_formatter.o \
+./src/servidor.o 
 
 C_DEPS += \
-./src/sac-server.d 
+./src/funcionesSac.d \
+./src/gestorDeMemoria.d \
+./src/pruebas.d \
+./src/sac-server.d \
+./src/sac_formatter.d \
+./src/servidor.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	gcc -I"/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
