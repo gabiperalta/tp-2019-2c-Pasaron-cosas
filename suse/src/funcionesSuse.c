@@ -54,6 +54,7 @@ void signal(thread* hilo, char* id_sem){
 	}
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
+	//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
 int next_tid(){
 
 }

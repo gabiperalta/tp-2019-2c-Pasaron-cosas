@@ -34,6 +34,9 @@ void procesar_solicitud(void* socket_cliente){
 			case SUSE_CREATE:
 				funcion_suse = funcion_create;
 				break;
+		//	case SUSE_CREATE_HILO:
+		//		funcion_suse = funcion_create_hilo;
+		//		break;
 			case SUSE_SCHEDULE_NEXT:
 				funcion_suse = funcion_schedule_next;
 				break;
@@ -58,6 +61,10 @@ void procesar_solicitud(void* socket_cliente){
 
 	close(socket_cliente);
 }
+
+
+// void funcion_create_hilo(t_paquete paquete,int socket_suse){
+
 
 void funcion_join(t_paquete paquete,int socket_suse){
 

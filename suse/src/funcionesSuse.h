@@ -12,7 +12,12 @@
 
 void iniciarPlanificacion();
 
-void wait(thread* hilo, semaforos_suse* semaforo);
+void wait(thread* hilo, char* id_sem);
+void signal(thread* hilo, char* id_sem);
+int next_tid();
+void close(int tid);
+void crear(int tid);
+void join(int tid);
 void planificar();
 void aplicarFIFO();
 void aplicarSJF(process* proceso);
