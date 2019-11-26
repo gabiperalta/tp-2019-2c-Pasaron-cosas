@@ -59,7 +59,7 @@ int next_tid(){
 }
 
 void close(int tid){
-	sem_wait(sem_close);
+	sem_wait(sem_ejecute);
 	thread* hilo = list_find(lista_procesos,(void*) buscador);
 	bool buscador(process* proceso){
 		return !strcmp(proceso->hilo_exec->tid, tid); //estan mal los tipos
@@ -124,11 +124,15 @@ void planificarCortoPlazo(){
 }
 
 void aplicarFIFO(){
+		uint64_t startTime, endTime;
 		thread* hilo_elegido = list_remove(hilos_new,0);
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
 		proceso->hilos_ready = list_create();
 		t_list* hilos_listos = proceso->hilos_ready;
+		startTime = getCurrentTime();
 		list_add(hilos_listos,hilo_elegido);
+		endTime = getCurrentTime();
+
 	}
 
 void aplicarSJFConDesalojo(process* proceso) {
@@ -144,10 +148,9 @@ void aplicarSJFConDesalojo(process* proceso) {
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
 		sem_post(sem_join);
-		sem_post(sem_close);
+		sem_post(sem_ejecute);
 	}
 
-// de exec pasa a blocked? como hago eso con el planificador a corto/largo plazo, de exec pasa a exit?
 
 thread* CalcularEstimacion(thread* unHilo) {
 	unHilo->rafagas_estimadas = (alpha_planificacion  * estimacion_inicial)
@@ -172,6 +175,7 @@ void leer_config(){
 	ids_sem = config_get_array_value(archivo_config,"SEM_IDS");
 	inicio_sem = config_get_array_value(archivo_config, "SEM_INIT");
 	max_sem = config_get_array_value(archivo_config, "SEM_MAX");
+	metrics = config_get_int_value(archivo_config,"METRICS_TIMER");
 	for(int i = 0; i< strlen(ids_sem); i++){
 		semaforos_suse* aux = sizeof(semaforos_suse);
 		aux->id = malloc(strlen(ids_sem[i]));
@@ -193,3 +197,11 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 	list_destroy(semaforo->hilos_bloqueados);
 	free(semaforo->id);
 }
+
+uint64_t getCurrentTime(){
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	uint64_t x = (uint64_t)( (tv.tv_sec)*1000 + (tv.tv_usec)/1000 );
+	return x;
+}
+

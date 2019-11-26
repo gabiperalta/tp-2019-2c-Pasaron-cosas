@@ -24,9 +24,12 @@
 #include <time.h>
 #include <signal.h>
 #include <readline/readline.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <commons/log.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
-
+#define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
 									/* Estructuras*/
 
 int PUERTO;
@@ -37,7 +40,9 @@ char** ids_sem;
 char** inicio_sem;
 char** max_sem;
 int estimacion_inicial = 0;
+int metrics;
 
+t_log* suse_log;
 
 t_list* lista_procesos;
 
@@ -49,7 +54,8 @@ t_list* hilos_exit;
 t_list* semaforos;
 sem_t sem_planificacion;
 sem_t sem_join;
-sem_t sem_close;
+sem_t sem_ejecute;
+pthread_t threadMetrics;
 
 typedef struct{
 	uint8_t pid; //id del proceso
