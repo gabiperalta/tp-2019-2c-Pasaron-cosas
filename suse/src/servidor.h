@@ -10,7 +10,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <commons/config.h>
-#include "biblioteca_sockets.h"
+#include "../../biblioteca/biblioteca.h"
+#include "../../biblioteca/biblioteca_sockets.h"
 #include "funcionesSuse.h"
 
 
