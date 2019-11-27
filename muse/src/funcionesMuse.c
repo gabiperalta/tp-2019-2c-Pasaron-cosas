@@ -40,7 +40,7 @@ void procesar_solicitud(void* socket_cliente){
 				funcion_muse = funcion_sync;
 				break;
 			case MUSE_UNMAP:
-				funcion_muse = funcion_sync;
+				funcion_muse = funcion_unmap;
 				break;
 			case MUSE_CLOSE:
 				// Nunca ingresara a esta condicion, o si
@@ -791,6 +791,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
 				fclose(archivo_solicitado);
 			}
+			segmento_nuevo->tipo_map = MAP_SHARED;
 			break;
 		case MAP_PRIVATE:
 			printf("Map private\n");
@@ -809,6 +810,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
 				fclose(archivo_solicitado);
 			}
+			segmento_nuevo->tipo_map = MAP_PRIVATE;
 			break;
 	}
 
@@ -938,12 +940,15 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 	uint32_t resultado_unmap = 1;
 	printf("Inicio unmap\n");
 	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
+	printf("direccion_recibida %d\n",direccion_recibida);
 
 	pthread_mutex_lock(&mutex_acceso_upcm);
 
 	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
 	t_segmento* segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_recibida);
 	// si no se encuentra el segmento, deberia controlar el error
+
+	printf("Hasta aca funciona\n");
 
 	if(segmento_obtenido == NULL){
 		resultado_unmap = 2; // indico que debe producirse segmentation fault
@@ -968,19 +973,37 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 		return;
 	}
 
+	printf("Hasta aca funciona 2\n");
+
 	int fd_archivo_segmento_mmap = fileno(segmento_obtenido->archivo_mmap);
 	t_archivo_mmap* archivo_mmap_encontrado = buscar_archivo_mmap(fd_archivo_segmento_mmap);
 
+	printf("Hasta aca funciona 3\n");
+
+	// funcion auxiliar
 	int igualSocket(int p) {
 		return p == proceso_encontrado->socket;
 	}
 	list_remove_by_condition(archivo_mmap_encontrado->sockets_procesos,(void*) igualSocket);
 
 	if(list_size(archivo_mmap_encontrado->sockets_procesos) == 0){
-		//list_remove_and_destroy_by_condition()
-
-		// terminar
+		printf("Se elimina el archivo mmap\n");
+		// funcion auxiliar
+		int igualArchivo(t_archivo_mmap* archivo_mmap) {
+		    struct stat stat1, stat2;
+		    if((fstat(fd_archivo_segmento_mmap, &stat1) < 0) || (fstat(fileno(archivo_mmap->archivo), &stat2) < 0)) return -1;
+		    return (stat1.st_dev == stat2.st_dev) && (stat1.st_ino == stat2.st_ino);
+		}
+		list_remove_and_destroy_by_condition(lista_archivos_mmap,(void*) igualArchivo,(void*) eliminar_archivo_mmap);
 	}
+
+	printf("Hasta aca funciona 4\n");
+
+	// funcion auxiliar
+	int igualBaseSegmento(t_segmento* p){
+		return p->base == segmento_obtenido->base;
+	}
+	list_remove_and_destroy_by_condition(proceso_encontrado->tabla_segmentos,(void*) igualBaseSegmento,(void*) eliminar_segmento);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
@@ -1006,16 +1029,16 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 	//////////////////////////////////////
 
 	t_paquete paquete_respuesta = {
-			.header = MUSE_FREE,
+			.header = MUSE_UNMAP,
 			.parametros = list_create()
 	};
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros,1);
+	agregar_valor(paquete_respuesta.parametros,resultado_unmap);
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
 
-	printf("Fin free\n");
+	//printf("Fin free\n");
 }
 
 

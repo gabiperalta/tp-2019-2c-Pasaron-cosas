@@ -194,7 +194,7 @@ int muse_sync(uint32_t addr, size_t len){
 	}
 	else if (valor_recibido == 3){
 		//raise(SIG_ERR);
-		perror("Fallo en muse_sync\n");
+		printf("Fallo en muse_sync\n");
 		return -1;
 	}
 
@@ -218,8 +218,18 @@ int muse_unmap(uint32_t dir){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	printf("Unmap exitoso?: %d\n",valor_recibido);
 	///////////////////////////////////////////////////////
+
+	if(valor_recibido == 2){
+		raise(SIGSEGV);
+		return -1; // creo que no es necesario este return
+	}
+	else if (valor_recibido == 3){
+		printf("Fallo en muse_unmap\n");
+		return -1;
+	}
+
+	printf("unmap exitoso\n");
 
 	return 0;
 }
