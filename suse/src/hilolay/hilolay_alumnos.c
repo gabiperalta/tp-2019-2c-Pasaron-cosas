@@ -132,17 +132,14 @@ int me_schedule_next(){
 		.parametros = NULL
 	};
 
-	enviar_paquete(paquete_solicitud,socket_suse) //el que guarde al inciiar la conex)
+	enviar_paquete(paquete_solicitud,socket_suse);
 
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
 
-	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+	int retorno = obtener_valor(paquete_respuesta.parametros);
 
-	return retorno;} //ponele un 0 si esta ok
+	return retorno;}
 
-
-
-	// ver la parte de "si no había hilo, se liberaban las conexiones"
 
 int me_close(int tid){
 
@@ -153,13 +150,13 @@ int me_close(int tid){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	enviar_paquete(paquete_solicitud,socket_suse); //el que guarde al inciiar la conex)
+	enviar_paquete(paquete_solicitud,socket_suse);
 
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
 
-	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+	int retorno = obtener_valor(paquete_respuesta.parametros);
 
 	return retorno;
-} //ponele un 0 si esta ok
+}
 
 
