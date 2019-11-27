@@ -8,8 +8,6 @@
 #include <funcionesSuse.h>
 
 
-//aca no tendria que venir por parametro el tid que le mandaria suse create?
-//tendria que retornar un 0 o -1 dependiendo si pudo recibir bien el hilo o algo asi que sirva para el retorno de la conexión
 
 //debe ser int no void
 void iniciarPlanificacion(){
@@ -65,6 +63,7 @@ void signal(thread* hilo, char* id_sem){
 	//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
 
 int next_tid(){
+	//tiene que dar proximo hilo segun el programa, iniciarplanificacion tiene que saber el id de programa?
 	log_info(logger,"Se planifica y se devuelve el next_tid");
 	return iniciarPlanificacion();
 }
@@ -87,8 +86,10 @@ void close(int tid){
 //cuando no es hilo principal
 void crear(int tid){
 
-	// crear un hilo con ese tid? meterlo en la cola new? Asignarle el programa que le corresponde por socket?
+	// crear un hilo con ese tid? meterlo en la cola new del programa? Asignarle el programa que le corresponde por socket?
 }
+
+//tiene que haber otra funcion para crear el hilo principal?
 
 void join(int tid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
 	thread* hilo_ejecutando = list_find(lista_procesos,(void*)buscador);

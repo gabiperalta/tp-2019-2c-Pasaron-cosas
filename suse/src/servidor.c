@@ -189,38 +189,10 @@ void funcion_create(t_paquete paquete,int socket_suse){
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
-/*	char* id_programa = string_new();
-	char* ip_socket = obtener_ip_socket(socket_muse);
-	string_append(&id_programa,string_itoa(obtener_valor(paquete.parametros)));
-	string_append(&id_programa,"-");
-	string_append(&id_programa,ip_socket);
-
-	list_add(lista_procesos,crear_proceso(id_programa,socket_muse));
-
-	//				PRUEBA
-	/*
-	t_thread* thread_obtenido;
-	for(int i=0; i<list_size(lista_threads); i++){
-		thread_obtenido = list_get(lista_threads,i);
-		printf("hilo nro %d\t",i);
-		printf("id_programa: %s\t",thread_obtenido->id_programa);
-		printf("socket: %d\t\n",thread_obtenido->socket);
-	}
-	printf("\n");
-
-
-	free(ip_socket); // Sacar si falla
-	*/
-
 }
 
 
 void funcion_schedule_next(t_paquete paquete,int socket_suse){
-
-	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint
-
-	//
-
 
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
