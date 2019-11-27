@@ -11,30 +11,31 @@
 int socket_suse;
 
 t_config* archivo_config = config_create(PATH_CONFIG);
+//ver de donde saco el IP
 char* ip = config_get_string_value(archivo_config, "IP");
 int puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
 
 
-typedef struct hilolay_operations {
+static struct hilolay_operations funciones_suse={
 	.suse_create= me_create,
 	.suse_schedule_next = me_schedule_next,
 	.suse_wait = me_wait,
 	.suse_signal = me_signal,
 	.suse_join= me_join,
 	.suse_close = me_close,
-	} hilolay_operations;
+	};
 
 
 
 	// en hilolay_init abro la conexión del socket
 
 void hilolay_init(){
-	//ver de donde saco la IP y el puerto
 	socket_suse = conectarseA(ip,puerto);
 	if(socket_suse == 0){
-		return -1;
+	//no puede retornar porque es void
+	//ver como manejar este error
 	}
-	init_internal(hilolay_operations);
+	init_internal(funciones_suse);
 
 }
 
