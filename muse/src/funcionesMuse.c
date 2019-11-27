@@ -935,7 +935,87 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 }
 
 void funcion_unmap(t_paquete paquete,int socket_muse){
+	uint32_t resultado_unmap = 1;
+	printf("Inicio unmap\n");
+	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
 
+	pthread_mutex_lock(&mutex_acceso_upcm);
+
+	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
+	t_segmento* segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_recibida);
+	// si no se encuentra el segmento, deberia controlar el error
+
+	if(segmento_obtenido == NULL){
+		resultado_unmap = 2; // indico que debe producirse segmentation fault
+	}
+	else if((segmento_obtenido->tipo_segmento != SEGMENTO_MMAP) || (direccion_recibida != segmento_obtenido->base)){
+		resultado_unmap = 3; // indico que debe retornar -1
+	}
+
+	if(resultado_unmap > 1){
+		t_paquete paquete_respuesta = {
+				.header = MUSE_UNMAP,
+				.parametros = list_create()
+		};
+
+		///////////////// Parametros a enviar /////////////////
+		agregar_valor(paquete_respuesta.parametros,resultado_unmap);
+		enviar_paquete(paquete_respuesta,socket_muse);
+		///////////////////////////////////////////////////////
+
+		pthread_mutex_unlock(&mutex_acceso_upcm);
+
+		return;
+	}
+
+	int fd_archivo_segmento_mmap = fileno(segmento_obtenido->archivo_mmap);
+	t_archivo_mmap* archivo_mmap_encontrado = buscar_archivo_mmap(fd_archivo_segmento_mmap);
+
+	int igualSocket(int p) {
+		return p == proceso_encontrado->socket;
+	}
+	list_remove_by_condition(archivo_mmap_encontrado->sockets_procesos,(void*) igualSocket);
+
+	if(list_size(archivo_mmap_encontrado->sockets_procesos) == 0){
+		//list_remove_and_destroy_by_condition()
+
+		// terminar
+	}
+
+	pthread_mutex_unlock(&mutex_acceso_upcm);
+
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
+
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+
+	t_paquete paquete_respuesta = {
+			.header = MUSE_FREE,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1);
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
+
+	printf("Fin free\n");
 }
 
 

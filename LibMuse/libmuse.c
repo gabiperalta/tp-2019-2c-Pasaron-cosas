@@ -89,13 +89,6 @@ void muse_free(uint32_t dir){
 
 int muse_get(void* dst, uint32_t src, size_t n){
 
-	/*
-	 * AGREGAR SENAL SIGSEGV
-	 *
-	 * */
-
-	//raise(SIGSEGV);
-
 	t_paquete paquete = {
 			.header = MUSE_GET,
 			.parametros = list_create()
@@ -211,6 +204,23 @@ int muse_sync(uint32_t addr, size_t len){
 }
 
 int muse_unmap(uint32_t dir){
+
+	t_paquete paquete = {
+			.header = MUSE_UNMAP,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros, dir);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	printf("Unmap exitoso?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
+
 	return 0;
 }
 
