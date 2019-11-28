@@ -31,5 +31,6 @@ void funcion_sync(t_paquete paquete,int socket_muse);
 void funcion_unmap(t_paquete paquete,int socket_muse);
 
 char* obtener_ip_socket(int s);
+void log_estado_del_sistema();
 
 #endif /* FUNCIONESMUSE_H_ */

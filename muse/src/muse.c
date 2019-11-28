@@ -3,13 +3,10 @@
 
 int main(void) {
 
-	leer_config();
-	lista_procesos = list_create();
-	lista_clock = list_create();
-	lista_archivos_mmap = list_create();
-
 	init_memoria();
 	init_threads();
+
+	log_info(archivo_log,"====================== MUSE ======================");
 
 	system("clear");
 	printf("---------------- MUSE ----------------\n");
@@ -23,10 +20,10 @@ int main(void) {
 			free(linea);
 			break;
 		}
-
 		free(linea);
 	}
 
+	log_destroy(archivo_log);
 	free(upcm);
 	return 0;
 }

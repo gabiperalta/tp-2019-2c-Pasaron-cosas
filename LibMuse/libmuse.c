@@ -51,8 +51,7 @@ uint32_t muse_alloc(uint32_t tam){
 	};
 
 	///////////////// Parametros a enviar /////////////////
-	//agregar_valor(paquete.parametros, id_programa);
-	agregar_valor(paquete.parametros, tam);
+	agregar_valor(paquete.parametros,tam);
 	enviar_paquete(paquete,socket_muse);
 	///////////////////////////////////////////////////////
 

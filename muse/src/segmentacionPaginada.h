@@ -29,6 +29,7 @@ typedef struct{
 	char* id_programa;
 	t_list* tabla_segmentos;
 	int socket;
+	uint32_t metrica_espacio_disponible; // espacio disponible en el ultimo segmento pedido
 }t_proceso;
 
 typedef struct{
