@@ -70,7 +70,7 @@ void funcion_join(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = join(tid);
+	int retorno = join(tid, cliente);
 
 	t_paquete paquete_respuesta = {
 		.header = SUSE_JOIN,
@@ -91,7 +91,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = close(tid);
+	int retorno = close(tid,pid);
 
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CLOSE,
@@ -170,7 +170,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 
-	int retorno = crear(tid, program id);//funcion suse)(tid); //podria tener una respuesta
+	int retorno = crear(tid,pid);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 

@@ -7,7 +7,7 @@
 
 #include <funcionesSuse.h>
 
-
+//primero el de largo plazo despues el de corto no en paralelo. sin hacer hilos
 
 //debe ser int no void
 void iniciarPlanificacion(){
@@ -70,6 +70,9 @@ int next_tid(int id_programa){
 	//next_hilo = planificar(id_programa)
 	//return next_hilo;
 
+	//planifica()
+	//return process->hilo_exec->id
+
 }
 
 
@@ -83,12 +86,13 @@ void close(int tid){
 	thread* hilo_ejecutando = proceso->hilo_exec;
 	list_add(hilos_exit,hilo_ejecutando);
 	//eliminar tid
-	//si no hay hilo se liberan las conexiones
+	//si no hay hilo se liberan las conexiones, cerrar el cliente (memory leaks)
+	//en cada una de las colas?
 
 }
 
-//cuando no es hilo principal
 void crear(int tid, int program_id){
+	//pthread_create
 //	->tid= tid
 //	->program_id= program_id
 //	-> estimacion= 0
@@ -98,10 +102,17 @@ void crear(int tid, int program_id){
 // crear un hilo con ese tid? meterlo en la cola new del programa? Asignarle el programa que le corresponde por socket?
 }
 
-//tiene que haber otra funcion para crear el hilo principal?
 
 void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
 
+	process* proceso = list_find(lista_procesos, (void*)buscador);
+
+	bool buscador(process* proceso){
+		return !strcmp(proceso->pid, pid);
+	}
+
+
+	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
 
 	bool condicion(thread* hilo){
 		return !strcmp(hilo->tid, tid);
@@ -116,33 +127,23 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 
 	 else{
 		 //antes que nada hay que chequear si ese tid no pertenece a unn hilo finalizado porque en este caso hay que definir que hacer
-		process* proceso = list_find(lista_procesos, (void*)buscador);
-
-		bool buscador(process* proceso){
-			return !strcmp(proceso->pid, pid);
-		}
 
 		thread* hilo_en_ejecucion= proceso->hilo_exec;
 
 
 		list_add(hilos_blocked, hilo_en_ejecucion);
-		//proceso->hilo_exec =  //ver donde esta este hilo
+		proceso->hilo_exec = hilo_prioritario;
+
+		//agregar al hilo_prioritario en la lista join proceso->hilo_exec->tid
 
 	 }
 
 
-
-
-
-	thread* hilo_ejecutando = list_find(lista_procesos,(void*)buscador);
-	bool buscador(process* proceso){
-		return !strcmp(proceso->hilo_exec->tid, tid);
-	}
-
-	//hay que bloquear el thread que se esta ejecutando
-	//esperar a que termine el tid que envio por paramtro
-
 }
+
+//adentro de la estructura hilo tengo una lista de ids que fueron joineados por ese hilo. antes de cerrarlo paso todos esos hilso a ready
+
+//close tengo que evaluar antes de cerrarlo si hay hilos que fueron joineados y liberarlos
 
 //TODO: wait y signal, claro miras el numero si esta >0 le restas uno y si esta <=0 lo bloqueasl, lo pasas a esa cola
 //signal tenes que desbloquear el hilo, dentro de cada semafoto ver que hilos bloqueo y liberas fifo. te pasa el tid del actual y tenes que desb loquear el de otro, entonces agarras el algoritmo que quieras
@@ -164,7 +165,7 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 	}
 }
 
-void planificarCortoPlazo(){
+void planificarCortoPlazo(){ //le mando el proceso por parametro??
 		process* proceso = obtener_proceso_asociado(hilo);
 		t_list* hilos_listos = proceso->hilos_ready;
 		while(!list_is_empty(hilos_listos)){
@@ -199,6 +200,8 @@ void aplicarSJFConDesalojo(process* proceso) {
 		hilo_a_ejecutar->rafagas_ejecutadas++;
 		sem_post(sem_join);
 		sem_post(sem_ejecute);
+
+
 	}
 
 
