@@ -6,7 +6,7 @@
 
 //hillay no tiene el struct implenetado entonces implementa el init alumno . Entonces el rpograma llama al init de almuno que a su vez inicializa hilolay y usa el suse creat. Alumno le hace el callback a hilolay. El init esta en hilolay.h . Al hacer el callback hilolay conoce las funciones del struct de alumnos y puede e mpezar a implementarlas . El call back es cada funcion que es de inversion de control.
 
-#include <suse.h>
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
-#include "biblioteca_sockets.h"
 
 #ifndef hilolay_alumnos_h__
 	#define hilolay_alumnos_h__

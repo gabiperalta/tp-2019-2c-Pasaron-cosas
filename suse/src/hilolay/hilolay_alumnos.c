@@ -6,7 +6,6 @@
  */
 
 #include "hilolay_alumnos.h"
-#include "biblioteca_sockets.h"
 
 int socket_suse;
 

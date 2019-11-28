@@ -22,6 +22,8 @@ void iniciarPlanificacion(){
 	//de alguna forma deberia quedar return prox_hilo_ejecutar
 }
 
+//Hay que tener en cuenta el sem max?
+
 //tid y id del semaforo
 void wait(thread* hilo, char* id_sem){
 
@@ -84,9 +86,14 @@ void close(int tid){
 }
 
 //cuando no es hilo principal
-void crear(int tid){
+void crear(int tid, int program_id){
+//	->tid= tid
+//	->program_id= program_id
+//	-> estimacion= 0
+//	rafagas=0
 
-	// crear un hilo con ese tid? meterlo en la cola new del programa? Asignarle el programa que le corresponde por socket?
+	//AGREGAR EL HILO A NEW
+// crear un hilo con ese tid? meterlo en la cola new del programa? Asignarle el programa que le corresponde por socket?
 }
 
 //tiene que haber otra funcion para crear el hilo principal?
@@ -126,7 +133,6 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 }
 
 void planificarCortoPlazo(){
-		thread* hilo = next_tid(); // esto no se si esta bien
 		process* proceso = obtener_proceso_asociado(hilo);
 		t_list* hilos_listos = proceso->hilos_ready;
 		while(!list_is_empty(hilos_listos)){

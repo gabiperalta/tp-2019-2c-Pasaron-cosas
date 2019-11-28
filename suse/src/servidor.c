@@ -27,7 +27,7 @@ void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_suse)(t_paquete,int);
 
-	// por cada conexion nueva, agrego al proceso/hilo a la lista de threads
+	//por cada conexion nueva, agrego al proceso/hilo a la lista de threads
 
 	while(paquete.error != 1){
 		switch(paquete.header){
@@ -80,7 +80,7 @@ void funcion_join(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -101,7 +101,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -153,7 +153,7 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -170,7 +170,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 
-	int retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
+	int retorno = crear(tid, program id);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -185,7 +185,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 

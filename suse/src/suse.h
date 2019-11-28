@@ -10,7 +10,7 @@
 
 #include "../../biblioteca/biblioteca_sockets.h"
 #include "../../biblioteca/biblioteca.h"
-#include <funcionesSuse.h>
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/funcionesSuse.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
