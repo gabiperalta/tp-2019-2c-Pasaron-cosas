@@ -4,7 +4,7 @@
 
 void inicializarServidor(){
 
-	printf("socketDeEscucha: %i\n", PUERTO);
+	printf("socketDeEscucha: %i\n", puerto);
 	pthread_t hiloServidor;
 
 	pthread_create(&hiloServidor,NULL,(void*)servidor, NULL);
@@ -13,7 +13,7 @@ void inicializarServidor(){
 
 void servidor(){
 	void * conectado;
-	int puerto_escucha = escuchar(PUERTO);
+	int puerto_escucha = escuchar(puerto);
 
 	while((conectado=aceptarConexion(puerto_escucha))!= 1){
 		// agrega procesos

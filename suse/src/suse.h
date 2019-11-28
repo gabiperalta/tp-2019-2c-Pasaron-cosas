@@ -10,7 +10,6 @@
 
 #include "../../biblioteca/biblioteca_sockets.h"
 #include "../../biblioteca/biblioteca.h"
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/funcionesSuse.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +18,6 @@
 #include <commons/collections/list.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include <commons/collections/queue.h>
 #include <semaphore.h>
 #include <time.h>
 #include <signal.h>
@@ -32,7 +30,8 @@
 #define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
 									/* Estructuras*/
 
-int PUERTO;
+char* ip;
+int puerto;
 int grado_multiprogramacion;
 int tiempo_metricas;
 int alpha_planificacion;
@@ -46,12 +45,15 @@ t_log* suse_log;
 
 t_list* lista_procesos;
 
+t_list* semaforos;
+
 t_config* archivo_config;
+
 
 t_list* hilos_new;
 t_list* hilos_blocked;
 t_list* hilos_exit;
-t_list* semaforos;
+
 sem_t sem_planificacion;
 sem_t sem_join;
 sem_t sem_ejecute;
