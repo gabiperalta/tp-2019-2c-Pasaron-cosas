@@ -13,7 +13,6 @@
 void iniciarPlanificacion(){
 	log_info(logger,"Se inicia planificacion");
 
-	//esto de crear un hilo no entiendo para que
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
 	pthread_create(&hilo,NULL, (void*) planificarCortoPlazo, NULL);
@@ -64,10 +63,13 @@ void signal(thread* hilo, char* id_sem){
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
 	//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
 
-int next_tid(){
-	//tiene que dar proximo hilo segun el programa, iniciarplanificacion tiene que saber el id de programa?
+int next_tid(int id_programa){
+	//tiene que dar proximo hilo segun el programa,
 	log_info(logger,"Se planifica y se devuelve el next_tid");
-	return iniciarPlanificacion();
+	//semaforo
+	//next_hilo = planificar(id_programa)
+	//return next_hilo;
+
 }
 
 
@@ -98,14 +100,44 @@ void crear(int tid, int program_id){
 
 //tiene que haber otra funcion para crear el hilo principal?
 
-void join(int tid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
+void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
+
+
+	bool condicion(thread* hilo){
+		return !strcmp(hilo->tid, tid);
+		}
+
+
+	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
+
+	 if(existe_en_exit){
+		 //pensar que hacemos, si creamos log con error o que
+	 }
+
+	 else{
+		 //antes que nada hay que chequear si ese tid no pertenece a unn hilo finalizado porque en este caso hay que definir que hacer
+		process* proceso = list_find(lista_procesos, (void*)buscador);
+
+		bool buscador(process* proceso){
+			return !strcmp(proceso->pid, pid);
+		}
+
+		thread* hilo_en_ejecucion= proceso->hilo_exec;
+
+
+		list_add(hilos_blocked, hilo_en_ejecucion);
+		//proceso->hilo_exec =  //ver donde esta este hilo
+
+	 }
+
+
+
+
+
 	thread* hilo_ejecutando = list_find(lista_procesos,(void*)buscador);
 	bool buscador(process* proceso){
 		return !strcmp(proceso->hilo_exec->tid, tid);
 	}
-	list_add(hilos_blocked, hilo_ejecutando);
-	sem_wait(sem_join);
-	list_remove(hilos_blocked, hilo_ejecutando);
 
 	//hay que bloquear el thread que se esta ejecutando
 	//esperar a que termine el tid que envio por paramtro
