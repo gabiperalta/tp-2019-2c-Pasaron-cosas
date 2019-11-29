@@ -1,4 +1,4 @@
-#include <suse.h>
+#include "suse.h"
 
 int main(){
 	puts("Proceso SUSE");

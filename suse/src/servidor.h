@@ -18,7 +18,7 @@
 void inicializarServidor();
 void servidor();
 void procesar_solicitud(void *socket_cliente);
-
+char* obtener_ip_socket(int s);
 
 /////////  FUNCIONES SUSE  /////////
 

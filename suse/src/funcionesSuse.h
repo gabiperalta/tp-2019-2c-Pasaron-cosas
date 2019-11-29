@@ -8,8 +8,7 @@
 #ifndef FUNCIONESSUSE_H_
 #define FUNCIONESSUSE_H_
 
-#include <suse.h>
-#include <logs.h>
+#include "suse.h"
 
 void iniciarPlanificacion();
 

@@ -1,18 +1,32 @@
 /*
  * hilolay_alumnos.c
  *
- *  Created on: 12 nov. 2019
+ *  Created on: 28 nov. 2019
  *      Author: utnso
  */
 
-#include "hilolay_alumnos.h"
+#include <hilolay/alumnos.h>
+#include <hilolay/hilolay.h>
+#include <hilolay/internal.h>
+#include "suse.h"
+#include "funcionesSuse.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <time.h>
+#include <string.h>
+#include <stdlib.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include "biblioteca_sockets.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stddef.h>
 
 int socket_suse;
 
-t_config* archivo_config = config_create(PATH_CONFIG);
 //ver de donde saco el IP
-char* ip = config_get_string_value(archivo_config, "IP");
-int puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
+
 
 
 static struct hilolay_operations funciones_suse={
@@ -157,5 +171,7 @@ int me_close(int tid){
 
 	return retorno;
 }
+
+
 
 

@@ -5,13 +5,13 @@
  *      Author: utnso
  */
 
-#include <funcionesSuse.h>
+#include "funcionesSuse.h"
 
 //primero el de largo plazo despues el de corto no en paralelo. sin hacer hilos
 
 //debe ser int no void
 void iniciarPlanificacion(){
-	log_info(logger,"Se inicia planificacion");
+	log_info(suse_log,"Se inicia planificacion");
 
 	pthread_t hilo;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
@@ -38,7 +38,7 @@ void wait(thread* hilo, char* id_sem){
 	else{
 		list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
 		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
-		log_info(logger,"Bloqueo thread en wait");
+		log_info(suse_log,"Bloqueo thread en wait");
 	}
 
 }
@@ -54,7 +54,7 @@ void signal(thread* hilo, char* id_sem){
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
 		list_remove(hilos_blocked, tid);
-		log_info(logger,"desbloqueo hilo en signal");
+		log_info(suse_log,"desbloqueo hilo en signal");
 	}
 	else{
 		semaforo->cant_instancias_disponibles +=1;
@@ -65,7 +65,7 @@ void signal(thread* hilo, char* id_sem){
 
 int next_tid(int id_programa){
 	//tiene que dar proximo hilo segun el programa,
-	log_info(logger,"Se planifica y se devuelve el next_tid");
+	log_info(suse_log,"Se planifica y se devuelve el next_tid");
 	//semaforo
 	//next_hilo = planificar(id_programa)
 	//return next_hilo;
@@ -221,7 +221,6 @@ process* obtener_proceso_asociado(thread* hilo){
 
 void leer_config(){
 	t_config* archivo_config = config_create(PATH_CONFIG);
-	PUERTO = config_get_int_value(archivo_config,"LISTEN_PORT");
 	grado_multiprogramacion= config_get_int_value(archivo_config,"MAX_MULTIPROG");
 	tiempo_metricas = config_get_int_value(archivo_config,"METRICS_TIMER");
 	alpha_planificacion = config_get_int_value(archivo_config,"ALPHA_SJF");
@@ -229,6 +228,8 @@ void leer_config(){
 	inicio_sem = config_get_array_value(archivo_config, "SEM_INIT");
 	max_sem = config_get_array_value(archivo_config, "SEM_MAX");
 	metrics = config_get_int_value(archivo_config,"METRICS_TIMER");
+	ip = config_get_string_value(archivo_config, "IP");
+	puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
 	for(int i = 0; i< strlen(ids_sem); i++){
 		semaforos_suse* aux = sizeof(semaforos_suse);
 		aux->id = malloc(strlen(ids_sem[i]));
@@ -242,13 +243,13 @@ void leer_config(){
 }
 
 void destructor_de_procesos(process* proceso){
-	log_info(logger,"destruyo proceso");
+	log_info(suse_log,"destruyo proceso");
 	list_destroy(proceso->hilos_ready);
 	free(proceso->hilo_exec);
 }
 
 void destructor_de_semaforos(semaforos_suse* semaforo){
-	log_info(logger,"destruyo semaforo");
+	log_info(suse_log,"destruyo semaforo");
 	list_destroy(semaforo->hilos_bloqueados);
 	free(semaforo->id);
 }
