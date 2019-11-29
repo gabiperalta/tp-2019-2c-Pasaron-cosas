@@ -10,19 +10,22 @@
 
 //primero el de largo plazo despues el de corto no en paralelo. sin hacer hilos
 
-//debe ser int no void
 void iniciarPlanificacion(){
+
 	log_info(suse_log,"Se inicia planificacion");
 
 	pthread_t hilo;
+	pthread_t hilo2;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
-	pthread_create(&hilo,NULL, (void*) planificarCortoPlazo, NULL);
 	pthread_detach(hilo);
+	pthread_detach(hilo2);
 
-	//de alguna forma deberia quedar return prox_hilo_ejecutar
+
 }
 
 //Hay que tener en cuenta el sem max?
+
+//ver en el signal si el numero sobrepasa el maximo y en ese caso no sumo nada
 
 //tid y id del semaforo
 void wait(thread* hilo, char* id_sem){
@@ -33,46 +36,55 @@ void wait(thread* hilo, char* id_sem){
 	}
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 
-	if(semaforo->cant_instancias_disponibles >0){
-		semaforo->cant_instancias_disponibles -=1;
-	}
-	else{
-		list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
-		list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
-		log_info(suse_log,"Bloqueo thread en wait");
-	}
+	list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
+	list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
+	semaforo->cant_instancias_disponibles -=1;
+	log_info(suse_log,"Bloqueo thread en wait");
 
 }
 
+
+
 void signal(thread* hilo, char* id_sem){
+
+
 	uint8_t tid = hilo->tid;
 	bool buscador(semaforos_suse* semaforo){
 			return !strcmp(semaforo->id, id_sem);
 	}
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
-	if(semaforo->cant_instancias_disponibles >= 0){
+	if(semaforo->cant_instancias_disponibles <= 0){ //ver si la lista es vacia
 		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
 		list_remove(hilos_blocked, tid);
+
 		log_info(suse_log,"desbloqueo hilo en signal");
 	}
-	else{
+
+	if(cant_inst < cant max){
+
 		semaforo->cant_instancias_disponibles +=1;
-	}}
+	}
+}
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
-	//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
+//Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
 
-int next_tid(int id_programa){
-	//tiene que dar proximo hilo segun el programa,
+int next_tid(int pid){
+	//tiene que dar proximo hilo segun el programa
+
 	log_info(suse_log,"Se planifica y se devuelve el next_tid");
-	//semaforo
-	//next_hilo = planificar(id_programa)
-	//return next_hilo;
 
-	//planifica()
-	//return process->hilo_exec->id
+	planificarCortoPlazo(pid);
+
+	process* proceso = list_find(lista_procesos, (void*)buscador);
+
+	bool buscador(process* proceso){
+		return !strcmp(proceso->pid, pid);
+	}
+
+	return proceso->hilo_exec->tid;
 
 }
 
@@ -88,6 +100,7 @@ void close(int tid){
 
 	for(int i=0; i<list_size(hilo_ejecutando->hilos_joineados); i++){
 		//ver aca memoria
+		//cambiar la lista por un solo int hilo joineado
 
 		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador);
 
@@ -112,7 +125,7 @@ void close(int tid){
 
 
 	//eliminar tid
-	//si no hay hilo se liberan las conexiones, cerrar el cliente (memory leaks)
+	//si no hay hilo se liberan las conexiones, cerrar el socket
 	//en cada una de las colas?
 
 }
@@ -122,12 +135,15 @@ void crear(int tid, int program_id){
 //	->tid= tid
 //	->program_id= program_id
 //	-> estimacion= 0
-//	rafagas=0
+//	->rafagas=0
 
 	//AGREGAR EL HILO A NEW
-// crear un hilo con ese tid? meterlo en la cola new del programa? Asignarle el programa que le corresponde por socket?
+	//SI es un hilo principal PASAR A READY DIRECTOOOO!!!!! winwin
+
+	//chequear en todas las colas si no hay ningun hilo de ese proceso para saber si es principal
 }
 
+//el tid que viene por parametro puede tener cualquier estado
 
 void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hilo que recibe
 
@@ -152,7 +168,6 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 	 }
 
 	 else{
-		 //antes que nada hay que chequear si ese tid no pertenece a unn hilo finalizado porque en este caso hay que definir que hacer
 
 		thread* hilo_en_ejecucion= proceso->hilo_exec;
 
@@ -174,11 +189,8 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 //TODO: wait y signal, claro miras el numero si esta >0 le restas uno y si esta <=0 lo bloqueasl, lo pasas a esa cola
 //signal tenes que desbloquear el hilo, dentro de cada semafoto ver que hilos bloqueo y liberas fifo. te pasa el tid del actual y tenes que desb loquear el de otro, entonces agarras el algoritmo que quieras
 
-//close lo borra y crear hilo de usuario mete un hilo del programa
-
 //join, bloquea el thread actual en le que esta (mirar el que esta ejecutando) y espera a que termine el thread que le pasas por parametro. El tid que te pasa el join es el que vas a esperar.
 
-//necesito poder tener el proximo hilo a ejecutar
 
 void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo hilo
 	while(1){
@@ -191,8 +203,10 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 	}
 }
 
-void planificarCortoPlazo(){ //le mando el proceso por parametro??
-		process* proceso = obtener_proceso_asociado(hilo);
+void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
+
+		//agarrar proceso
+
 		t_list* hilos_listos = proceso->hilos_ready;
 		while(!list_is_empty(hilos_listos)){
 			aplicarSJFConDesalojo(proceso);// sockets
@@ -224,7 +238,6 @@ void aplicarSJFConDesalojo(process* proceso) {
 		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready,index);
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
-		sem_post(sem_join);
 		sem_post(sem_ejecute);
 
 

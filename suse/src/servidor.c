@@ -21,7 +21,13 @@ void servidor(){
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
+		//process* proceso = malloc(sizeof proceso));
+		//inicializar lista proceso ready
+		//list_add();
+		//agregar a la lista de procesos de suse
 	}
+
+
 }
 void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
@@ -70,7 +76,7 @@ void funcion_join(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = join(tid, cliente);
+	int retorno = join(tid, socket_suse);
 
 	t_paquete paquete_respuesta = {
 		.header = SUSE_JOIN,
