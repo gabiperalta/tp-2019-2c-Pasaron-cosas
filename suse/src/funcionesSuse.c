@@ -118,8 +118,8 @@ void close(int tid){
 
 	//if() ver si el proceso esta sin hilos asociados {
 
-	// liberar al cliente;
-
+	// liberar al cliente; agarrar del tid el pid buscar si es el ultimo hilo, sacarlod e la lista de procesos hacer un close al socket y listo
+	//matar el hilo del handle del proceso del socket. KILLLLL
 
 	//}
 

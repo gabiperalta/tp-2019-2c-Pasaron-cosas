@@ -71,6 +71,10 @@ typedef struct{
 	uint8_t pid; // proceso en el que esta el hilo
 	t_list* hilos_joineados; //lista de tid de hilos que joineo
 	double rafagas_estimadas;
+	int tiempo_ejecucion;
+	int tiempo_espera;
+	int tiempo_uso_CPU;
+	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
 }thread;
 
