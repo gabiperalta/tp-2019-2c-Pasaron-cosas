@@ -1,5 +1,5 @@
 #include "servidor.h"
-
+#include "suse.h"
 
 
 void inicializarServidor(){
@@ -14,17 +14,24 @@ void inicializarServidor(){
 void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(puerto);
-
+	log_info(suse_log, "Conexion aceptada");
 	while((conectado=aceptarConexion(puerto_escucha))!= 1){
 		// agrega procesos
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
+<<<<<<< HEAD
 		//process* proceso = malloc(sizeof(proceso));
 		//inicializar lista proceso ready
 		//list_add();
 		//agregar a la lista de procesos de suse
+=======
+		process* proceso = malloc(sizeof(process));
+		proceso->hilos_ready = list_create();//inicializar lista proceso ready
+		list_add(lista_procesos,proceso);//list_add();
+	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
+>>>>>>> 8bf03c8f6bce8eaeae6cb9a39d873a8f21f5be92
 	}
 
 

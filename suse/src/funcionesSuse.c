@@ -12,20 +12,16 @@
 
 void iniciarPlanificacion(){
 
-	log_info(suse_log,"Se inicia planificacion");
-
 	pthread_t hilo;
 	pthread_t hilo2;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
 	pthread_detach(hilo);
 	pthread_detach(hilo2);
 
+	log_info(suse_log, "Planificacion iniciada correctamente");
 
 }
 
-//Hay que tener en cuenta el sem max?
-
-//ver en el signal si el numero sobrepasa el maximo y en ese caso no sumo nada
 
 //tid y id del semaforo
 void wait(thread* hilo, char* id_sem){
@@ -39,7 +35,8 @@ void wait(thread* hilo, char* id_sem){
 	list_add(semaforo->hilos_bloqueados, tid); // uso las dos colas para no hacer finds
 	list_add(hilos_blocked, tid);//paso el thread a la cola de bloqueado
 	semaforo->cant_instancias_disponibles -=1;
-	log_info(suse_log,"Bloqueo thread en wait");
+
+	log_info(suse_log,"Se bloqueo el thread");
 
 }
 
@@ -59,10 +56,10 @@ void signal(thread* hilo, char* id_sem){
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
 		list_remove(hilos_blocked, tid);
 
-		log_info(suse_log,"desbloqueo hilo en signal");
+		log_info(suse_log,"Desbloqueo thread");
 	}
 
-	if(cant_inst < cant max){
+	if(semaforo->cant_instancias_disponibles < semaforo->max_valor){
 
 		semaforo->cant_instancias_disponibles +=1;
 	}
@@ -74,47 +71,61 @@ void signal(thread* hilo, char* id_sem){
 int next_tid(int pid){
 	//tiene que dar proximo hilo segun el programa
 
-	log_info(suse_log,"Se planifica y se devuelve el next_tid");
-
 	planificarCortoPlazo(pid);
 
-	process* proceso = list_find(lista_procesos, (void*)buscador);
+	bool buscadorṔID(process* proceso){
+				return !strcmp(proceso->pid, pid);
+		}
+	process* proceso = list_find(lista_procesos, (void*)buscadorṔID);
 
-	bool buscador(process* proceso){
-		return !strcmp(proceso->pid, pid);
-	}
 
 	return proceso->hilo_exec->tid;
+
+	log_info(suse_log,"Se planifica y se devuelve el next_tid");
 
 }
 
 
 void close(int tid){
 	sem_wait(sem_ejecute);
-	thread* hilo = list_find(lista_procesos,(void*) buscador);
-	bool buscador(process* proceso){
+	bool buscadorClose(process* proceso){
 		return !strcmp(proceso->hilo_exec->tid, tid);
 	}
+	thread* hilo = list_find(lista_procesos,(void*) buscadorClose);
+
 	process* proceso = obtener_proceso_asociado(hilo);
 	thread* hilo_ejecutando = proceso->hilo_exec;
 
-	for(int i=0; i<list_size(hilo_ejecutando->hilos_joineados); i++){
+	//for(int i=0; i<list_size(hilo_ejecutando->hilos_joineados); i++){
 		//ver aca memoria
 		//cambiar la lista por un solo int hilo joineado
+	bool buscador2(thread* hilo){
+		return !strcmp(hilo->tid, hilo_ejecutando->tid_joineado);
+	}
 
-		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador);
-
-		bool buscador(thread* hilo){
-			return !strcmp(hilo->tid, hilo_ejecutando->hilos_joineados[i]);
-		}
+	thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador2);
 
 		list_remove(hilos_blocked, hilo_joineado);
 
 		list_add(proceso->hilos_ready, hilo_joineado);
 
-	}
+		sem_wait(mut_exit);
 
-	list_add(hilos_exit,hilo_ejecutando);
+		list_add(hilos_exit,hilo_ejecutando);
+
+		sem_post(mut_exit);
+
+		if(list_is_empty(proceso->hilo_exec) && proceso->hilo_exec == NULL){
+
+			bool condicionProceso(process* proceso){
+				return !strcmp(proceso->pid,socket_suse);
+			}
+			list_remove_and_destroy_by_condition(lista_procesos,(void*)condicionProceso,(void*)destructor_de_procesos);
+			close(socket_suse);
+			//kill()
+			log_info(suse_log, "Se hizo un close");
+	}
+}
 
 	//if() ver si el proceso esta sin hilos asociados {
 
@@ -128,9 +139,9 @@ void close(int tid){
 	//si no hay hilo se liberan las conexiones, cerrar el socket
 	//en cada una de las colas?
 
-}
 
 void crear(int tid, int program_id){
+
 	//pthread_create
 //	->tid= tid
 //	->program_id= program_id
@@ -171,23 +182,24 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 
 		thread* hilo_en_ejecucion= proceso->hilo_exec;
 
+		sem_wait(mut_blocked);
 
 		list_add(hilos_blocked, hilo_en_ejecucion);
+
+		sem_post(mut_blocked);
+
 		proceso->hilo_exec = hilo_prioritario;
 
-		list_add(hilo_prioritario->hilos_joineados,hilo_en_ejecucion->tid);
+		hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
 
 	 }
-
+	 log_info(suse_log, "Se hizo un join");
 
 }
 
 //adentro de la estructura hilo tengo una lista de ids que fueron joineados por ese hilo. antes de cerrarlo paso todos esos hilso a ready
 
 //close tengo que evaluar antes de cerrarlo si hay hilos que fueron joineados y liberarlos
-
-//TODO: wait y signal, claro miras el numero si esta >0 le restas uno y si esta <=0 lo bloqueasl, lo pasas a esa cola
-//signal tenes que desbloquear el hilo, dentro de cada semafoto ver que hilos bloqueo y liberas fifo. te pasa el tid del actual y tenes que desb loquear el de otro, entonces agarras el algoritmo que quieras
 
 //join, bloquea el thread actual en le que esta (mirar el que esta ejecutando) y espera a que termine el thread que le pasas por parametro. El tid que te pasa el join es el que vas a esperar.
 
@@ -200,30 +212,31 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 			aplicarFIFO();
 			i++;
 		}
+
+		log_info(suse_log,"Se planifico por FIFO");
 	}
 }
 
 void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
-
-		//agarrar proceso
+		bool buscadorProceso(process* proceso){
+			return !strcmp(proceso->pid,pid);//agarrar proceso
+		}
+		process* proceso = list_find(lista_procesos, (void*) buscadorProceso);
 
 		t_list* hilos_listos = proceso->hilos_ready;
 		while(!list_is_empty(hilos_listos)){
 			aplicarSJFConDesalojo(proceso);// sockets
 		}
 		sem_post(sem_planificacion);
+		log_info(suse_log, "Se planifico por SJF");
 }
 
 void aplicarFIFO(){
-		uint64_t startTime, endTime;
 		thread* hilo_elegido = list_remove(hilos_new,0);
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
-		proceso->hilos_ready = list_create();
 		t_list* hilos_listos = proceso->hilos_ready;
-		startTime = getCurrentTime();
 		list_add(hilos_listos,hilo_elegido);
-		endTime = getCurrentTime();
-
+		hilo_elegido->timestamp_inicio = clock();
 	}
 
 void aplicarSJFConDesalojo(process* proceso) {
@@ -236,11 +249,19 @@ void aplicarSJFConDesalojo(process* proceso) {
 
 		int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
 		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready,index);
+		hilo_a_ejecutar->timestamp_final = clock();
+		clock_t tiempoReady = (hilo_a_ejecutar->timestamp_final - hilo_a_ejecutar->timestamp_inicio) * 1000;
+		hilo_a_ejecutar->tiempo_espera += tiempoReady;
+
+		hilo_a_ejecutar->timestamp_inicio = clock();
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
 		sem_post(sem_ejecute);
+		hilo_a_ejecutar->timestamp_final = clock();
+		clock_t tiempoCPU = (hilo_a_ejecutar->timestamp_final - hilo_a_ejecutar->timestamp_inicio) * 1000;
+		hilo_a_ejecutar->tiempo_uso_CPU += tiempoCPU;
 
-
+		metricasHilo(hilo_a_ejecutar);
 	}
 
 
@@ -258,6 +279,40 @@ process* obtener_proceso_asociado(thread* hilo){
 	return list_get(lista_procesos,hilo->pid);
 }
 
+void inicializar_listas(){
+	lista_procesos = list_create();
+	hilos_new = list_create();
+	hilos_blocked = list_create();
+	hilos_exit = list_create();
+	semaforos = list_create();
+}
+void inicializar_semaforos(){
+	sem_init(mut_exit, NULL, 1);
+	sem_init(mut_blocked,NULL,1);
+	sem_init(mut_new, NULL, 1);
+	sem_init(mut_semaforos, NULL, 1);
+	sem_init(sem_planificacion,NULL, grado_multiprogramacion);
+	sem_init(sem_join,NULL,1);
+	sem_init(sem_ejecute,NULL,1);
+}
+
+void destructor_listas(){
+	list_destroy_and_destroy_elements(lista_procesos,(void*)destructor_de_procesos);
+	list_destroy(hilos_new);
+	list_destroy(hilos_blocked);
+	list_destroy(hilos_exit);
+	list_destroy_and_destroy_elements(semaforos,(void*)destructor_de_semaforos);
+}
+
+void destructor_semaforos(){
+	sem_destroy(sem_planificacion);
+	sem_destroy(sem_join);
+	sem_destroy(sem_ejecute);
+	sem_destroy(mut_blocked);
+	sem_destroy(mut_exit);
+	sem_destroy(mut_new);
+	sem_destroy(mut_semaforos);
+}
 void leer_config(){
 	t_config* archivo_config = config_create(PATH_CONFIG);
 	grado_multiprogramacion= config_get_int_value(archivo_config,"MAX_MULTIPROG");
@@ -276,7 +331,12 @@ void leer_config(){
 		aux->cant_instancias_disponibles = atoi(inicio_sem[i]);
 		aux->max_valor = atoi(max_sem[i]);
 		aux->hilos_bloqueados = list_create();
+
+		sem_wait(mut_semaforos);
+
 		list_add(semaforos,aux);
+
+		sem_post(mut_semaforos);
 	}
 	config_destroy(archivo_config);
 }
@@ -293,10 +353,29 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 	free(semaforo->id);
 }
 
-uint64_t getCurrentTime(){
-	struct timeval tv;
-	gettimeofday(&tv,NULL);
-	uint64_t x = (uint64_t)( (tv.tv_sec)*1000 + (tv.tv_usec)/1000 );
-	return x;
+void metricasHilo(thread* hilo){
+	process* proceso = obtener_proceso_asociado(hilo);
+	for(int i = 0; i<list_size(proceso->hilos_ready); i++){
+		printf("El tiempo de espera en Ready es: %i", hilo->tiempo_espera);
+	}
+	printf("El tiempo de uso de la CPU es: %i", hilo->tiempo_uso_CPU);
 }
 
+void metricasPrograma(process proceso){
+	printf("El grado actual de multiprogramacion es: %i", grado_multiprogramacion);
+	printf("La cantidad de hilos en READY es: %i", list_size(hilos_new)); //por cada programa
+	printf("La cantidad de hilos en READY es: %i", list_size(proceso->hilos_ready));
+	printf("La cantidad de hilos en BLOCKED es: %i",list_size(hilos_blocked));
+
+}
+
+void metricasSemaforo(semaforos_suse* semaforo){
+	for(int i= 0; i < list_size(semaforos); i++){
+		printf("El Valor actual semaforo: %s es: %i", semaforo->id, semaforo->cant_instancias_disponibles);
+	}
+}
+
+void metricas(){
+	sleep(metrics);
+
+}

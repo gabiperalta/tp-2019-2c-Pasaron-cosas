@@ -29,7 +29,6 @@
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 #define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
 									/* Estructuras*/
-
 char* ip;
 int puerto;
 int grado_multiprogramacion;
@@ -57,6 +56,11 @@ t_list* hilos_exit;
 sem_t sem_planificacion;
 sem_t sem_join;
 sem_t sem_ejecute;
+sem_t mut_exit;
+sem_t mut_new;
+sem_t mut_blocked;
+sem_t mut_semaforos;
+
 pthread_t threadMetrics;
 
 typedef struct{
@@ -69,13 +73,15 @@ typedef struct{
 typedef struct{
 	uint8_t tid; // id del hilo
 	uint8_t pid; // proceso en el que esta el hilo
-	t_list* hilos_joineados; //lista de tid de hilos que joineo
+	int tid_joineado;
 	double rafagas_estimadas;
-	int tiempo_ejecucion;
-	int tiempo_espera;
-	int tiempo_uso_CPU;
+	clock_t tiempo_ejecucion;
+	clock_t tiempo_espera;
+	clock_t tiempo_uso_CPU;
 	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
+	clock_t timestamp_inicio;
+	clock_t timestamp_final;
 }thread;
 
 typedef struct{
