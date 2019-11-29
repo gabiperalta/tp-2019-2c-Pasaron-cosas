@@ -7,7 +7,7 @@
 
 // Funciones generales de MUSE
 
-#include "funcionesMuse.h"
+#include "madness.h"
 
 // El socket que se crea en MUSE es diferente al creado en libmuse
 // Ej.: para una misma conexion, MUSE tiene el socket 2 y libmuse el 7

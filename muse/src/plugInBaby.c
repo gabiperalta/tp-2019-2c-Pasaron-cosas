@@ -7,7 +7,7 @@
 
 // Funciones para la segmentacion paginada de MUSE
 
-#include "segmentacionPaginada.h"
+#include "plugInBaby.h"
 
 
 t_proceso* crear_proceso(char* id_programa,int socket_creado){
