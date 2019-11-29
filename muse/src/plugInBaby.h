@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef SEGMENTACIONPAGINADA_H_
-#define SEGMENTACIONPAGINADA_H_
+#ifndef PLUGINBABY_H_
+#define PLUGINBABY_H_
 
 #include "muse.h"
 //#include <stdio.h>
@@ -92,4 +92,4 @@ void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap);
 t_pagina* ejecutar_algoritmo_clock_modificado();
 void agregar_frame_clock(t_pagina* pagina);
 
-#endif /* SEGMENTACIONPAGINADA_H_ */
+#endif /* PLUGINBABY_H_ */
