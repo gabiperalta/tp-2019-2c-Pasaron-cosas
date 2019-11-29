@@ -21,7 +21,7 @@ void servidor(){
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
-		//process* proceso = malloc(sizeof proceso));
+		//process* proceso = malloc(sizeof(proceso));
 		//inicializar lista proceso ready
 		//list_add();
 		//agregar a la lista de procesos de suse
