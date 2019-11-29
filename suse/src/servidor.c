@@ -21,17 +21,11 @@ void servidor(){
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
-<<<<<<< HEAD
-		//process* proceso = malloc(sizeof(proceso));
-		//inicializar lista proceso ready
-		//list_add();
-		//agregar a la lista de procesos de suse
-=======
 		process* proceso = malloc(sizeof(process));
 		proceso->hilos_ready = list_create();//inicializar lista proceso ready
 		list_add(lista_procesos,proceso);//list_add();
-	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
->>>>>>> 8bf03c8f6bce8eaeae6cb9a39d873a8f21f5be92
+		log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
+
 	}
 
 
@@ -104,7 +98,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = close(tid,pid);
+	int retorno = close(tid, socket_suse);
 
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CLOSE,
@@ -183,7 +177,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 
-	int retorno = crear(tid,pid);//funcion suse)(tid); //podria tener una respuesta
+	int retorno = crear(tid,socket_suse);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -209,7 +203,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
-	int retorno= dame_prox_hilo();//funcion suse)(tid); //podria tener una respuesta
+	int retorno= next_tid(socket_suse);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 

@@ -13,10 +13,8 @@
 void iniciarPlanificacion(){
 
 	pthread_t hilo;
-	pthread_t hilo2;
 	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
 	pthread_detach(hilo);
-	pthread_detach(hilo2);
 
 	log_info(suse_log, "Planificacion iniciada correctamente");
 
@@ -86,14 +84,21 @@ int next_tid(int pid){
 }
 
 
-void close(int tid){
+void close(int tid, int pid){
 	sem_wait(sem_ejecute);
-	bool buscadorClose(process* proceso){
-		return !strcmp(proceso->hilo_exec->tid, tid);
-	}
-	thread* hilo = list_find(lista_procesos,(void*) buscadorClose);
 
-	process* proceso = obtener_proceso_asociado(hilo);
+	process* proceso = list_find(lista_procesos, (void*)buscador);
+
+	bool buscador(process* proceso){
+		return !strcmp(proceso->pid, pid);
+	}
+
+	//bool buscadorClose(process* proceso){
+	//	return !strcmp(proceso->hilo_exec->tid, tid);
+	//}
+
+	//thread* hilo = list_find(lista_procesos,(void*) buscadorClose);
+
 	thread* hilo_ejecutando = proceso->hilo_exec;
 
 	//for(int i=0; i<list_size(hilo_ejecutando->hilos_joineados); i++){
@@ -103,50 +108,73 @@ void close(int tid){
 		return !strcmp(hilo->tid, hilo_ejecutando->tid_joineado);
 	}
 
-	thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador2);
+	if(hilo_ejecutando->tid_joineado != 0){
+		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador2);
 
 		list_remove(hilos_blocked, hilo_joineado);
 
 		list_add(proceso->hilos_ready, hilo_joineado);
 
-		sem_wait(mut_exit);
+	}
 
-		list_add(hilos_exit,hilo_ejecutando);
 
-		sem_post(mut_exit);
+	sem_wait(mut_exit);
 
-		if(list_is_empty(proceso->hilo_exec) && proceso->hilo_exec == NULL){
+	list_add(hilos_exit,hilo_ejecutando);
 
+	sem_post(mut_exit);
+
+	log_info(suse_log, "Se hizo un close");
+
+
+	bool condicion(thread* hilo){
+		return !strcmp(hilo->tid, tid);
+	}
+
+	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
+		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
 			bool condicionProceso(process* proceso){
 				return !strcmp(proceso->pid,socket_suse);
 			}
 			list_remove_and_destroy_by_condition(lista_procesos,(void*)condicionProceso,(void*)destructor_de_procesos);
 			close(socket_suse);
-			//kill()
-			log_info(suse_log, "Se hizo un close");
+					//kill()
+			log_info(suse_log, "Se cerro la conexión");
+		}
 	}
 }
 
-	//if() ver si el proceso esta sin hilos asociados {
 
-	// liberar al cliente; agarrar del tid el pid buscar si es el ultimo hilo, sacarlod e la lista de procesos hacer un close al socket y listo
-	//matar el hilo del handle del proceso del socket. KILLLLL
+void crear(int tid, int pid){
 
-	//}
+	thread* hilo = malloc(sizeof(hilo));
+	//CHEQUEAAAAAAR
 
+	hilo->tid= tid;
+	hilo->pid= pid;
+	hilo->rafagas_estimadas=0;
+	hilo->tid_joineado =0;
+	hilo->rafagas_ejecutadas;
 
-	//eliminar tid
-	//si no hay hilo se liberan las conexiones, cerrar el socket
-	//en cada una de las colas?
+	//NO SE QUE PONER EN RAFAGA Y ESTIMACION
+	//ver si inicializamos lo de las metricas en 0 o que
 
+	process* proceso = list_find(lista_procesos, (void*)buscador);
 
-void crear(int tid, int program_id){
+	bool buscador(process* proceso){
+		return !strcmp(proceso->pid, pid);
+	}
 
-	//pthread_create
-//	->tid= tid
-//	->program_id= program_id
-//	-> estimacion= 0
-//	->rafagas=0
+	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
+		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
+			list_add(proceso->hilos_ready, hilo);
+			log_info(suse_log, "creo hilo principal en ready");
+		}
+	}
+	else{
+		list_add(hilos_new, hilo);
+	}
+
 
 	//AGREGAR EL HILO A NEW
 	//SI es un hilo principal PASAR A READY DIRECTOOOO!!!!! winwin
