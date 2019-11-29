@@ -26,10 +26,15 @@ thread* CalcularEstimacion(thread* unHilo);
 bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo);
 
 process* obtener_proceso_asociado(thread* hilo);
-thread* elegidoParaPlanificar(t_list* hilos);
+
 void destructor_de_procesos(process* proceso);
 void destructor_de_hilos(thread* hilo);
+void inicializar_listas();
+void inicializar_semaforos();
+void destructor_listas();
+void destructor_semaforos();
 void leer_config();
+void metricas();
 
 
 #endif /* FUNCIONESSUSE_H_ */
