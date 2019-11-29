@@ -69,6 +69,7 @@ typedef struct{
 typedef struct{
 	uint8_t tid; // id del hilo
 	uint8_t pid; // proceso en el que esta el hilo
+	t_list* hilos_joineados; //lista de tid de hilos que joineo
 	double rafagas_estimadas;
 	int rafagas_ejecutadas;
 }thread;

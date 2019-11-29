@@ -81,11 +81,36 @@ void close(int tid){
 	sem_wait(sem_ejecute);
 	thread* hilo = list_find(lista_procesos,(void*) buscador);
 	bool buscador(process* proceso){
-		return !strcmp(proceso->hilo_exec->tid, tid); //estan mal los tipos
+		return !strcmp(proceso->hilo_exec->tid, tid);
 	}
 	process* proceso = obtener_proceso_asociado(hilo);
 	thread* hilo_ejecutando = proceso->hilo_exec;
+
+	for(int i=0; i<list_size(hilo_ejecutando->hilos_joineados); i++){
+		//ver aca memoria
+
+		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador);
+
+		bool buscador(thread* hilo){
+			return !strcmp(hilo->tid, hilo_ejecutando->hilos_joineados[i]);
+		}
+
+		list_remove(hilos_blocked, hilo_joineado);
+
+		list_add(proceso->hilos_ready, hilo_joineado);
+
+	}
+
 	list_add(hilos_exit,hilo_ejecutando);
+
+	//if() ver si el proceso esta sin hilos asociados {
+
+	// liberar al cliente;
+
+
+	//}
+
+
 	//eliminar tid
 	//si no hay hilo se liberan las conexiones, cerrar el cliente (memory leaks)
 	//en cada una de las colas?
@@ -123,7 +148,7 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 
 	 if(existe_en_exit){
-		 //pensar que hacemos, si creamos log con error o que
+		 log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
 	 }
 
 	 else{
@@ -135,7 +160,7 @@ void join(int tid, int pid){ // bloquea el hilo de exec hasta que termine el hil
 		list_add(hilos_blocked, hilo_en_ejecucion);
 		proceso->hilo_exec = hilo_prioritario;
 
-		//agregar al hilo_prioritario en la lista join proceso->hilo_exec->tid
+		list_add(hilo_prioritario->hilos_joineados,hilo_en_ejecucion->tid);
 
 	 }
 
