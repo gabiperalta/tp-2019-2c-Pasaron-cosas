@@ -149,12 +149,17 @@ void crear(int tid, int pid){
 	hilo->rafagas_ejecutadas=0;
 	hilo->porcentaje_tiempo = 0;
 	hilo->tiempo_ejecucion = 0;
+	hilo->tiempo_ejecucion_total = 0;
 	hilo->tiempo_espera = 0;
 	hilo->tiempo_uso_CPU = 0;
-	hilo->timestamp_final = 0;
-	hilo->timestamp_inicio = 0;
+	hilo->timestamp_final_cpu = 0;
+	hilo->timestamp_inicio_cpu = 0;
+	hilo->timestamp_final_ejec = 0;
+	hilo->timestamp_inicio_ejec = 0;
+	hilo->timestamp_inicio_espera = 0;
+	hilo->timestamp_final_espera = 0;
 
-	hilo->timestamp_inicio = getCurrentTime();
+	hilo->timestamp_inicio_ejec = getCurrentTime();
 	//NO SE QUE PONER EN RAFAGA Y ESTIMACION
 	//ver si inicializamos lo de las metricas en 0 o que
 	bool buscador(process* proceso){
@@ -250,7 +255,7 @@ void aplicarFIFO(){
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
 		t_list* hilos_listos = proceso->hilos_ready;
 		list_add(hilos_listos,hilo_elegido);
-		hilo_elegido->timestamp_inicio = getCurrentTime();
+		hilo_elegido->timestamp_inicio_espera = getCurrentTime();
 	}
 
 void aplicarSJFConDesalojo(process* proceso) {
@@ -262,16 +267,16 @@ void aplicarSJFConDesalojo(process* proceso) {
 		}
 
 		thread* hilo_a_ejecutar = list_remove_by_condition(proceso->hilos_ready,(void*)comparator);
-		hilo_a_ejecutar->timestamp_final = getCurrentTime();
-		uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final - hilo_a_ejecutar->timestamp_inicio);
+		hilo_a_ejecutar->timestamp_final_espera = getCurrentTime();
+		uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final_espera - hilo_a_ejecutar->timestamp_inicio_espera);
 		hilo_a_ejecutar->tiempo_espera += tiempoReady;
 
-		hilo_a_ejecutar->timestamp_inicio = getCurrentTime();
+		hilo_a_ejecutar->timestamp_inicio_cpu = getCurrentTime();
 		proceso->hilo_exec = hilo_a_ejecutar;
 		hilo_a_ejecutar->rafagas_ejecutadas++;
 		sem_post(&sem_ejecute);
-		hilo_a_ejecutar->timestamp_final = getCurrentTime();
-		uint32_t tiempoCPU = (hilo_a_ejecutar->timestamp_final - hilo_a_ejecutar->timestamp_inicio);
+		hilo_a_ejecutar->timestamp_final_cpu = getCurrentTime();
+		uint32_t tiempoCPU = (hilo_a_ejecutar->timestamp_final_cpu - hilo_a_ejecutar->timestamp_inicio_cpu);
 		hilo_a_ejecutar->tiempo_uso_CPU += tiempoCPU;
 	}
 
@@ -384,8 +389,8 @@ void metricas(){
 	sleep(metrics);
 	process* proceso;
 	thread* hilo;
-	hilo->timestamp_final = getCurrentTime();
-	uint32_t tiempoEjecucion = (hilo->timestamp_final - hilo->timestamp_inicio);
+	hilo->timestamp_final_ejec = getCurrentTime();
+	uint32_t tiempoEjecucion = (hilo->timestamp_final_ejec - hilo->timestamp_inicio_ejec);
 	hilo->tiempo_ejecucion += tiempoEjecucion;
 	for(int i= 0; i < list_size(lista_procesos); i++){
 		proceso = list_get(lista_procesos, i);
@@ -399,6 +404,12 @@ void metricas(){
 		printf("El tiempo de ejecucion es: %i", hilo->tiempo_ejecucion);
 		log_info(suse_log, "El tiempo de ejecucion es: %i",hilo->tiempo_uso_CPU);
 	}
+	for(int i = 0; i < list_size(lista_procesos); i++){
+		hilo->tiempo_ejecucion_total += hilo->tiempo_ejecucion;
+	}
+	hilo->porcentaje_tiempo = (hilo->tiempo_ejecucion / hilo->tiempo_ejecucion_total) * 100;
+	printf("El porcentaje de tiempo de ejecucion es: %i", hilo->porcentaje_tiempo);
+	log_info(suse_log, "El porcentaje de tiempo de ejecucion es: %i",hilo->porcentaje_tiempo);
 	for(int i= 0; i < list_size(lista_procesos); i++){
 			bool condition(thread* hilo){
 		return hilo->pid == proceso->pid;

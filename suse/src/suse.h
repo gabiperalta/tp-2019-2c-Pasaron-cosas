@@ -73,12 +73,17 @@ typedef struct{
 	int tid_joineado;
 	double rafagas_estimadas;
 	uint32_t tiempo_ejecucion;
+	uint32_t tiempo_ejecucion_total;
 	uint32_t tiempo_espera;
 	uint32_t tiempo_uso_CPU;
 	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
-	uint32_t timestamp_inicio;
-	uint32_t timestamp_final;
+	uint32_t timestamp_inicio_ejec;
+	uint32_t timestamp_final_ejec;
+	uint32_t timestamp_inicio_espera;
+	uint32_t timestamp_final_espera;
+	uint32_t timestamp_inicio_cpu;
+	uint32_t timestamp_final_cpu;
 }thread;
 
 typedef struct{
