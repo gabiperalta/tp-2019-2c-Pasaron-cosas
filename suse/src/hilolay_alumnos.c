@@ -10,7 +10,6 @@
 #include <hilolay/hilolay.h>
 #include <hilolay/internal.h>
 #include "suse.h"
-#include "funcionesSuse.h"
 int socket_suse;
 
 //ver de donde saco el IP

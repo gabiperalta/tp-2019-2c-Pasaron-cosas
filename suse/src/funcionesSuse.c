@@ -4,8 +4,8 @@
  *  Created on: 30 sep. 2019
  *      Author: utnso
  */
-#ifndef FUNCIONES_SUSE_H
-#define FUNCIONES_SUSE_H
+//#ifndef FUNCIONES_SUSE_H
+//#define FUNCIONES_SUSE_H
 #include "funcionesSuse.h"
 
 
@@ -462,4 +462,4 @@ void liberarCharAsteriscoAsterisco(char** array){
 }
 
 
-#endif
+//#endif

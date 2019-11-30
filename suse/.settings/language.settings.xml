@@ -1,37 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project>
-<<<<<<< HEAD
-	<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1463299095" name="Build (GNU)">
-=======
-	<configuration id="cdt.managedbuild.config.gnu.exe.debug.1241351978" name="Debug">
->>>>>>> cf11c4b562f8033929f19e4a9e33da39520563ad
+	<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.694033989" name="Build (GNU)">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
 			<provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
-<<<<<<< HEAD
 			<provider copy-of="extension" id="org.eclipse.cdt.autotools.core.LibtoolGCCBuildCommandParser"/>
-=======
->>>>>>> cf11c4b562f8033929f19e4a9e33da39520563ad
 			<provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="false" env-hash="-1309530438320417064" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
 				<language-scope id="org.eclipse.cdt.core.gcc"/>
 				<language-scope id="org.eclipse.cdt.core.g++"/>
 			</provider>
 		</extension>
 	</configuration>
-<<<<<<< HEAD
-	<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1235377638" name="Debug (GNU)">
-=======
-	<configuration id="cdt.managedbuild.config.gnu.exe.release.1026549838" name="Release">
->>>>>>> cf11c4b562f8033929f19e4a9e33da39520563ad
+	<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.239789061" name="Debug (GNU)">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
 			<provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
-<<<<<<< HEAD
 			<provider copy-of="extension" id="org.eclipse.cdt.autotools.core.LibtoolGCCBuildCommandParser"/>
-=======
->>>>>>> cf11c4b562f8033929f19e4a9e33da39520563ad
 			<provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="false" env-hash="-1309530438320417064" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
 				<language-scope id="org.eclipse.cdt.core.gcc"/>
 				<language-scope id="org.eclipse.cdt.core.g++"/>

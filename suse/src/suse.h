@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef SUSE_H_
-#define SUSE_H_
+//#ifndef SUSE_H_
+//#define SUSE_H_
 
 #include "biblioteca_sockets.h"
 #include "biblioteca.h"
@@ -26,7 +26,6 @@
 #include <sys/time.h>
 #include <commons/log.h>
 #include <unistd.h>
-#include "funcionesSuse.h"
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 #define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
@@ -102,4 +101,4 @@ typedef struct{
 }semaforos_suse;
 
 
-#endif /* SUSE_H_ */
+//#endif /* SUSE_H_ */

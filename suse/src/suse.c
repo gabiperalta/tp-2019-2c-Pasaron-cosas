@@ -10,7 +10,8 @@ int main(){
 	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
 	inicializar_listas();
 	inicializar_semaforos();
-	pthread_create(&threadMetrics, NULL,(void*) metricas, NULL);
+	//ACA PONES METRICAS Y NO ESTA DECLARADO EN NINGUN LADO
+	//pthread_create(&threadMetrics, NULL,(void*) metricas, NULL);
 	inicializarServidor();
 	iniciarPlanificacion();
 	system("clear");
@@ -29,7 +30,8 @@ int main(){
 			free(linea);
 		}
 	log_destroy(suse_log);
-	pthread_detach(&threadMetrics);
+	//aca no tiene que ser un puntero el detach
+	//pthread_detach(&threadMetrics);
 	destructor_listas();
 	destructor_semaforos();
 	return 0;
