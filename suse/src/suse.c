@@ -4,6 +4,7 @@
 
 
 int main(){
+	estimacion_inicial = 0;
 	puts("Proceso SUSE");
 	leer_config();
 	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);

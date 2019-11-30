@@ -42,8 +42,8 @@ void procesar_solicitud(void* socket_cliente){
 			case MUSE_UNMAP:
 				funcion_muse = funcion_unmap;
 				break;
-			case MUSE_CLOSE:
-				// Nunca ingresara a esta condicion, o si?
+			default:
+				printf("Header incorrecto\n");
 				return;
 		}
 
@@ -51,6 +51,9 @@ void procesar_solicitud(void* socket_cliente){
 
 		paquete = recibir_paquete(socket_cliente);
 	}
+
+	// MUSE_CLOSE
+	funcion_close(paquete,socket_cliente);
 
 	close(socket_cliente);
 }
@@ -155,11 +158,15 @@ void funcion_init(t_paquete paquete,int socket_muse){
 }
 
 void funcion_close(t_paquete paquete,int socket_muse){
+	log_estado_del_sistema();
 
 }
 
 void funcion_alloc(t_paquete paquete,int socket_muse){
+	printf("\nInicio alloc\n");
 	uint32_t tam = obtener_valor(paquete.parametros);
+
+	printf("Tam solicitado: %d\n",tam);
 
 	pthread_mutex_lock(&mutex_acceso_upcm);
 	//pthread_mutex_lock(&mutex_lista_procesos);
@@ -185,10 +192,8 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		return;
 	}
 
-	//pthread_mutex_lock(&mutex_acceso_upcm);
-
-	printf("id_programa: %s\t",proceso_encontrado->id_programa);
-	printf("socket: %d\t\n",proceso_encontrado->socket);
+	//printf("id_programa: %s\t",proceso_encontrado->id_programa);
+	//printf("socket: %d\t\n",proceso_encontrado->socket);
 
 	for(int numero_segmento=0;numero_segmento<list_size(proceso_encontrado->tabla_segmentos);numero_segmento++){
 		segmento_obtenido = list_get(proceso_encontrado->tabla_segmentos,numero_segmento);
@@ -380,6 +385,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 	log_estado_del_sistema();
+	printf("Fin alloc\n");
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
@@ -756,6 +762,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 }
 
 void funcion_map(t_paquete paquete,int socket_muse){
+	printf("Inicio map\n");
 	char* path_recibido = obtener_string(paquete.parametros);
 	uint32_t length_recibido = obtener_valor(paquete.parametros);
 	uint8_t flag_recibido = obtener_valor(paquete.parametros);
@@ -859,6 +866,8 @@ void funcion_map(t_paquete paquete,int socket_muse){
 	agregar_valor(paquete_respuesta.parametros,direccion_retornada);
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
+
+	printf("Fin map\n");
 }
 
 void funcion_sync(t_paquete paquete,int socket_muse){

@@ -8,8 +8,8 @@
 #ifndef SUSE_H_
 #define SUSE_H_
 
-#include "../../biblioteca/biblioteca_sockets.h"
-#include "../../biblioteca/biblioteca.h"
+#include "biblioteca_sockets.h"
+#include "biblioteca.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +39,7 @@ int alpha_planificacion;
 char** ids_sem;
 char** inicio_sem;
 char** max_sem;
-int estimacion_inicial = 0;
+int estimacion_inicial;
 int metrics;
 
 t_log* suse_log;

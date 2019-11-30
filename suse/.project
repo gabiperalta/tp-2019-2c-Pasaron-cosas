@@ -3,7 +3,6 @@
 	<name>suse</name>
 	<comment></comment>
 	<projects>
-		<project>libSuse</project>
 		<project>biblioteca</project>
 	</projects>
 	<buildSpec>
