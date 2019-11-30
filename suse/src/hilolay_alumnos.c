@@ -10,19 +10,6 @@
 #include <hilolay/internal.h>
 #include "suse.h"
 #include "funcionesSuse.h"
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <commons/config.h>
-#include <commons/string.h>
-#include "../../biblioteca/biblioteca_sockets.h"
-#include <errno.h>
-#include <fcntl.h>
-#include <stddef.h>
-
 int socket_suse;
 
 //ver de donde saco el IP
