@@ -117,7 +117,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 void funcion_signal(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
-	char* semaforo= obtener_string()(paquete.parametros);
+	char* semaforo= obtener_string(paquete.parametros);
 
 	//aca le das la orden a suse
 	int retorno = signal_suse(tid, semaforo);
