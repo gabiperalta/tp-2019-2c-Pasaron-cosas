@@ -8,9 +8,31 @@
 #include <hilolay/alumnos.h>
 #include <hilolay/hilolay.h>
 #include <hilolay/internal.h>
-#include "suse.h"
-#include "funcionesSuse.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
+#include <commons/collections/dictionary.h>
+#include <commons/collections/list.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include <semaphore.h>
+#include <time.h>
+#include <signal.h>
+#include <readline/readline.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <commons/log.h>
+#include <unistd.h>
+
+#define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 int socket_suse;
+
+t_config* archivo_config;
+char* ip_suse;
+int puerto_suse;
 
 //ver de donde saco el IP
 
@@ -149,7 +171,10 @@ static struct hilolay_operations funciones_suse={
 };
 
 void hilolay_init(){
-	socket_suse = conectarseA(ip,puerto);
+	archivo_config = config_create(PATH_CONFIG);
+	ip_suse =  config_get_string_value(archivo_config, "IP");
+	puerto_suse = config_get_int_value(archivo_config, "LISTEN_PORT");
+	socket_suse = conectarseA(ip_suse,puerto_suse);
 	init_internal(&funciones_suse);
 
 }

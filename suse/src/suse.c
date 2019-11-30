@@ -4,10 +4,10 @@
 int main(){
 	estimacion_inicial = 0;
 	puts("Proceso SUSE");
-	leer_config();
-	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
 	inicializar_listas();
 	inicializar_semaforos();
+	leer_config();
+	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
 	pthread_create(&threadMetrics, NULL,(void*) metricas, NULL);
 	inicializarServidor();
 	iniciarPlanificacion();

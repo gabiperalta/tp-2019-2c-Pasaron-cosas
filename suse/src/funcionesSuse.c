@@ -142,7 +142,7 @@ int close_suse(int tid, int pid){
 
 int crear(int tid, int pid){
 
-	thread* hilo = malloc(sizeof(hilo));
+	thread* hilo = malloc(sizeof(thread));
 	//CHEQUEAAAAAAR
 	hilo->tid= tid;
 	hilo->pid= pid;
@@ -362,8 +362,8 @@ void leer_config(){
 	ip = config_get_string_value(archivo_config, "IP");
 	puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
 	for(int i = 0; i< cantidadElementosCharAsteriscoAsterisco(ids_sem); i++){
-		semaforos_suse* aux = sizeof(aux);
-		aux->id = malloc(strlen(ids_sem[i]));
+		semaforos_suse* aux = malloc(sizeof(semaforos_suse));
+		aux->id = malloc(strlen(ids_sem[i]) + 1);
 		strcpy(aux->id, ids_sem[i]);
 		aux->cant_instancias_disponibles = atoi(inicio_sem[i]);
 		aux->max_valor = atoi(max_sem[i]);
@@ -392,9 +392,20 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 
 void metricas(){
 	sleep(metrics);
-	process* proceso;
-	thread* hilo;
-	hilo->timestamp_final_ejec = getCurrentTime();
+	process* proceso = malloc(sizeof(process));
+	thread* hilo = malloc(sizeof(thread));
+	hilo->porcentaje_tiempo = 0;
+	hilo->tiempo_ejecucion = 0;
+	hilo->tiempo_ejecucion_total = 0;
+	hilo->tiempo_espera = 0;
+	hilo->tiempo_uso_CPU = 0;
+	hilo->timestamp_final_cpu = 0;
+	hilo->timestamp_inicio_cpu = 0;
+	hilo->timestamp_final_ejec = 0;
+	hilo->timestamp_inicio_ejec = 0;
+	hilo->timestamp_inicio_espera = 0;
+	hilo->timestamp_final_espera = 0;
+
 	uint32_t tiempoEjecucion = (hilo->timestamp_final_ejec - hilo->timestamp_inicio_ejec);
 	hilo->tiempo_ejecucion += tiempoEjecucion;
 	for(int i= 0; i < list_size(lista_procesos); i++){
@@ -412,7 +423,13 @@ void metricas(){
 	for(int i = 0; i < list_size(lista_procesos); i++){
 		hilo->tiempo_ejecucion_total += hilo->tiempo_ejecucion;
 	}
-	hilo->porcentaje_tiempo = (hilo->tiempo_ejecucion / hilo->tiempo_ejecucion_total) * 100;
+	if(hilo->tiempo_ejecucion_total == 0){
+		hilo->porcentaje_tiempo = 0;
+	}
+	else{
+		hilo->porcentaje_tiempo = (hilo->tiempo_ejecucion / hilo->tiempo_ejecucion_total) * 100;
+	}
+
 	printf("El porcentaje de tiempo de ejecucion es: %i", hilo->porcentaje_tiempo);
 	log_info(suse_log, "El porcentaje de tiempo de ejecucion es: %i",hilo->porcentaje_tiempo);
 	for(int i= 0; i < list_size(lista_procesos); i++){

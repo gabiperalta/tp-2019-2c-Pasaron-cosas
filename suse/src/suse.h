@@ -8,8 +8,8 @@
 #ifndef SUSE_H_
 #define SUSE_H_
 
-#include "biblioteca_sockets.h"
-#include "biblioteca.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
