@@ -56,10 +56,11 @@ t_list* hilos_exit;
 sem_t sem_planificacion;
 sem_t sem_join;
 sem_t sem_ejecute;
-sem_t mut_exit;
-sem_t mut_new;
-sem_t mut_blocked;
-sem_t mut_semaforos;
+pthread_mutex_t mut_exit;
+pthread_mutex_t mut_new;
+pthread_mutex_t mut_blocked;
+pthread_mutex_t mut_semaforos;
+pthread_mutex_t mut_procesos;
 
 pthread_t threadMetrics;
 
@@ -75,13 +76,13 @@ typedef struct{
 	uint8_t pid; // proceso en el que esta el hilo
 	int tid_joineado;
 	double rafagas_estimadas;
-	clock_t tiempo_ejecucion;
-	clock_t tiempo_espera;
+	uint32_t tiempo_ejecucion;
+	uint32_t tiempo_espera;
 	clock_t tiempo_uso_CPU;
 	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
-	clock_t timestamp_inicio;
-	clock_t timestamp_final;
+	uint32_t timestamp_inicio;
+	uint32_t timestamp_final;
 }thread;
 
 typedef struct{
