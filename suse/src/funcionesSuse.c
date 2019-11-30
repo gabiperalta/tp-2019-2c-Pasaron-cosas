@@ -261,8 +261,7 @@ void aplicarSJFConDesalojo(process* proceso) {
 			return unHilo->tid == otroHIlo->tid;
 		}
 
-		int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
-		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready,index);
+		thread* hilo_a_ejecutar = list_remove_by_condition(proceso->hilos_ready,(void*)comparator);
 		hilo_a_ejecutar->timestamp_final = getCurrentTime();
 		uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final - hilo_a_ejecutar->timestamp_inicio);
 		hilo_a_ejecutar->tiempo_espera += tiempoReady;
