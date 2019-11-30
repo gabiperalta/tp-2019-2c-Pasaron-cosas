@@ -1,40 +1,54 @@
 /*
  * hilolay_alumnos.c
  *
- *  Created on: 12 nov. 2019
+ *  Created on: 28 nov. 2019
  *      Author: utnso
  */
 
-#include "hilolay_alumnos.h"
+#include <hilolay/alumnos.h>
+#include <hilolay/hilolay.h>
+#include <hilolay/internal.h>
+#include "suse.h"
+#include "funcionesSuse.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <time.h>
+#include <string.h>
+#include <stdlib.h>
+#include <commons/config.h>
+#include <commons/string.h>
 #include "biblioteca_sockets.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stddef.h>
 
 int socket_suse;
 
-t_config* archivo_config = config_create(PATH_CONFIG);
-char* ip = config_get_string_value(archivo_config, "IP");
-int puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
+//ver de donde saco el IP
 
 
-typedef struct hilolay_operations {
+
+static struct hilolay_operations funciones_suse={
 	.suse_create= me_create,
 	.suse_schedule_next = me_schedule_next,
 	.suse_wait = me_wait,
 	.suse_signal = me_signal,
 	.suse_join= me_join,
 	.suse_close = me_close,
-	} hilolay_operations;
+	};
 
 
 
 	// en hilolay_init abro la conexión del socket
 
 void hilolay_init(){
-	//ver de donde saco la IP y el puerto
 	socket_suse = conectarseA(ip,puerto);
 	if(socket_suse == 0){
-		return -1;
+	//no puede retornar porque es void
+	//ver como manejar este error
 	}
-	init_internal(hilolay_operations);
+	init_internal(funciones_suse);
 
 }
 
@@ -131,17 +145,14 @@ int me_schedule_next(){
 		.parametros = NULL
 	};
 
-	enviar_paquete(paquete_solicitud,socket_suse) //el que guarde al inciiar la conex)
+	enviar_paquete(paquete_solicitud,socket_suse);
 
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
 
-	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+	int retorno = obtener_valor(paquete_respuesta.parametros);
 
-	return retorno;} //ponele un 0 si esta ok
+	return retorno;}
 
-
-
-	// ver la parte de "si no había hilo, se liberaban las conexiones"
 
 int me_close(int tid){
 
@@ -152,13 +163,15 @@ int me_close(int tid){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	enviar_paquete(paquete_solicitud,socket_suse); //el que guarde al inciiar la conex)
+	enviar_paquete(paquete_solicitud,socket_suse);
 
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
 
-	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
+	int retorno = obtener_valor(paquete_respuesta.parametros);
 
 	return retorno;
-} //ponele un 0 si esta ok
+}
+
+
 
 

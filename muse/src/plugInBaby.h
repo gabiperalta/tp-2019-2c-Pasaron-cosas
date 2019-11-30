@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef SEGMENTACIONPAGINADA_H_
-#define SEGMENTACIONPAGINADA_H_
+#ifndef PLUGINBABY_H_
+#define PLUGINBABY_H_
 
 #include "muse.h"
 //#include <stdio.h>
@@ -29,6 +29,7 @@ typedef struct{
 	char* id_programa;
 	t_list* tabla_segmentos;
 	int socket;
+	uint32_t metrica_espacio_disponible; // espacio disponible en el ultimo segmento pedido
 }t_proceso;
 
 typedef struct{
@@ -36,6 +37,7 @@ typedef struct{
 	uint32_t limite;
 	t_list* tabla_paginas;
 	uint8_t tipo_segmento;
+	uint8_t tipo_map;
 	FILE* archivo_mmap;
 	int tam_archivo_mmap;
 }t_segmento;
@@ -84,8 +86,10 @@ bool espacio_en_upcm();
 void liberar_frame(int numero_frame);
 void liberar_frame_swap(int numero_frame_swap);
 void eliminar_pagina(t_pagina* pagina);
+void eliminar_segmento(t_segmento* segmento);
+void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap);
 
 t_pagina* ejecutar_algoritmo_clock_modificado();
 void agregar_frame_clock(t_pagina* pagina);
 
-#endif /* SEGMENTACIONPAGINADA_H_ */
+#endif /* PLUGINBABY_H_ */

@@ -7,7 +7,7 @@
 
 // Funciones para la segmentacion paginada de MUSE
 
-#include "segmentacionPaginada.h"
+#include "plugInBaby.h"
 
 
 t_proceso* crear_proceso(char* id_programa,int socket_creado){
@@ -183,9 +183,6 @@ t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 
 // retorno la tabla de paginas
 t_archivo_mmap* buscar_archivo_mmap(int fd_archivo){
-	//FILE* archivo = fopen(path,"r+");
-	//int fd_archivo = fileno(archivo);
-
 	int igualArchivo(t_archivo_mmap* archivo_mmap) {
 	    struct stat stat1, stat2;
 	    if((fstat(fd_archivo, &stat1) < 0) || (fstat(fileno(archivo_mmap->archivo), &stat2) < 0)) return -1;
@@ -436,6 +433,7 @@ void liberar_frame_swap(int numero_frame_swap){
 }
 
 void eliminar_pagina(t_pagina* pagina){
+	printf("Eliminando pagina\n");
 	if(pagina->bit_presencia){
 		//memset(obtener_datos_frame(pagina),NULL,TAM_PAGINA);
 		int igualFrameClock(t_pagina* p) {
@@ -445,15 +443,29 @@ void eliminar_pagina(t_pagina* pagina){
 		list_remove_by_condition(lista_clock,(void*) igualFrameClock);
 		liberar_frame(pagina->frame);
 	}
-	else{
+	else if(!pagina->bit_presencia && (pagina->tipo_segmento == SEGMENTO_HEAP)){
 		// liberar del swap
 		// podria hacer memset de la pagina en archivo_swap, pero creo q no hace falta
 		liberar_frame_swap(pagina->frame);
 	}
 
 	free(pagina);
+	printf("Se elimino la pagina\n");
 }
 
+void eliminar_segmento(t_segmento* segmento){
+	if((segmento->tipo_segmento == SEGMENTO_HEAP) || ((segmento->tipo_segmento == SEGMENTO_MMAP) && (segmento->tipo_map == MAP_PRIVATE)))
+		list_destroy_and_destroy_elements(segmento->tabla_paginas,(void*) eliminar_pagina);
+	free(segmento);
+}
+
+void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap){
+	if(archivo_mmap->tabla_paginas != NULL)
+		list_destroy_and_destroy_elements(archivo_mmap->tabla_paginas,(void*) eliminar_pagina);
+	list_destroy(archivo_mmap->sockets_procesos);
+	fclose(archivo_mmap->archivo);
+	free(archivo_mmap);
+}
 
 // me va a retornar los datos de la pagina que se libera de la memoria principal
 // ahora la nueva version va a retornar la pagina que sera reemplazada

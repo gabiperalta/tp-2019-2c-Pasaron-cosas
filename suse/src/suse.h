@@ -10,7 +10,6 @@
 
 #include "../../biblioteca/biblioteca_sockets.h"
 #include "../../biblioteca/biblioteca.h"
-#include <funcionesSuse.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,17 +18,19 @@
 #include <commons/collections/list.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include <commons/collections/queue.h>
 #include <semaphore.h>
 #include <time.h>
 #include <signal.h>
 #include <readline/readline.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <commons/log.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
-
+#define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
 									/* Estructuras*/
-
-int PUERTO;
+char* ip;
+int puerto;
 int grado_multiprogramacion;
 int tiempo_metricas;
 int alpha_planificacion;
@@ -37,19 +38,30 @@ char** ids_sem;
 char** inicio_sem;
 char** max_sem;
 int estimacion_inicial = 0;
+int metrics;
 
+t_log* suse_log;
 
 t_list* lista_procesos;
 
+t_list* semaforos;
+
 t_config* archivo_config;
+
 
 t_list* hilos_new;
 t_list* hilos_blocked;
 t_list* hilos_exit;
-t_list* semaforos;
+
 sem_t sem_planificacion;
 sem_t sem_join;
-sem_t sem_close;
+sem_t sem_ejecute;
+sem_t mut_exit;
+sem_t mut_new;
+sem_t mut_blocked;
+sem_t mut_semaforos;
+
+pthread_t threadMetrics;
 
 typedef struct{
 	uint8_t pid; //id del proceso
@@ -61,8 +73,15 @@ typedef struct{
 typedef struct{
 	uint8_t tid; // id del hilo
 	uint8_t pid; // proceso en el que esta el hilo
+	int tid_joineado;
 	double rafagas_estimadas;
+	clock_t tiempo_ejecucion;
+	clock_t tiempo_espera;
+	clock_t tiempo_uso_CPU;
+	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
+	clock_t timestamp_inicio;
+	clock_t timestamp_final;
 }thread;
 
 typedef struct{

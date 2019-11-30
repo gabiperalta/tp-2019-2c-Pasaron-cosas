@@ -17,12 +17,14 @@
 #include "biblioteca_sockets.h"
 #include "commons/collections/list.h"
 #include "commons/bitarray.h"
+#include "commons/log.h"
 
-#include "funcionesMuse.h"
+#include "madness.h"
 
 #define IP "127.0.0.1"
 //#define PUERTO 34043
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/muse/muse.config"
+#define PATH_LOG "muse.log"
 #define PATH_SWAP "archivo_swap.bin"
 
 void* upcm;
@@ -32,6 +34,8 @@ int cantidad_frames;
 int cantidad_frames_swap;
 int algoritmo_clock_frame_recorrido;
 FILE* archivo_swap;
+
+t_log* archivo_log;
 
 int PUERTO;
 int TAM_MEMORIA;

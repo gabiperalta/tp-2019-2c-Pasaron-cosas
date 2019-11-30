@@ -8,11 +8,16 @@
 #ifndef FUNCIONESSUSE_H_
 #define FUNCIONESSUSE_H_
 
-#include <suse.h>
+#include "suse.h"
 
 void iniciarPlanificacion();
 
-void wait(thread* hilo, semaforos_suse* semaforo);
+void wait(thread* hilo, char* id_sem);
+void signal(thread* hilo, char* id_sem);
+int next_tid();
+void close(int tid);
+void crear(int tid);
+void join(int tid);
 void planificar();
 void aplicarFIFO();
 void aplicarSJF(process* proceso);
@@ -21,10 +26,15 @@ thread* CalcularEstimacion(thread* unHilo);
 bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo);
 
 process* obtener_proceso_asociado(thread* hilo);
-thread* elegidoParaPlanificar(t_list* hilos);
+
 void destructor_de_procesos(process* proceso);
 void destructor_de_hilos(thread* hilo);
+void inicializar_listas();
+void inicializar_semaforos();
+void destructor_listas();
+void destructor_semaforos();
 void leer_config();
+void metricas();
 
 
 #endif /* FUNCIONESSUSE_H_ */

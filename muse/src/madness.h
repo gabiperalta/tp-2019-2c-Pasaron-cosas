@@ -5,14 +5,14 @@
  *      Author: utnso
  */
 
-#ifndef FUNCIONESMUSE_H_
-#define FUNCIONESMUSE_H_
+#ifndef MADNESS_H_
+#define MADNESS_H_
 
 #include <math.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "muse.h"
-#include "segmentacionPaginada.h"
+#include "plugInBaby.h"
 
 void procesar_solicitud(void* socket_cliente);
 void leer_config();
@@ -31,5 +31,6 @@ void funcion_sync(t_paquete paquete,int socket_muse);
 void funcion_unmap(t_paquete paquete,int socket_muse);
 
 char* obtener_ip_socket(int s);
+void log_estado_del_sistema();
 
-#endif /* FUNCIONESMUSE_H_ */
+#endif /* MADNESS_H_ */

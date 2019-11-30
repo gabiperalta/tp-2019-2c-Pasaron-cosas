@@ -7,7 +7,7 @@
 
 // Funciones generales de MUSE
 
-#include "funcionesMuse.h"
+#include "madness.h"
 
 // El socket que se crea en MUSE es diferente al creado en libmuse
 // Ej.: para una misma conexion, MUSE tiene el socket 2 y libmuse el 7
@@ -40,10 +40,10 @@ void procesar_solicitud(void* socket_cliente){
 				funcion_muse = funcion_sync;
 				break;
 			case MUSE_UNMAP:
-				funcion_muse = funcion_sync;
+				funcion_muse = funcion_unmap;
 				break;
 			case MUSE_CLOSE:
-				// Nunca ingresara a esta condicion, o si
+				// Nunca ingresara a esta condicion, o si?
 				return;
 		}
 
@@ -65,6 +65,13 @@ void leer_config(){
 }
 
 void init_memoria(){
+	leer_config();
+	lista_procesos = list_create();
+	lista_clock = list_create();
+	lista_archivos_mmap = list_create();
+
+	archivo_log = log_create(PATH_LOG,"muse",false,LOG_LEVEL_INFO);
+
 	t_heap_metadata heap_metadata;
 	SIZE_HEAP_METADATA = sizeof(heap_metadata.isFree) + sizeof(heap_metadata.size);
 
@@ -125,7 +132,6 @@ void funcion_init(t_paquete paquete,int socket_muse){
 	pthread_mutex_unlock(&mutex_lista_procesos);
 
 	//				PRUEBA
-
 	t_proceso* proceso_obtenido;
 	for(int i=0; i<list_size(lista_procesos); i++){
 		proceso_obtenido = list_get(lista_procesos,i);
@@ -134,7 +140,6 @@ void funcion_init(t_paquete paquete,int socket_muse){
 		printf("socket: %d\t\n",proceso_obtenido->socket);
 	}
 	printf("\n");
-
 
 	free(ip_socket); // Sacar si falla
 
@@ -232,6 +237,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 					heap_metadata.isFree = true;
 					heap_metadata.size = size_original - tam_real;
+					proceso_encontrado->metrica_espacio_disponible = heap_metadata.size;
 
 					memcpy(&buffer[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
 					posicion_recorrida += sizeof(heap_metadata.isFree);
@@ -316,6 +322,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		if(agregar_metadata_free){
 			heap_metadata.isFree = true;
 			heap_metadata.size = segmento_obtenido->limite - segmento_limite_anterior - posicion_recorrida - SIZE_HEAP_METADATA; // revisar despues si es lo mismo q hacer sizeof(t_heap_metadata)
+			proceso_encontrado->metrica_espacio_disponible = heap_metadata.size;
 
 			memcpy(&buffer_auxiliar[posicion_recorrida],&heap_metadata.isFree,sizeof(heap_metadata.isFree));
 			posicion_recorrida += sizeof(heap_metadata.isFree);
@@ -332,8 +339,12 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	}// termina for
 
 	//si no hay ningun segmento creado, se crea uno nuevo
-	if(direccion_retornada == NULL)
+	if(direccion_retornada == NULL){
 		direccion_retornada = crear_segmento(SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
+		// obtengo el segmento para las metricas
+		segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+		proceso_encontrado->metrica_espacio_disponible = segmento_obtenido->limite - tam - (2*SIZE_HEAP_METADATA);
+	}
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
@@ -368,6 +379,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
 
+	log_estado_del_sistema();
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
@@ -791,6 +803,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
 				fclose(archivo_solicitado);
 			}
+			segmento_nuevo->tipo_map = MAP_SHARED;
 			break;
 		case MAP_PRIVATE:
 			printf("Map private\n");
@@ -809,6 +822,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
 				fclose(archivo_solicitado);
 			}
+			segmento_nuevo->tipo_map = MAP_PRIVATE;
 			break;
 	}
 
@@ -935,7 +949,97 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 }
 
 void funcion_unmap(t_paquete paquete,int socket_muse){
+	uint32_t resultado_unmap = 1;
+	printf("Inicio unmap\n");
+	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
+	printf("direccion_recibida %d\n",direccion_recibida);
 
+	pthread_mutex_lock(&mutex_acceso_upcm);
+
+	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
+	t_segmento* segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_recibida);
+
+	if(segmento_obtenido == NULL){
+		resultado_unmap = 2; // indico que debe producirse segmentation fault
+	}
+	else if((segmento_obtenido->tipo_segmento != SEGMENTO_MMAP) || (direccion_recibida != segmento_obtenido->base)){
+		resultado_unmap = 3; // indico que debe retornar -1
+	}
+
+	if(resultado_unmap > 1){
+		t_paquete paquete_respuesta = {
+				.header = MUSE_UNMAP,
+				.parametros = list_create()
+		};
+
+		///////////////// Parametros a enviar /////////////////
+		agregar_valor(paquete_respuesta.parametros,resultado_unmap);
+		enviar_paquete(paquete_respuesta,socket_muse);
+		///////////////////////////////////////////////////////
+
+		pthread_mutex_unlock(&mutex_acceso_upcm);
+
+		return;
+	}
+
+	int fd_archivo_segmento_mmap = fileno(segmento_obtenido->archivo_mmap);
+	t_archivo_mmap* archivo_mmap_encontrado = buscar_archivo_mmap(fd_archivo_segmento_mmap);
+
+	// funcion auxiliar
+	int igualSocket(int p) {
+		return p == proceso_encontrado->socket;
+	}
+	list_remove_by_condition(archivo_mmap_encontrado->sockets_procesos,(void*) igualSocket);
+
+	if(list_size(archivo_mmap_encontrado->sockets_procesos) == 0){
+		printf("Se elimina el archivo mmap\n");
+		// funcion auxiliar
+		int igualArchivo(t_archivo_mmap* archivo_mmap) {
+		    struct stat stat1, stat2;
+		    if((fstat(fd_archivo_segmento_mmap, &stat1) < 0) || (fstat(fileno(archivo_mmap->archivo), &stat2) < 0)) return -1;
+		    return (stat1.st_dev == stat2.st_dev) && (stat1.st_ino == stat2.st_ino);
+		}
+		list_remove_and_destroy_by_condition(lista_archivos_mmap,(void*) igualArchivo,(void*) eliminar_archivo_mmap);
+	}
+
+	// funcion auxiliar
+	int igualBaseSegmento(t_segmento* p){
+		return p->base == segmento_obtenido->base;
+	}
+	list_remove_and_destroy_by_condition(proceso_encontrado->tabla_segmentos,(void*) igualBaseSegmento,(void*) eliminar_segmento);
+
+	pthread_mutex_unlock(&mutex_acceso_upcm);
+
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
+
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+
+	t_paquete paquete_respuesta = {
+			.header = MUSE_UNMAP,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,resultado_unmap);
+	enviar_paquete(paquete_respuesta,socket_muse);
+	///////////////////////////////////////////////////////
 }
 
 
@@ -944,7 +1048,6 @@ char* obtener_ip_socket(int s){
 	struct sockaddr_storage addr;
 	char ipstr[INET6_ADDRSTRLEN];
 	char* ipstr_reservado = malloc(sizeof(ipstr));
-	//int port;
 
 	len = sizeof addr;
 	getpeername(s, (struct sockaddr*)&addr, &len);
@@ -952,16 +1055,39 @@ char* obtener_ip_socket(int s){
 	// deal with both IPv4 and IPv6:
 	if(addr.ss_family == AF_INET){
 	    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-	    //port = ntohs(s->sin_port);
 	    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
 	}
 	else{ // AF_INET6
 		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
-	    //port = ntohs(s->sin6_port);
 	    inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
 
 	strcpy(ipstr_reservado,ipstr);
 
 	return ipstr_reservado;
+}
+
+void log_estado_del_sistema(){
+	pthread_mutex_lock(&mutex_acceso_upcm);
+
+	// Log de los sockets
+	t_proceso* proceso_obtenido;
+	int cantidad_total_segmentos = 0;
+	int porcentaje_asignacion_memoria;
+	for(int i=0; i<list_size(lista_procesos); i++){
+		proceso_obtenido = list_get(lista_procesos,i);
+		cantidad_total_segmentos += list_size(proceso_obtenido->tabla_segmentos);
+	}
+	log_info(archivo_log,"\t\tSockets");
+	log_info(archivo_log,"Socket\t\tPorcentaje asignacion\tEspacio disponible");
+	for(int i=0; i<list_size(lista_procesos); i++){
+		proceso_obtenido = list_get(lista_procesos,i);
+		porcentaje_asignacion_memoria = (list_size(proceso_obtenido->tabla_segmentos)/cantidad_total_segmentos)*100;
+		// el nro 23 es solo de prueba
+		log_info(archivo_log,"%d\t\t%d\t\t\t%d",proceso_obtenido->socket,porcentaje_asignacion_memoria,proceso_obtenido->metrica_espacio_disponible);
+	}
+
+	log_info(archivo_log,"\n");
+
+	pthread_mutex_unlock(&mutex_acceso_upcm);
 }

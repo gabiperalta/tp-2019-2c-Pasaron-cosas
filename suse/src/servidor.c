@@ -1,10 +1,10 @@
 #include "servidor.h"
-
+#include "suse.h"
 
 
 void inicializarServidor(){
 
-	printf("socketDeEscucha: %i\n", PUERTO);
+	printf("socketDeEscucha: %i\n", puerto);
 	pthread_t hiloServidor;
 
 	pthread_create(&hiloServidor,NULL,(void*)servidor, NULL);
@@ -13,27 +13,37 @@ void inicializarServidor(){
 
 void servidor(){
 	void * conectado;
-	int puerto_escucha = escuchar(PUERTO);
-
+	int puerto_escucha = escuchar(puerto);
+	log_info(suse_log, "Conexion aceptada");
 	while((conectado=aceptarConexion(puerto_escucha))!= 1){
 		// agrega procesos
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
+		process* proceso = malloc(sizeof(process));
+		proceso->hilos_ready = list_create();//inicializar lista proceso ready
+		list_add(lista_procesos,proceso);//list_add();
+		log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
+
 	}
+
+
 }
 void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_suse)(t_paquete,int);
 
-	// por cada conexion nueva, agrego al proceso/hilo a la lista de threads
+	//por cada conexion nueva, agrego al proceso/hilo a la lista de threads
 
 	while(paquete.error != 1){
 		switch(paquete.header){
 			case SUSE_CREATE:
 				funcion_suse = funcion_create;
 				break;
+		//	case SUSE_CREATE_HILO:
+		//		funcion_suse = funcion_create_hilo;
+		//		break;
 			case SUSE_SCHEDULE_NEXT:
 				funcion_suse = funcion_schedule_next;
 				break;
@@ -59,11 +69,15 @@ void procesar_solicitud(void* socket_cliente){
 	close(socket_cliente);
 }
 
+
+// void funcion_create_hilo(t_paquete paquete,int socket_suse){
+
+
 void funcion_join(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = join(tid);
+	int retorno = join(tid, socket_suse);
 
 	t_paquete paquete_respuesta = {
 		.header = SUSE_JOIN,
@@ -73,7 +87,7 @@ void funcion_join(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -84,7 +98,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = close(tid);
+	int retorno = close(tid, socket_suse);
 
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CLOSE,
@@ -94,7 +108,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -146,7 +160,7 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
@@ -163,7 +177,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 	//aca le das la orden a suse
 
-	int retorno = planificate(tid);//funcion suse)(tid); //podria tener una respuesta
+	int retorno = crear(tid,socket_suse);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
@@ -178,46 +192,18 @@ void funcion_create(t_paquete paquete,int socket_suse){
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno)//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
-
-/*	char* id_programa = string_new();
-	char* ip_socket = obtener_ip_socket(socket_muse);
-	string_append(&id_programa,string_itoa(obtener_valor(paquete.parametros)));
-	string_append(&id_programa,"-");
-	string_append(&id_programa,ip_socket);
-
-	list_add(lista_procesos,crear_proceso(id_programa,socket_muse));
-
-	//				PRUEBA
-	/*
-	t_thread* thread_obtenido;
-	for(int i=0; i<list_size(lista_threads); i++){
-		thread_obtenido = list_get(lista_threads,i);
-		printf("hilo nro %d\t",i);
-		printf("id_programa: %s\t",thread_obtenido->id_programa);
-		printf("socket: %d\t\n",thread_obtenido->socket);
-	}
-	printf("\n");
-
-
-	free(ip_socket); // Sacar si falla
-	*/
 
 }
 
 
 void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
-	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint
-
-	//
-
-
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
-	int retorno= dame_prox_hilo();//funcion suse)(tid); //podria tener una respuesta
+	int retorno= next_tid(socket_suse);//funcion suse)(tid); //podria tener una respuesta
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 

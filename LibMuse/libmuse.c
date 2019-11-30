@@ -51,8 +51,7 @@ uint32_t muse_alloc(uint32_t tam){
 	};
 
 	///////////////// Parametros a enviar /////////////////
-	//agregar_valor(paquete.parametros, id_programa);
-	agregar_valor(paquete.parametros, tam);
+	agregar_valor(paquete.parametros,tam);
 	enviar_paquete(paquete,socket_muse);
 	///////////////////////////////////////////////////////
 
@@ -88,13 +87,6 @@ void muse_free(uint32_t dir){
 }
 
 int muse_get(void* dst, uint32_t src, size_t n){
-
-	/*
-	 * AGREGAR SENAL SIGSEGV
-	 *
-	 * */
-
-	//raise(SIGSEGV);
 
 	t_paquete paquete = {
 			.header = MUSE_GET,
@@ -201,7 +193,7 @@ int muse_sync(uint32_t addr, size_t len){
 	}
 	else if (valor_recibido == 3){
 		//raise(SIG_ERR);
-		perror("Fallo en muse_sync\n");
+		printf("Fallo en muse_sync\n");
 		return -1;
 	}
 
@@ -211,6 +203,33 @@ int muse_sync(uint32_t addr, size_t len){
 }
 
 int muse_unmap(uint32_t dir){
+
+	t_paquete paquete = {
+			.header = MUSE_UNMAP,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros, dir);
+	enviar_paquete(paquete,socket_muse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_muse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	///////////////////////////////////////////////////////
+
+	if(valor_recibido == 2){
+		raise(SIGSEGV);
+		return -1; // creo que no es necesario este return
+	}
+	else if (valor_recibido == 3){
+		printf("Fallo en muse_unmap\n");
+		return -1;
+	}
+
+	printf("unmap exitoso\n");
+
 	return 0;
 }
 
