@@ -31,8 +31,11 @@ int myGetattr( char *path, struct stat *statRetorno ){
 	GFile *inodoArchivo;
 	ptrGBloque punteroInodo;
 
+	printf("El path mandado es: %s \n", path);
+
 	punteroInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
-	if( punteroInodo ){
+
+	if( punteroInodo >0 ){
 		statRetorno->st_ino = (punteroInodo - INODE_TABLE_START) / BLOCK_SIZE; // esto daria el numero de inodo
 		statRetorno->st_mode = inodoArchivo->state | 0777 ; // NO SE COMO SE USA
 		statRetorno->st_size = inodoArchivo->file_size;
@@ -490,6 +493,10 @@ ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo){
 		directorioActual ++;
 	}
 
+	if(inodoArchivo->state == BORRADO){ // TODO, REVISAR QUE NO GENERE PROBLEMAS. LO HICE PARA QUE NO DEVUELVA INODO SI ES UNO BORRADO
+		return 0;
+	}
+
 	return punteroAlInodo;
 }
 
@@ -615,7 +622,7 @@ int cantidadBloquesAsignados(ptrGBloque array[]){
 }
 
 bool entradaVacia(GDirEntry entrada){ // POSIBLEMENTE TENGA QUE CAMBIARLO POR UN *
-	return entrada.inode;
+	return entrada.inode == 0;
 }
 
 GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){

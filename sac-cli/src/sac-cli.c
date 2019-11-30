@@ -16,7 +16,7 @@ char* formatearPath(char* path){
 static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	//char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
@@ -24,7 +24,8 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	};
 
 	// MANDO UNICAMENTE EL PATH, Y QUE EL SERVIDOR ME DEVUELVA LOS PARAMETROS QUE NECESITO
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 
@@ -39,7 +40,16 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	statRetorno->st_blocks = obtener_valor(paquete_respuesta.parametros );
 	statRetorno->st_mtim.tv_nsec = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	printf("statRetorno: \n"
+			"ino: %i \n"
+			"mode: %i \n"
+			"size: %i \n"
+			"blksize: %i \n"
+			"blocks: %i \n"
+			"mtim: %i \n", statRetorno->st_ino, statRetorno->st_mode, statRetorno->st_size,
+			statRetorno->st_blksize, statRetorno->st_blocks, statRetorno->st_mtim.tv_nsec);
+
+	//free(path_formateado);
 
 	return retorno;
 }
@@ -63,7 +73,7 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	(void) offset;
 	(void) fi;
 
-	char* path_formateado = formatearPath(path);
+	//char* path_formateado = formatearPath(path);
 
 	if (strcmp(path, "/") != 0)
 			return -ENOENT;
@@ -77,7 +87,8 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	};
 
 	// MANDO UNICAMENTE EL PATH, Y QUE EL SERVIDOR ME DEVUELVA LOS PARAMETROS QUE NECESITO
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	//agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	agregar_string(paquete_solicitud.parametros, bufferAuxiliar);
 	enviar_paquete(paquete_solicitud, my_socket);
 
@@ -95,7 +106,7 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 		filler( buffer, bufferAuxiliarSplitteado[i], NULL, 0);
 	}
 
-	free(path_formateado);
+	//free(path_formateado);
 
 	// liberarCharAsteriscoAsterisco(bufferAuxiliarSplitteado);
 	// free(bufferAuxiliar); TODO LO DEJO COMENTADO PORQUE NO SE COMO VA A AFECTAR AL BUFFER FILLEADO
@@ -113,7 +124,7 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	//char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
@@ -121,7 +132,8 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 	};
 
 	// MANDO UNICAMENTE EL PATH
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -129,7 +141,7 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	//free(path_formateado);
 
 	return retorno;
 }
@@ -154,7 +166,7 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
@@ -162,7 +174,8 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	};
 
 	// MANDO UNICAMENTE EL PATH
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -170,7 +183,7 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }
@@ -187,14 +200,15 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 static int sac_cli_write( const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
 			.parametros = list_create()
 	};
 
-	agregar_string( paquete_solicitud.parametros, path_formateado);
+	// agregar_string( paquete_solicitud.parametros, path_formateado);
+	agregar_string( paquete_solicitud.parametros, path);
 	agregar_string( paquete_solicitud.parametros, buffer);
 	agregar_valor( paquete_solicitud.parametros, size);
 	agregar_valor( paquete_solicitud.parametros, offset);
@@ -205,7 +219,7 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 
 	retorno = obtener_valor( paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }
@@ -225,14 +239,15 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
 			.parametros = list_create()
 	};
 
-	agregar_string( paquete_solicitud.parametros, path_formateado);
+	// agregar_string( paquete_solicitud.parametros, path_formateado);
+	agregar_string( paquete_solicitud.parametros, path);
 	agregar_string( paquete_solicitud.parametros, buffer);
 	agregar_valor( paquete_solicitud.parametros, size);
 	agregar_valor( paquete_solicitud.parametros, offset);
@@ -244,7 +259,7 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 	retorno = obtener_valor( paquete_respuesta.parametros );
 	buffer = obtener_string( paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }
@@ -253,14 +268,15 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 static int sac_cli_unlink(const char *path){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
 			.parametros = list_create()
 	};
 
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -268,7 +284,7 @@ static int sac_cli_unlink(const char *path){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }
@@ -282,14 +298,15 @@ static int sac_cli_unlink(const char *path){
 static int sac_cli_mkdir(const char *path, mode_t mode){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
 			.parametros = list_create()
 	};
 
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -297,7 +314,7 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }
@@ -306,14 +323,15 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 static int sac_cli_rmdir(const char *path){
 	int retorno = 0;
 
-	char* path_formateado = formatearPath(path);
+	// char* path_formateado = formatearPath(path);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_GETATTR,
 			.parametros = list_create()
 	};
 
-	agregar_string(paquete_solicitud.parametros, path_formateado);
+	// agregar_string(paquete_solicitud.parametros, path_formateado);
+	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -321,7 +339,7 @@ static int sac_cli_rmdir(const char *path){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	free(path_formateado);
+	// free(path_formateado);
 
 	return retorno;
 }

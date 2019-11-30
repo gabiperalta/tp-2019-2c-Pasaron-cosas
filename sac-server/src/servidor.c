@@ -119,6 +119,7 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
+	free(path);
 
 }
 
@@ -141,6 +142,8 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
+	free(path);
+	free(buffer);
 
 }
 
@@ -159,6 +162,9 @@ void funcion_mknod(t_paquete paquete,int socket_fuse){
 	agregar_valor(paquete_respuesta.parametros, retorno);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
+
+	free(path);
+
 }
 
 
@@ -177,6 +183,8 @@ void funcion_open(t_paquete paquete,int socket_fuse){
 	agregar_valor(paquete_respuesta.parametros, retorno);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
+
+	free(path);
 
 }
 
@@ -198,6 +206,10 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 	agregar_valor(paquete_respuesta.parametros, retorno);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
+
+	free(path);
+	free(buffer);
+
 }
 
 
@@ -223,6 +235,9 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
+	free(path);
+	free(buffer);
+
 }
 
 
@@ -241,6 +256,8 @@ void funcion_unlink(t_paquete paquete,int socket_fuse){
 	agregar_valor(paquete_respuesta.parametros, retorno);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
+
+	free(path);
 
 }
 
@@ -261,6 +278,8 @@ void funcion_mkdir(t_paquete paquete,int socket_fuse){
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
+	free(path);
+
 }
 
 
@@ -279,5 +298,7 @@ void funcion_rmdir(t_paquete paquete,int socket_fuse){
 	agregar_valor(paquete_respuesta.parametros, retorno);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
+
+	free(path);
 
 }
