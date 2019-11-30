@@ -120,7 +120,7 @@ void funcion_signal(t_paquete paquete,int socket_suse){
 	char* semaforo= obtener_valor(paquete.parametros);
 
 	//aca le das la orden a suse
-	int retorno = signal(tid, semaforo);
+	int retorno = signal_suse(tid, semaforo);
 
 	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
 

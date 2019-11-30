@@ -12,8 +12,8 @@
 
 void iniciarPlanificacion();
 
-void wait(thread* hilo, char* id_sem);
-void signal(thread* hilo, char* id_sem);
+void wait(int tid, char* id_sem);
+void signal_suse(int tid, char* id_sem);
 int next_tid();
 void close(int tid);
 void crear(int tid);
@@ -35,6 +35,8 @@ void destructor_listas();
 void destructor_semaforos();
 void leer_config();
 void metricas();
+void planificarCortoPlazo(int pid);
+void planificarLargoPlazo();
 
 
 #endif /* FUNCIONESSUSE_H_ */

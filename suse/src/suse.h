@@ -64,11 +64,6 @@ pthread_mutex_t mut_procesos;
 
 pthread_t threadMetrics;
 
-typedef struct{
-	uint8_t pid; //id del proceso
-	t_list* hilos_ready;
-	thread* hilo_exec;
-}process;
 
 
 typedef struct{
@@ -84,6 +79,13 @@ typedef struct{
 	uint32_t timestamp_inicio;
 	uint32_t timestamp_final;
 }thread;
+
+typedef struct{
+	uint8_t pid; //id del proceso
+	t_list* hilos_ready;
+	thread* hilo_exec;
+}process;
+
 
 typedef struct{
 	char* id;
