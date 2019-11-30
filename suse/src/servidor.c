@@ -98,7 +98,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 
 	int tid = obtener_valor(paquete.parametros);
 
-	int retorno = close(tid, socket_suse);
+	int retorno = close_suse(tid, socket_suse);
 
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CLOSE,
@@ -148,7 +148,7 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 	char* semaforo= obtener_valor(paquete.parametros);
 
 	//aca le das la orden a suse
-	int retorno = wait(tid, semaforo);
+	int retorno = wait(tid, semaforo, socket_suse);
 
 	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
 

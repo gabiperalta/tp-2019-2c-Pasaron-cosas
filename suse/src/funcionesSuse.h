@@ -12,12 +12,12 @@
 
 void iniciarPlanificacion();
 
-void wait(int tid, char* id_sem);
+void wait(int tid, char* id_sem, int pid);
 void signal_suse(int tid, char* id_sem);
 int next_tid();
-void close(int tid);
-void crear(int tid);
-void join(int tid);
+void close_suse(int tid, int pid);
+void crear(int tid, int pid);
+void join(int tid, int pid);
 void planificar();
 void aplicarFIFO();
 void aplicarSJF(process* proceso);
@@ -37,6 +37,11 @@ void leer_config();
 void metricas();
 void planificarCortoPlazo(int pid);
 void planificarLargoPlazo();
+uint32_t getCurrentTime();
+void destructor_semaforos();
+void destructor_listas();
+uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
+void liberarCharAsteriscoAsterisco(char** array);
 
 
 #endif /* FUNCIONESSUSE_H_ */

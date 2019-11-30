@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include "biblioteca_sockets.h"
+#include "../../biblioteca/biblioteca_sockets.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
@@ -27,16 +27,6 @@ int socket_suse;
 
 //ver de donde saco el IP
 
-
-
-static struct hilolay_operations funciones_suse={
-	.suse_create= me_create,
-	.suse_schedule_next = me_schedule_next,
-	.suse_wait = me_wait,
-	.suse_signal = me_signal,
-	.suse_join= me_join,
-	.suse_close = me_close,
-	};
 
 
 
@@ -173,5 +163,15 @@ int me_close(int tid){
 }
 
 
+
+
+static struct hilolay_operations funciones_suse={
+	.suse_create= me_create,
+	.suse_schedule_next = me_schedule_next,
+	.suse_wait = me_wait,
+	.suse_signal = me_signal,
+	.suse_join= me_join,
+	.suse_close = me_close,
+};
 
 

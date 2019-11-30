@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <commons/log.h>
+#include <unistd.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 #define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"
@@ -73,7 +74,7 @@ typedef struct{
 	double rafagas_estimadas;
 	uint32_t tiempo_ejecucion;
 	uint32_t tiempo_espera;
-	clock_t tiempo_uso_CPU;
+	uint32_t tiempo_uso_CPU;
 	int	porcentaje_tiempo;
 	int rafagas_ejecutadas;
 	uint32_t timestamp_inicio;
