@@ -131,7 +131,7 @@ void crear(int tid, int pid){
 	hilo->pid= pid;
 	hilo->rafagas_estimadas=0;
 	hilo->tid_joineado =0;
-	hilo->rafagas_ejecutadas;
+	hilo->rafagas_ejecutadas=0;
 
 	//NO SE QUE PONER EN RAFAGA Y ESTIMACION
 	//ver si inicializamos lo de las metricas en 0 o que
@@ -263,13 +263,13 @@ void inicializar_listas(){
 	semaforos = list_create();
 }
 void inicializar_semaforos(){
-	sem_init(mut_exit, NULL, 1);
-	sem_init(mut_blocked,NULL,1);
-	sem_init(mut_new, NULL, 1);
-	sem_init(mut_semaforos, NULL, 1);
-	sem_init(sem_planificacion,NULL, grado_multiprogramacion);
-	sem_init(sem_join,NULL,1);
-	sem_init(sem_ejecute,NULL,1);
+	sem_init(&mut_exit, NULL, 1);
+	sem_init(&mut_blocked,NULL,1);
+	sem_init(&mut_new, NULL, 1);
+	sem_init(&mut_semaforos, NULL, 1);
+	sem_init(&sem_planificacion,NULL, grado_multiprogramacion);
+	sem_init(&sem_join,NULL,1);
+	sem_init(&sem_ejecute,NULL,1);
 }
 
 void destructor_listas(){
@@ -329,29 +329,35 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 	free(semaforo->id);
 }
 
-void metricasHilo(thread* hilo){
-	process* proceso = obtener_proceso_asociado(hilo);
-	for(int i = 0; i<list_size(proceso->hilos_ready); i++){
-		printf("El tiempo de espera en Ready es: %i", hilo->tiempo_espera);
-	}
-	printf("El tiempo de uso de la CPU es: %i", hilo->tiempo_uso_CPU);
-}
 
-void metricasPrograma(process proceso){
-	printf("El grado actual de multiprogramacion es: %i", grado_multiprogramacion);
-	printf("La cantidad de hilos en READY es: %i", list_size(hilos_new)); //por cada programa
-	printf("La cantidad de hilos en READY es: %i", list_size(proceso->hilos_ready));
-	printf("La cantidad de hilos en BLOCKED es: %i",list_size(hilos_blocked));
-
-}
-
-void metricasSemaforo(semaforos_suse* semaforo){
-	for(int i= 0; i < list_size(semaforos); i++){
-		printf("El Valor actual semaforo: %s es: %i", semaforo->id, semaforo->cant_instancias_disponibles);
-	}
-}
+//void metricasPrograma(process* proceso){
+//	printf("El grado actual de multiprogramacion es: %i", grado_multiprogramacion);
+//	printf("La cantidad de hilos en READY es: %i", list_size(hilos_new)); //por cada programa
+//	printf("La cantidad de hilos en READY es: %i", list_size(proceso->hilos_ready));
+//	printf("La cantidad de hilos en BLOCKED es: %i",list_size(hilos_blocked));
+//
+//}
+//
+//void metricasSemaforo(semaforos_suse* semaforo){
+//	for(int i= 0; i < list_size(semaforos); i++){
+//		printf("El Valor actual semaforo: %s es: %i", semaforo->id, semaforo->cant_instancias_disponibles);
+//	}
+//}
 
 void metricas(){
 	sleep(metrics);
-
+	process* proceso;
+	thread* hilo;
+	// timestamp final primer metrica
+	for(int i= 0; i < list_size(lista_procesos); i++){
+		proceso = list_get(lista_procesos, i);
+		for(int j= 0; j < list_size(proceso->hilos_ready); j++){
+			hilo = list_get(proceso->hilos_ready, j);
+			printf("El tiempo de espera en Ready es: %i", hilo->tiempo_espera);
+		}
+		printf("El tiempo de uso de la CPU es: %i", hilo->tiempo_uso_CPU);
+	}
+	// for(int i= 0; i < list_size(lista_procesos); i++){
+	// filter proceso
+	//list_fil
 }

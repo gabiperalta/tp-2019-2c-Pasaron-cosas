@@ -26,7 +26,7 @@ int main(){
 			free(linea);
 		}
 	log_destroy(suse_log);
-	pthread_join(threadMetrics, NULL);
+	pthread_detach(&threadMetrics);
 	destructor_listas();
 	destructor_semaforos();
 	return 0;
