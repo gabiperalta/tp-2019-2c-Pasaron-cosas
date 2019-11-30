@@ -27,20 +27,9 @@ int socket_suse;
 
 //ver de donde saco el IP
 
-
-
-
 	// en hilolay_init abro la conexión del socket
 
-void hilolay_init(){
-	socket_suse = conectarseA(ip,puerto);
-	if(socket_suse == 0){
-	//no puede retornar porque es void
-	//ver como manejar este error
-	}
-	init_internal(funciones_suse);
 
-}
 
 
 // le paso el tid y el id del semaforo a suse
@@ -54,7 +43,7 @@ int me_wait(int tid , char * semaforo){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	agregar_valor(paquete_solicitud.parametros, semaforo);
+	agregar_string(paquete_solicitud.parametros, semaforo);
 
 	enviar_paquete(paquete_solicitud,socket_suse);
 
@@ -75,7 +64,7 @@ int me_signal(int tid, char * semaforo){
 
 	agregar_valor(paquete_solicitud.parametros,tid);
 
-	agregar_valor(paquete_solicitud.parametros,semaforo); //agregar el semaforo al paramtro
+	agregar_string(paquete_solicitud.parametros,semaforo); //agregar el semaforo al paramtro
 
 	enviar_paquete(paquete_solicitud,socket_suse);
 
@@ -173,5 +162,16 @@ static struct hilolay_operations funciones_suse={
 	.suse_join= me_join,
 	.suse_close = me_close,
 };
+
+void hilolay_init(){
+	socket_suse = conectarseA(ip,puerto);
+	if(socket_suse == 0){
+	//no puede retornar porque es void
+	//ver como manejar este error
+	}
+
+	init_internal(&funciones_suse);
+
+}
 
 

@@ -12,12 +12,12 @@
 
 void iniciarPlanificacion();
 
-void wait(int tid, char* id_sem, int pid);
-void signal_suse(int tid, char* id_sem);
+int wait(int tid, char* id_sem, int pid);
+int signal_suse(int tid, char* id_sem);
 int next_tid();
-void close_suse(int tid, int pid);
-void crear(int tid, int pid);
-void join(int tid, int pid);
+int close_suse(int tid, int pid);
+int crear(int tid, int pid);
+int join(int tid, int pid);
 void planificar();
 void aplicarFIFO();
 void aplicarSJF(process* proceso);
