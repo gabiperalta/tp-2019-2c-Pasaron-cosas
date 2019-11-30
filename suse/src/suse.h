@@ -26,6 +26,7 @@
 #include <sys/time.h>
 #include <commons/log.h>
 #include <unistd.h>
+#include "funcionesSuse.h"
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
 #define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/suse.log"

@@ -1,5 +1,7 @@
+
+
 #include "suse.h"
-#include "funcionesSuse.h"
+
 
 int main(){
 	puts("Proceso SUSE");

@@ -1,5 +1,8 @@
+#ifndef SERVIDOR_H
+#define SERVIDOR_H
+
 #include "servidor.h"
-#include "suse.h"
+
 
 
 void inicializarServidor(){
@@ -250,6 +253,6 @@ char* obtener_ip_socket(int s){
 	return ipstr_reservado;
 }
 
-
+#endif
 
 

@@ -4,15 +4,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <commons/config.h>
-#include "../../biblioteca/biblioteca.h"
-#include "../../biblioteca/biblioteca_sockets.h"
-#include "funcionesSuse.h"
+
+
+#include "suse.h"
 
 
 void inicializarServidor();
