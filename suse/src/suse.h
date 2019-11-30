@@ -38,7 +38,7 @@ int alpha_planificacion;
 char** ids_sem;
 char** inicio_sem;
 char** max_sem;
-int estimacion_inicial = 0;
+int estimacion_inicial;
 int metrics;
 
 t_log* suse_log;

@@ -232,9 +232,3 @@ int muse_unmap(uint32_t dir){
 
 	return 0;
 }
-
-//================= FUNCIONES AUXILIARES =================
-
-//void __attribute__((constructor)) libmuse_init(){
-//	obtener_ip(); // para obtener esta funcion, revisar commits antes del 10/10
-//}

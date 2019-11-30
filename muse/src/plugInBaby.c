@@ -181,7 +181,6 @@ t_segmento* buscar_segmento(t_list* tabla_segmentos,uint32_t direccion){
 	return NULL;
 }
 
-// retorno la tabla de paginas
 t_archivo_mmap* buscar_archivo_mmap(int fd_archivo){
 	int igualArchivo(t_archivo_mmap* archivo_mmap) {
 	    struct stat stat1, stat2;
@@ -203,7 +202,6 @@ void agregar_archivo_mmap(FILE* archivo,int socket_proceso,t_list* tabla_paginas
 }
 
 void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
-//void cargar_datos(void* buffer,t_list* tabla_paginas,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
 	t_pagina* pagina;
 	void* direccion_frame;
 	int paginas_a_recorrer = cantidad_paginas_solicitadas;
@@ -235,7 +233,7 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 			case GUARDAR_DATOS:
 			case CREAR_DATOS:
 				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
-		    	printf("Se copiaron los datos nuevos\n");
+		    	//printf("Se copiaron los datos nuevos\n");
 				break;
 		}
 	}
@@ -470,7 +468,7 @@ void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap){
 // me va a retornar los datos de la pagina que se libera de la memoria principal
 // ahora la nueva version va a retornar la pagina que sera reemplazada
 t_pagina* ejecutar_algoritmo_clock_modificado(){
-	printf("Se ejecuta el algoritmo clock modificado\n");
+	//printf("Se ejecuta el algoritmo clock modificado\n");
 	t_proceso* proceso_obtenido;
 	t_segmento* segmento_obtenido;
 	t_pagina* pagina_obtenida;
