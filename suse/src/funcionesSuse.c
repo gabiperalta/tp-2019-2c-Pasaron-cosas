@@ -12,7 +12,7 @@
 
 
 //tid y id del semaforo
-void wait(int tid, char* id_sem, int pid){
+int wait(int tid, char* id_sem, int pid){
 
 	//uint8_t tid = hilo->tid;
 	bool buscador(semaforos_suse* semaforo){
@@ -38,12 +38,12 @@ void wait(int tid, char* id_sem, int pid){
 	semaforo->cant_instancias_disponibles -=1;
 
 	log_info(suse_log,"Se bloqueo el thread");
-
+	return 1;
 }
 
 
 
-void signal_suse(int tid, char* id_sem){
+int signal_suse(int tid, char* id_sem){
 
 
 	//uint8_t tid = hilo->tid;
@@ -67,6 +67,7 @@ void signal_suse(int tid, char* id_sem){
 
 		semaforo->cant_instancias_disponibles +=1;
 	}
+	return 1;
 }
 
 //aca tenes que planificar y devolver el prox tid a ejecutar. retornar el ID no el hilo
@@ -89,7 +90,7 @@ int next_tid(int pid){
 }
 
 
-void close_suse(int tid, int pid){
+int close_suse(int tid, int pid){
 	sem_wait(&sem_ejecute);
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
@@ -135,10 +136,11 @@ void close_suse(int tid, int pid){
 		}
 	}
 	free(hilo_ejecutando);
+	return 1;
 }
 
 
-void crear(int tid, int pid){
+int crear(int tid, int pid){
 
 	thread* hilo = malloc(sizeof(hilo));
 	//CHEQUEAAAAAAR
@@ -185,12 +187,12 @@ void crear(int tid, int pid){
 		list_add(hilos_new, hilo);
 		pthread_mutex_unlock(&mut_new);
 	}
-
+	return 1;
 }
 
 //el tid que viene por parametro puede tener cualquier estado
 
-void join(int tid, int pid){
+int join(int tid, int pid){
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
@@ -217,7 +219,10 @@ void join(int tid, int pid){
 		hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
 
 	 }
-	 log_info(suse_log, "Se hizo un join");
+
+
+	log_info(suse_log, "Se hizo un join");
+	return 1;
 }
 
 
