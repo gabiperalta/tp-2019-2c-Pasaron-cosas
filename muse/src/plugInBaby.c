@@ -123,18 +123,23 @@ t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento) {
     new->tipo_segmento = tipo_segmento;
     new->frame = 0;
 
+	//printf("Estoy por crear una pagina\n");
+
     if(!bit_presencia)
     	return new;
 
     frame_obtenido = obtener_frame_libre();
     if(frame_obtenido >= 0){
+    	printf("Hay frame libre\n");
     	new->frame = frame_obtenido;
     }
     else{
+    	printf("NO hay frame libre\n");
     	// no hay espacio, por lo tanto se tiene que liberar un frame y pasarlo a swap
     	// revisar q pasa si no hay espacio en swap, igualmente
     	// a la hora de crear el segmento
     	t_pagina* pagina_a_reemplazar = ejecutar_algoritmo_clock_modificado();
+    	printf("Se encontro la pagina a reemplazar\n");
     	pagina_a_reemplazar->bit_presencia = 0;
 		new->frame = obtener_frame_libre();
 
@@ -215,7 +220,9 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 
 	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){
 		if(flag_operacion == CREAR_DATOS){
+			//printf("Hasta aca funciona\n");
 			pagina = crear_pagina(bit_presencia,segmento->tipo_segmento);
+			//printf("Hasta aca funciona\n");
 			list_add(segmento->tabla_paginas,pagina);
 			printf("Se actualizo la tabla de paginas\n");
 			if(!bit_presencia)
@@ -225,7 +232,6 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 			pagina = list_get(segmento->tabla_paginas,numero_pagina);
 		}
 		direccion_frame = obtener_datos_frame(pagina);
-
 		switch(flag_operacion){
 			case CARGAR_DATOS:
 				memcpy(&buffer[TAM_PAGINA*numero_pagina],direccion_frame,TAM_PAGINA);
@@ -234,6 +240,7 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 			case CREAR_DATOS:
 				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
 		    	//printf("Se copiaron los datos nuevos\n");
+				//printf("Pagina que guarde: nro %d\tbp %d\tframe %d\t\n",numero_pagina,pagina->bit_presencia,pagina->frame);
 				break;
 		}
 	}
@@ -469,8 +476,6 @@ void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap){
 // ahora la nueva version va a retornar la pagina que sera reemplazada
 t_pagina* ejecutar_algoritmo_clock_modificado(){
 	//printf("Se ejecuta el algoritmo clock modificado\n");
-	t_proceso* proceso_obtenido;
-	t_segmento* segmento_obtenido;
 	t_pagina* pagina_obtenida;
 	int primer_frame_recorrido = algoritmo_clock_frame_recorrido;
 	int nro_vuelta = 1;
@@ -478,15 +483,19 @@ t_pagina* ejecutar_algoritmo_clock_modificado(){
 	while(true){
 
 		pagina_obtenida = list_get(lista_clock,algoritmo_clock_frame_recorrido);
-
+		//printf("Se obtuvo pagina en el algoritmo clock modificado bu %d\tbm %d\tfr%d\n",pagina_obtenida->bit_usado,pagina_obtenida->bit_modificado,pagina_obtenida->frame);
+		//printf("nro_vuelta %d\n",nro_vuelta);
 		switch(nro_vuelta){
 			case 1:
 				if(!pagina_obtenida->bit_usado && !pagina_obtenida->bit_modificado){
 					//datos_pagina = malloc(TAM_PAGINA);
 					//memcpy(datos_pagina,&upcm[algoritmo_clock_frame_recorrido*TAM_PAGINA],TAM_PAGINA);
 					liberar_frame(algoritmo_clock_frame_recorrido);
-					list_remove(lista_clock,algoritmo_clock_frame_recorrido);
-					//pagina_obtenida->bit_presencia = 0;
+					//printf("Se libero el frame\n");
+					//printf("Size lista_clock %d\n",list_size(lista_clock));
+					//printf("algoritmo_clock_frame_recorrido %d\n",algoritmo_clock_frame_recorrido);
+					//list_remove(lista_clock,algoritmo_clock_frame_recorrido);
+					//printf("Se removio la pagina del algoritmo\n");
 					algoritmo_clock_frame_recorrido++;
 					if(algoritmo_clock_frame_recorrido == cantidad_frames){
 						algoritmo_clock_frame_recorrido = 0;
@@ -530,5 +539,12 @@ t_pagina* ejecutar_algoritmo_clock_modificado(){
 }
 
 void agregar_frame_clock(t_pagina* pagina){
-	list_add_in_index(lista_clock,pagina->frame,pagina);
+	//list_add_in_index(lista_clock,pagina->frame,pagina);
+	if(list_size(lista_clock) == cantidad_frames){
+		list_replace(lista_clock,pagina->frame,pagina);
+		//printf("Se reemplazo la pagina\n");
+	}
+	else{
+		list_add_in_index(lista_clock,pagina->frame,pagina);
+	}
 }
