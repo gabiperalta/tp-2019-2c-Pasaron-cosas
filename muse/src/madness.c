@@ -184,7 +184,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	uint32_t size_original;
 	bool analizar_extension = true;
 
-	bool agregar_metadata_free = true;
+	bool agregar_metadata_free = false;
 	int cantidad_paginas_solicitadas;
 	uint32_t segmento_limite_anterior;
 
@@ -713,22 +713,24 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	printf("nro_pagina_obtenida %d\n",nro_pagina_obtenida);
 	int desplazamiento_obtenido = (direccion_recibida - segmento_obtenido->base) - (nro_pagina_obtenida * TAM_PAGINA);
 	printf("desplazamiento_obtenido %d\n",desplazamiento_obtenido);
-	t_pagina* pagina_obtenida;// = list_get(segmento_obtenido->tabla_paginas,nro_pagina_obtenida);
 
-	void* direccion_datos;// = obtener_datos_frame(pagina_obtenida);
+	t_pagina* pagina_obtenida;
+	void* direccion_datos;
 	t_heap_metadata heap_metadata;
-	int posicion_recorrida = desplazamiento_obtenido - SIZE_HEAP_METADATA;
 	void* buffer;
+	int posicion_recorrida = desplazamiento_obtenido - SIZE_HEAP_METADATA;
+	//posicion_recorrida = (int)fmax((double)posicion_recorrida,0); // controlo que no se vuelva negativo
 
 	// calculo para las paginas necesarias
 	int cantidad_paginas_necesarias = (int)ceil((double)(desplazamiento_obtenido + tam_bloque_datos_recibido)/TAM_PAGINA);
 	//int cantidad_paginas_necesarias;
 
-	if((segmento_obtenido->tipo_segmento == SEGMENTO_HEAP) && ((desplazamiento_obtenido - (int)SIZE_HEAP_METADATA) < 0)){
+	if((segmento_obtenido->tipo_segmento == SEGMENTO_HEAP) && (posicion_recorrida < 0)){ // revisar esto para un mmap
 		// tengo que obtener la pagina anterior para poder manejar la metadata
-		cantidad_paginas_necesarias++;
-		nro_pagina_obtenida--;
-		posicion_recorrida = TAM_PAGINA + desplazamiento_obtenido - SIZE_HEAP_METADATA;
+		int cantidad_paginas_necesarias_auxiliares = (int)ceil((double)abs(posicion_recorrida)/TAM_PAGINA);
+		cantidad_paginas_necesarias += cantidad_paginas_necesarias_auxiliares;
+		nro_pagina_obtenida -= cantidad_paginas_necesarias_auxiliares;
+		posicion_recorrida = (cantidad_paginas_necesarias_auxiliares*TAM_PAGINA) + desplazamiento_obtenido - SIZE_HEAP_METADATA;
 	}
 
 	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
