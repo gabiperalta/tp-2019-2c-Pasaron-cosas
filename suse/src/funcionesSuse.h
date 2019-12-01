@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-//#ifndef FUNCIONESSUSE_H_
-//#define FUNCIONESSUSE_H_
+#ifndef FUNCIONESSUSE_H_
+#define FUNCIONESSUSE_H_
 
 #include "suse.h"
 
@@ -45,4 +45,4 @@ void iniciarLog();
 void destruirLog();
 void destruirMetricas();
 
-//#endif /* FUNCIONESSUSE_H_ */
+#endif /* FUNCIONESSUSE_H_ */

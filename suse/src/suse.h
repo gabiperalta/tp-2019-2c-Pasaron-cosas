@@ -5,11 +5,11 @@
  *      Author: utnso
  */
 
-//#ifndef SUSE_H_
-//#define SUSE_H_
+#ifndef SUSE_H_
+#define SUSE_H_
 
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca.h"
+#include "biblioteca_sockets.h"
+#include "biblioteca.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,4 +101,4 @@ typedef struct{
 }semaforos_suse;
 
 
-//#endif /* SUSE_H_ */
+#endif /* SUSE_H_ */

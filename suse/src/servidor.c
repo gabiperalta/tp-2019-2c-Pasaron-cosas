@@ -1,8 +1,11 @@
-#ifndef SERVIDOR_H
-#define SERVIDOR_H
+/*
+ * servidor.c
+ *
+ *  Created on: 1 dic. 2019
+ *      Author: utnso
+ */
 
 #include "servidor.h"
-
 
 
 void inicializarServidor(){
@@ -252,7 +255,3 @@ char* obtener_ip_socket(int s){
 
 	return ipstr_reservado;
 }
-
-#endif
-
-

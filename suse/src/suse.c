@@ -1,5 +1,3 @@
-
-
 #include "suse.h"
 
 int main(){
