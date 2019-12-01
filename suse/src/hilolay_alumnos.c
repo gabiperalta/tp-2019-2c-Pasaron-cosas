@@ -9,7 +9,6 @@
 #include <hilolay/alumnos.h>
 #include <hilolay/hilolay.h>
 #include <hilolay/internal.h>
-<<<<<<< HEAD
 #include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
 #include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca.h"
 #include <stdio.h>
@@ -30,9 +29,7 @@
 #include <unistd.h>
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/suse/src/suse.config"
-=======
-#include "suse.h"
->>>>>>> 76dff580cd951483a9e301535d84528c812a2ddc
+
 int socket_suse;
 
 t_config* archivo_config;

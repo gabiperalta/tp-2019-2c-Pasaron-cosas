@@ -234,9 +234,8 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 			sem_wait(&sem_planificacion);
 			aplicarFIFO();
 			i++;
+			log_info(suse_log,"Se planifico por FIFO");
 		}
-
-		log_info(suse_log,"Se planifico por FIFO");
 	}
 }
 
@@ -305,14 +304,12 @@ process* obtener_proceso_asociado(thread* hilo){
 
 
 void iniciarPlanificacion(){
-
-	pthread_t hilo;
-	pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
-	pthread_detach(hilo);
-
-	log_info(suse_log, "Planificacion iniciada correctamente");
-
-}
+		pthread_t hilo;
+		pthread_create(&hilo, NULL, (void *) planificarLargoPlazo, NULL);
+		log_info(suse_log, "se creo el hilo de planificacion");
+		pthread_detach(hilo);
+		log_info(suse_log, "Planificacion iniciada correctamente");
+	}
 
 
 void inicializar_listas(){
@@ -359,7 +356,7 @@ void leer_config(){
 	ids_sem = config_get_array_value(archivo_config,"SEM_IDS");
 	inicio_sem = config_get_array_value(archivo_config, "SEM_INIT");
 	max_sem = config_get_array_value(archivo_config, "SEM_MAX");
-	metrics = config_get_int_value(archivo_config,"METRICS_TIMER");
+	tiempo_metrics = config_get_int_value(archivo_config,"METRICS_TIMER");
 	ip = config_get_string_value(archivo_config, "IP");
 	puerto = config_get_int_value(archivo_config, "LISTEN_PORT");
 	for(int i = 0; i< cantidadElementosCharAsteriscoAsterisco(ids_sem); i++){
@@ -391,8 +388,8 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 	free(semaforo->id);
 }
 
-void metricas(){
-	sleep(metrics);
+void suse_metricas(){
+	sleep(tiempo_metrics);
 	process* proceso = malloc(sizeof(process));
 	thread* hilo = malloc(sizeof(thread));
 	hilo->porcentaje_tiempo = 0;
@@ -478,5 +475,17 @@ void liberarCharAsteriscoAsterisco(char** array){
 	return;
 }
 
+void iniciarMetricas(){
+	pthread_create(&threadMetrics, NULL,(void*) suse_metricas, NULL);
+}
 
+void iniciarLog(){
+	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
+}
+void destruirLog(){
+	log_destroy(suse_log);
+}
+void destruirMetricas(){
+	pthread_detach(threadMetrics);
+}
 //#endif

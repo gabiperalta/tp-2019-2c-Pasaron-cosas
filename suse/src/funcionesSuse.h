@@ -32,7 +32,6 @@ void destructor_de_hilos(thread* hilo);
 void inicializar_listas();
 void inicializar_semaforos();
 void leer_config();
-void metricas();
 void planificarCortoPlazo(int pid);
 void planificarLargoPlazo();
 uint32_t getCurrentTime();
@@ -40,6 +39,10 @@ void destructor_semaforos();
 void destructor_listas();
 uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
 void liberarCharAsteriscoAsterisco(char** array);
-
+void suse_metricas();
+void iniciarMetricas();
+void iniciarLog();
+void destruirLog();
+void destruirMetricas();
 
 //#endif /* FUNCIONESSUSE_H_ */

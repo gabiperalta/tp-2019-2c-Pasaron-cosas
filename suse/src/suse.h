@@ -39,7 +39,7 @@ char** ids_sem;
 char** inicio_sem;
 char** max_sem;
 int estimacion_inicial;
-int metrics;
+int tiempo_metrics;
 
 t_log* suse_log;
 

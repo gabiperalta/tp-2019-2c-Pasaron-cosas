@@ -2,24 +2,21 @@
 
 #include "suse.h"
 
-
 int main(){
 	estimacion_inicial = 0;
 	puts("Proceso SUSE");
 	inicializar_listas();
 	inicializar_semaforos();
-<<<<<<< HEAD
 	leer_config();
-	suse_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
-	pthread_create(&threadMetrics, NULL,(void*) metricas, NULL);
-=======
-	//ACA PONES METRICAS Y NO ESTA DECLARADO EN NINGUN LADO
-	//pthread_create(&threadMetrics, NULL,(void*) metricas, NULL);
->>>>>>> 76dff580cd951483a9e301535d84528c812a2ddc
-	inicializarServidor();
-	iniciarPlanificacion();
-	system("clear");
+	iniciarLog();
 	log_info(suse_log,"====================== SUSE ======================");
+	inicializarServidor();
+	log_info(suse_log, "hasta aca llegue");
+	iniciarPlanificacion();
+	log_info(suse_log, "planifique");
+	//iniciarMetricas();
+	log_info(suse_log, "metricas");
+	system("clear");
 	printf("---------------- SUSE ----------------\n");
 	char * linea;
 		while(1) {
@@ -33,9 +30,8 @@ int main(){
 
 			free(linea);
 		}
-	log_destroy(suse_log);
-	//aca no tiene que ser un puntero el detach
-	//pthread_detach(&threadMetrics);
+	destruirLog();
+	destruirMetricas();
 	destructor_listas();
 	destructor_semaforos();
 	return 0;
