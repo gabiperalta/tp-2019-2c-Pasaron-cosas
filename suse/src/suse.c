@@ -17,17 +17,17 @@ int main(){
 	system("clear");
 	printf("---------------- SUSE ----------------\n");
 	char * linea;
-		while(1) {
-			linea = readline(">");
-			if(linea)
-				add_history(linea);
-			if(!strncmp(linea, "exit", 4)) {
-				free(linea);
-				break;
-			}
-
+	while(1) {
+		linea = readline(">");
+		if(linea)
+			add_history(linea);
+		if(!strncmp(linea, "exit", 4)) {
 			free(linea);
+			break;
 		}
+
+		free(linea);
+	}
 	destruirLog();
 	destruirMetricas();
 	destructor_listas();
