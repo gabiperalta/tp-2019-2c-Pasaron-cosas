@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef FUNCIONESSUSE_H_
-#define FUNCIONESSUSE_H_
+//#ifndef FUNCIONESSUSE_H_
+//#define FUNCIONESSUSE_H_
 
 #include "suse.h"
 
@@ -31,8 +31,6 @@ void destructor_de_procesos(process* proceso);
 void destructor_de_hilos(thread* hilo);
 void inicializar_listas();
 void inicializar_semaforos();
-void destructor_listas();
-void destructor_semaforos();
 void leer_config();
 void metricas();
 void planificarCortoPlazo(int pid);
@@ -44,4 +42,4 @@ uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);
 void liberarCharAsteriscoAsterisco(char** array);
 
 
-#endif /* FUNCIONESSUSE_H_ */
+//#endif /* FUNCIONESSUSE_H_ */

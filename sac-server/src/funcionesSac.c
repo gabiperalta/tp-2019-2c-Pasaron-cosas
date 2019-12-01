@@ -13,7 +13,7 @@ void crearDirectorioRaiz(){
 	directorioRaiz->state = DIRECTORIO;
 	directorioRaiz->father_block = 0;
 	directorioRaiz->file_size = 0;
-	memcpy(directorioRaiz->fname, "./", 2);
+	memcpy(directorioRaiz->fname, "/", 1);
 	directorioRaiz->creation_date = tiempo.tv_usec;
 	directorioRaiz->modification_date = tiempo.tv_usec;
 
@@ -35,13 +35,33 @@ int myGetattr( char *path, struct stat *statRetorno ){
 
 	punteroInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
 
-	if( punteroInodo >0 ){
-		statRetorno->st_ino = (punteroInodo - INODE_TABLE_START) / BLOCK_SIZE; // esto daria el numero de inodo
-		statRetorno->st_mode = inodoArchivo->state | 0777 ; // NO SE COMO SE USA
+	/*printf("statRetorno: \n"
+				"ino: %i \n"
+				"mode: %i \n"
+				"size: %i \n"
+				"blksize: %i \n"
+				"blocks: %i \n"
+				"mtim: %i \n", statRetorno->st_ino, statRetorno->st_mode, statRetorno->st_size,
+				statRetorno->st_blksize, statRetorno->st_blocks, statRetorno->st_mtim.tv_nsec);*/
+
+	if( inodoArchivo->state == DIRECTORIO || inodoArchivo->state == ARCHIVO ){
+		if(inodoArchivo->state == DIRECTORIO){
+			statRetorno->st_mode = S_IFDIR | 0777;
+			statRetorno->st_nlink = 2;
+		}
+		if(inodoArchivo->state == ARCHIVO){
+			statRetorno->st_mode = S_IFREG | 0777;
+			statRetorno->st_nlink = 1;
+			statRetorno->st_size = inodoArchivo->file_size;
+		}
+
+
+		/*statRetorno->st_ino = (punteroInodo - INODE_TABLE_START) / BLOCK_SIZE; // esto daria el numero de inodo
+		statRetorno->st_mode = S_IFDIR | 0777 ; // NO SE COMO SE USA
 		statRetorno->st_size = inodoArchivo->file_size;
 		statRetorno->st_blksize = BLOCK_SIZE;
 		statRetorno->st_blocks = cantidadBloquesAsignados(inodoArchivo->blocks);
-		statRetorno->st_mtim.tv_nsec = inodoArchivo->modification_date;
+		statRetorno->st_mtim.tv_nsec = inodoArchivo->modification_date;*/
 
 		return 0;
 	}
@@ -397,6 +417,10 @@ t_list* listarDirectorio(GFile *directorio){
 		int numeroBloqueDeDatos = 0;
 		int BloquesAsignados = (cantidadBloquesAsignados(directorio->blocks));
 
+		buscarInodoArchivo()
+
+		// TODO RECORRER LA TABLA DE INODOS Y CARGAR EN UNA ESTRUCTURA CUSTOM, SOLO LA METADATA, SIN LA LISTA DE BLOQUES
+		// TODOS LOS INODOS QUE TENGAN EL MISMO NUMERO DE INODO PADRE, SON LOS QUE ESTAN DENTRO DE DICHO DIRECTORIO
 
 		do{
 			// OBTENER BLOQUE DE PUNTEROS
@@ -472,20 +496,23 @@ t_list* listarDirectorio(GFile *directorio){
 ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo){
 	char** directorios = string_split(path, "/");
 	inodoArchivo = directorioRaiz();
-	ptrGBloque punteroAlInodo;
+	ptrGBloque punteroAlInodo = INODE_TABLE_START;
+	ptrGBloque punteroDirAnterior = INODE_TABLE_START;
 
 	int cantidadDirectorios = cantidadElementosCharAsteriscoAsterisco(directorios);
 
-	if(mode == SIN_EL_ULTIMO){
+	/*if(mode == SIN_EL_ULTIMO){
 		cantidadDirectorios --;
 	}
 	if(mode == SIN_LOS_DOS_ULTIMOS){
 		cantidadDirectorios -= 2;
-	}
+	}*/
 	int directorioActual = 1;
 
 	while((directorioActual < cantidadDirectorios) && (inodoArchivo != NULL)){
-		punteroAlInodo = buscarArchivoEnDirectorio(inodoArchivo, directorios[directorioActual]);
+		while(strcmp(directorios[directorioActual]) && inodoArchivo->father_block != punteroDirAnterior){
+
+		}
 		if(directorioActual < (cantidadDirectorios + 1) && inodoArchivo->state != DIRECTORIO){
 			inodoArchivo = NULL;
 			return 0;
@@ -494,6 +521,7 @@ ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo){
 	}
 
 	if(inodoArchivo->state == BORRADO){ // TODO, REVISAR QUE NO GENERE PROBLEMAS. LO HICE PARA QUE NO DEVUELVA INODO SI ES UNO BORRADO
+		inodoArchivo = NULL;
 		return 0;
 	}
 

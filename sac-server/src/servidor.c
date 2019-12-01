@@ -108,14 +108,21 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 			.parametros = list_create()
 	};
 
-	///////////////// Parametros a enviar /////////////////
 	agregar_valor(paquete_respuesta.parametros, retorno);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_ino);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_blksize);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_blocks);
-	agregar_valor(paquete_respuesta.parametros, statRetorno.st_mtim.tv_nsec);
+
+	if(retorno == 0 ){
+		if(statRetorno.st_nlink == 2){
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+		}
+		if(statRetorno.st_nlink == 1){
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
+		}
+	}
+
+	///////////////// Parametros a enviar /////////////////
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
