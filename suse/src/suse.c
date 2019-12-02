@@ -14,7 +14,7 @@ int main(){
 	log_info(suse_log, "hasta aca llegue");
 	iniciarPlanificacion();
 	log_info(suse_log, "planifique");
-	//iniciarMetricas();
+	iniciarMetricas();
 	log_info(suse_log, "metricas");
 	system("clear");
 	printf("---------------- SUSE ----------------\n");

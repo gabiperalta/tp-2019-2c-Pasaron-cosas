@@ -212,16 +212,19 @@ int join(int tid, int pid){
 		 log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
 	 }
 	else{
-		thread* hilo_en_ejecucion= proceso->hilo_exec;
-		pthread_mutex_lock(&mut_blocked);
-		list_add(hilos_blocked, hilo_en_ejecucion);
-		pthread_mutex_unlock(&mut_blocked);
-		proceso->hilo_exec = hilo_prioritario;
-		hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
+		if(proceso->hilo_exec != NULL){
+			thread* hilo_en_ejecucion= proceso->hilo_exec;
+			pthread_mutex_lock(&mut_blocked);
+			list_add(hilos_blocked, hilo_en_ejecucion);
+			pthread_mutex_unlock(&mut_blocked);
+			proceso->hilo_exec = hilo_prioritario;
+			hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
+		}
+		else{
+			log_error(suse_log, "No hay ningun hilo ejecutando");
+		}
 
 	 }
-
-
 	log_info(suse_log, "Se hizo un join");
 	return 1;
 }
@@ -234,9 +237,9 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 			sem_wait(&sem_planificacion);
 			aplicarFIFO();
 			i++;
-			log_info(suse_log,"Se planifico por FIFO");
 		}
 	}
+	log_info(suse_log,"Se planifico por FIFO");
 }
 
 void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
@@ -326,7 +329,6 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mut_semaforos, NULL);
 	pthread_mutex_init(&mut_procesos, NULL);
 	sem_init(&sem_planificacion, 0, grado_multiprogramacion);
-	sem_init(&sem_join,0,1);
 	sem_init(&sem_ejecute,0,1);
 }
 
@@ -340,7 +342,6 @@ void destructor_listas(){
 
 void destructor_semaforos(){
 	sem_destroy(&sem_planificacion);
-	sem_destroy(&sem_join);
 	sem_destroy(&sem_ejecute);
 	pthread_mutex_destroy(&mut_blocked);
 	pthread_mutex_destroy(&mut_exit);
