@@ -143,6 +143,8 @@ int close_suse(int tid, int pid){
 
 int crear(int tid, int pid){
 
+	printf("Inicio crear\n");
+
 	thread* hilo = malloc(sizeof(thread));
 	//CHEQUEAAAAAAR
 	hilo->tid= tid;
@@ -169,9 +171,18 @@ int crear(int tid, int pid){
 		return proceso->pid == pid;
 	}
 
+	//printf("size lista procesos %d\n",list_size(lista_procesos));
+
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+
+	if(proceso == NULL)
+		printf("No se encontro proceso\n");
+
+	//proceso = list_get(lista_procesos,0);
+	//printf("pid %d\n",proceso->pid);
+	//printf("pid recibido %d\n",pid);
 
 	bool condicion(thread* hilo){
 		return hilo-> pid ==  pid;
@@ -188,6 +199,7 @@ int crear(int tid, int pid){
 		list_add(hilos_new, hilo);
 		pthread_mutex_unlock(&mut_new);
 	}
+	printf("Fin crear\n");
 	return 1;
 }
 

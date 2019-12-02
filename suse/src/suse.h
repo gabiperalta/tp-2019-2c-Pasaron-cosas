@@ -87,7 +87,7 @@ typedef struct{
 }thread;
 
 typedef struct{
-	uint8_t pid; //id del proceso
+	uint32_t pid; //id del proceso
 	t_list* hilos_ready;
 	thread* hilo_exec;
 }process;

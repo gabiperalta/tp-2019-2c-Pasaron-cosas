@@ -111,6 +111,7 @@ int me_create(int tid){
 	};
 
 	agregar_valor(paquete_solicitud.parametros,tid);
+	//agregar_valor(paquete_solicitud.parametros,getpid());
 	enviar_paquete(paquete_solicitud,socket_suse); //el que guarde al inciiar la conex)
 
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
@@ -177,6 +178,23 @@ void hilolay_init(){
 	printf("Se leyo config\n");
 	socket_suse = conectarseA(ip_suse,puerto_suse);
 	printf("Se conecto a suse\n");
+
+	t_paquete paquete = {
+			.header = SUSE_INIT,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete.parametros,getpid());
+	enviar_paquete(paquete,socket_suse);
+	///////////////////////////////////////////////////////
+
+	///////////////// Parametros a recibir ////////////////
+	t_paquete paquete_recibido = recibir_paquete(socket_suse);
+	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
+	printf("Conexion exitosa?: %d\n",valor_recibido);
+	///////////////////////////////////////////////////////
+
 	init_internal(&funciones_suse);
 	printf("Se inicializo\n");
 }
