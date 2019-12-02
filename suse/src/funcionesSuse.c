@@ -214,7 +214,7 @@ int join(int tid, int pid){
 	pthread_mutex_unlock(&mut_procesos);
 	bool condicion(thread* hilo){
 		return hilo->tid == tid;
-		}
+	}
 	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
 
 	pthread_mutex_lock(&mut_exit);
@@ -222,7 +222,7 @@ int join(int tid, int pid){
 	pthread_mutex_unlock(&mut_exit);
 	if(existe_en_exit){
 		 log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
-	 }
+	}
 	else{
 		thread* hilo_en_ejecucion= proceso->hilo_exec;
 		pthread_mutex_lock(&mut_blocked);
@@ -231,7 +231,7 @@ int join(int tid, int pid){
 		proceso->hilo_exec = hilo_prioritario;
 		hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
 
-	 }
+	}
 
 
 	log_info(suse_log, "Se hizo un join");

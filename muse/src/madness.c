@@ -188,13 +188,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	int cantidad_paginas_solicitadas;
 	uint32_t segmento_limite_anterior;
 
-
-
-	int contador_prueba = 0;
-
-
-
-
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
 		return;
@@ -270,9 +263,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			}
 
 			posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
-
-			contador_prueba++;
-
 		}
 
 		//se analiza si se puede extender el segmento
@@ -313,11 +303,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		t_pagina* pagina_nueva;
 		void* buffer_auxiliar = malloc(cantidad_paginas_solicitadas * TAM_PAGINA);
 		void* direccion_datos_auxiliar;
-
-		//////////////////// PRUEBA BORRAR CUANDO TERMINE //////////////////////
-		//if((contador_prueba == 7)) //&& !heap_metadata.isFree)
-		//	pthread_mutex_lock(&mutex_acceso_upcm);
-		//////////////////// PRUEBA BORRAR CUANDO TERMINE //////////////////////
 
 		printf("Se extiende el segmento\n");
 
