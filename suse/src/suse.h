@@ -5,11 +5,11 @@
  *      Author: utnso
  */
 
-//#ifndef SUSE_H_
-//#define SUSE_H_
+#ifndef SUSE_H_
+#define SUSE_H_
 
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
-#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca.h"
+#include "biblioteca_sockets.h"
+#include "biblioteca.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +55,6 @@ t_list* hilos_blocked;
 t_list* hilos_exit;
 
 sem_t sem_planificacion;
-sem_t sem_join;
 sem_t sem_ejecute;
 pthread_mutex_t mut_exit;
 pthread_mutex_t mut_new;
@@ -87,7 +86,7 @@ typedef struct{
 }thread;
 
 typedef struct{
-	uint8_t pid; //id del proceso
+	uint32_t pid; //id del proceso
 	t_list* hilos_ready;
 	thread* hilo_exec;
 }process;
@@ -101,4 +100,4 @@ typedef struct{
 }semaforos_suse;
 
 
-//#endif /* SUSE_H_ */
+#endif /* SUSE_H_ */

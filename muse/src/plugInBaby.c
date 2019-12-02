@@ -215,7 +215,7 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 	if(segmento->tipo_segmento == SEGMENTO_MMAP)
 		bit_presencia = 0;
 
-	if(paginas_a_recorrer == NULL)
+	if(paginas_a_recorrer == 0)
 		paginas_a_recorrer = list_size(segmento->tabla_paginas);
 
 	for(int numero_pagina=0;numero_pagina<paginas_a_recorrer;numero_pagina++){

@@ -13,7 +13,7 @@
 // Ej.: para una misma conexion, MUSE tiene el socket 2 y libmuse el 7
 
 void procesar_solicitud(void* socket_cliente){
-	t_paquete paquete = recibir_paquete(socket_cliente);
+	t_paquete paquete = recibir_paquete((int)socket_cliente);
 	void (*funcion_muse)(t_paquete,int);
 
 	while(paquete.error != 1){
@@ -47,15 +47,15 @@ void procesar_solicitud(void* socket_cliente){
 				return;
 		}
 
-		funcion_muse(paquete,socket_cliente);
+		funcion_muse(paquete,(int)socket_cliente);
 
-		paquete = recibir_paquete(socket_cliente);
+		paquete = recibir_paquete((int)socket_cliente);
 	}
 
 	// MUSE_CLOSE
-	funcion_close(paquete,socket_cliente);
+	funcion_close(paquete,(int)socket_cliente);
 
-	close(socket_cliente);
+	close((int)socket_cliente);
 }
 
 void leer_config(){
@@ -82,7 +82,7 @@ void init_memoria(){
 	cantidad_frames = TAM_MEMORIA / TAM_PAGINA;
 	int cantidad_frames_bytes = (int)ceil((double)cantidad_frames/8);
 	void* frames_bitmap = malloc(cantidad_frames_bytes);
-	memset(frames_bitmap,NULL,cantidad_frames_bytes); // seteo frames_bitmap en 0 por las dudas
+	memset(frames_bitmap,0,cantidad_frames_bytes); // seteo frames_bitmap en 0 por las dudas
 
 	upcm = malloc(TAM_MEMORIA); // memoria principal
 	bitmap_upcm = bitarray_create_with_mode(frames_bitmap,cantidad_frames_bytes,MSB_FIRST);
@@ -92,7 +92,7 @@ void init_memoria(){
 	cantidad_frames_swap = TAM_SWAP / TAM_PAGINA;
 	int cantidad_frames_swap_bytes = (int)ceil((double)cantidad_frames_swap/8);
 	void* frames_swap_bitmap = malloc(cantidad_frames_swap_bytes);
-	memset(frames_swap_bitmap,NULL,cantidad_frames_swap_bytes);
+	memset(frames_swap_bitmap,0,cantidad_frames_swap_bytes);
 
 	bitmap_swap = bitarray_create_with_mode(frames_swap_bitmap,cantidad_frames_swap_bytes,MSB_FIRST);
 
@@ -113,7 +113,7 @@ void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(PUERTO);
 
-	while((conectado=aceptarConexion(puerto_escucha))!= 1){
+	while((conectado=(void*)aceptarConexion(puerto_escucha))!= (void*)1){
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
@@ -175,7 +175,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	t_segmento* segmento_obtenido;
 	t_segmento* segmento_siguiente;
-	uint32_t direccion_retornada = NULL;
+	uint32_t direccion_retornada = 0;
 	int posicion_recorrida = 0;
 	t_heap_metadata heap_metadata;
 	bool ultimo_valor_isFree;
@@ -187,13 +187,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	bool agregar_metadata_free = false;
 	int cantidad_paginas_solicitadas;
 	uint32_t segmento_limite_anterior;
-
-
-
-	int contador_prueba = 0;
-
-
-
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
@@ -212,7 +205,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		posicion_recorrida = 0;
 
 		printf("Se cargan los datos en un buffer\n");
-		cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,NULL);
+		cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,0);
 
 		while(posicion_recorrida < segmento_obtenido->limite){
 			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
@@ -270,9 +263,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			}
 
 			posicion_recorrida += sizeof(heap_metadata.size) + heap_metadata.size;
-
-			contador_prueba++;
-
 		}
 
 		//se analiza si se puede extender el segmento
@@ -314,11 +304,6 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		void* buffer_auxiliar = malloc(cantidad_paginas_solicitadas * TAM_PAGINA);
 		void* direccion_datos_auxiliar;
 
-		//////////////////// PRUEBA BORRAR CUANDO TERMINE //////////////////////
-		//if((contador_prueba == 7)) //&& !heap_metadata.isFree)
-		//	pthread_mutex_lock(&mutex_acceso_upcm);
-		//////////////////// PRUEBA BORRAR CUANDO TERMINE //////////////////////
-
 		printf("Se extiende el segmento\n");
 
 		if(heap_metadata.isFree && (heap_metadata.size >= 0)){
@@ -351,7 +336,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		}
 
 		// se vuelven a copiar los datos en los frames correspondientes
-		cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
+		cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,0);
 
 		segmento_limite_anterior = segmento_obtenido->limite;
 		segmento_obtenido->limite += (cantidad_paginas_solicitadas * TAM_PAGINA);

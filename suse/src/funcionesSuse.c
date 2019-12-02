@@ -143,6 +143,8 @@ int close_suse(int tid, int pid){
 
 int crear(int tid, int pid){
 
+	printf("Inicio crear\n");
+
 	thread* hilo = malloc(sizeof(thread));
 	//CHEQUEAAAAAAR
 	hilo->tid= tid;
@@ -169,9 +171,18 @@ int crear(int tid, int pid){
 		return proceso->pid == pid;
 	}
 
+	//printf("size lista procesos %d\n",list_size(lista_procesos));
+
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+
+	if(proceso == NULL)
+		printf("No se encontro proceso\n");
+
+	//proceso = list_get(lista_procesos,0);
+	//printf("pid %d\n",proceso->pid);
+	//printf("pid recibido %d\n",pid);
 
 	bool condicion(thread* hilo){
 		return hilo-> pid ==  pid;
@@ -188,6 +199,7 @@ int crear(int tid, int pid){
 		list_add(hilos_new, hilo);
 		pthread_mutex_unlock(&mut_new);
 	}
+	printf("Fin crear\n");
 	return 1;
 }
 
@@ -202,7 +214,7 @@ int join(int tid, int pid){
 	pthread_mutex_unlock(&mut_procesos);
 	bool condicion(thread* hilo){
 		return hilo->tid == tid;
-		}
+	}
 	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
 
 	pthread_mutex_lock(&mut_exit);
@@ -210,7 +222,7 @@ int join(int tid, int pid){
 	pthread_mutex_unlock(&mut_exit);
 	if(existe_en_exit){
 		 log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
-	 }
+	}
 	else{
 		if(proceso->hilo_exec != NULL){
 			thread* hilo_en_ejecucion= proceso->hilo_exec;
@@ -223,7 +235,6 @@ int join(int tid, int pid){
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
 		}
-
 	 }
 	log_info(suse_log, "Se hizo un join");
 	return 1;

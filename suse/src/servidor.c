@@ -1,8 +1,11 @@
-#ifndef SERVIDOR_H
-#define SERVIDOR_H
+/*
+ * servidor.c
+ *
+ *  Created on: 1 dic. 2019
+ *      Author: utnso
+ */
 
 #include "servidor.h"
-
 
 
 void inicializarServidor(){
@@ -17,18 +20,13 @@ void inicializarServidor(){
 void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(puerto);
-	log_info(suse_log, "Conexion aceptada");
 	while((conectado=aceptarConexion(puerto_escucha))!= 1){
 		// agrega procesos
+		log_info(suse_log, "Conexion aceptada");
 		//printf("Se acepto conexion\n");
 		pthread_t thread_solicitud;
 		pthread_create(&thread_solicitud,NULL,(void*)procesar_solicitud,conectado);
 		pthread_detach(thread_solicitud);
-		process* proceso = malloc(sizeof(process));
-		proceso->hilos_ready = list_create();//inicializar lista proceso ready
-		list_add(lista_procesos,proceso);//list_add();
-		log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
-
 	}
 
 
@@ -41,6 +39,9 @@ void procesar_solicitud(void* socket_cliente){
 
 	while(paquete.error != 1){
 		switch(paquete.header){
+			case SUSE_INIT:
+				funcion_suse = funcion_init;
+				break;
 			case SUSE_CREATE:
 				funcion_suse = funcion_create;
 				break;
@@ -75,6 +76,27 @@ void procesar_solicitud(void* socket_cliente){
 
 // void funcion_create_hilo(t_paquete paquete,int socket_suse){
 
+void funcion_init(t_paquete paquete,int socket_suse){
+	uint32_t pid_recibido = obtener_valor(paquete.parametros);
+
+	process* proceso = malloc(sizeof(process));
+	//proceso->pid = pid_recibido;
+	proceso->pid = socket_suse;
+	proceso->hilos_ready = list_create();//inicializar lista proceso ready
+	proceso->hilo_exec = NULL;
+	list_add(lista_procesos,proceso);//list_add();
+	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
+
+	t_paquete paquete_respuesta = {
+			.header = SUSE_INIT,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1); // solo para confirmar que la comunicacion fue exitosa
+	enviar_paquete(paquete_respuesta,socket_suse);
+	///////////////////////////////////////////////////////
+}
 
 void funcion_join(t_paquete paquete,int socket_suse){
 
@@ -252,7 +274,3 @@ char* obtener_ip_socket(int s){
 
 	return ipstr_reservado;
 }
-
-#endif
-
-
