@@ -110,15 +110,19 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 
 	agregar_valor(paquete_respuesta.parametros, retorno);
 
-	if(retorno == 0 ){
+	printf("soyUnServidor\n");
+
+	if( retorno == 0 ){
 		if(statRetorno.st_nlink == 2){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			printf("ENVIE UN DIRECTORIO\n");
 		}
 		if(statRetorno.st_nlink == 1){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
+			printf("ENVIE UN ARCHIVO\n");
 		}
 	}
 

@@ -24,6 +24,7 @@ int main(int argc, char *argv[]){
 	GHeader* header = (GHeader*) myDisk;
 	if(!header->estaElDirectorioRaiz){
 		crearDirectorioRaiz();
+		header->estaElDirectorioRaiz = true;
 	}
 
 	printf("hasta aca llegue palurdo\n");

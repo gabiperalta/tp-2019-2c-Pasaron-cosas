@@ -13,7 +13,7 @@ void crearDirectorioRaiz(){
 	directorioRaiz->state = DIRECTORIO;
 	directorioRaiz->father_block = 0;
 	directorioRaiz->file_size = 0;
-	memcpy(directorioRaiz->fname, "/", 1);
+	memcpy(directorioRaiz->fname, "/\0", 2);
 	directorioRaiz->creation_date = tiempo.tv_usec;
 	directorioRaiz->modification_date = tiempo.tv_usec;
 
@@ -29,20 +29,17 @@ void crearDirectorioRaiz(){
 //GETATTR
 int myGetattr( char *path, struct stat *statRetorno ){
 	GFile *inodoArchivo;
-	ptrGBloque punteroInodo;
+	ptrGBloque punteroInodo = 0;
 
+	printf("myGetattr \n");
 	printf("El path mandado es: %s \n", path);
 
-	punteroInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
+	punteroInodo = buscarInodoArchivo(path, NORMAL);
 
-	/*printf("statRetorno: \n"
-				"ino: %i \n"
-				"mode: %i \n"
-				"size: %i \n"
-				"blksize: %i \n"
-				"blocks: %i \n"
-				"mtim: %i \n", statRetorno->st_ino, statRetorno->st_mode, statRetorno->st_size,
-				statRetorno->st_blksize, statRetorno->st_blocks, statRetorno->st_mtim.tv_nsec);*/
+	inodoArchivo = (GFile*) obtenerBloque(punteroInodo);
+
+	printf("ARCHIVO: name: %s \t pather: %i\t state: %i\n", inodoArchivo->fname, inodoArchivo->father_block, inodoArchivo->state);
+
 
 	if( inodoArchivo->state == DIRECTORIO || inodoArchivo->state == ARCHIVO ){
 		if(inodoArchivo->state == DIRECTORIO){
@@ -55,13 +52,6 @@ int myGetattr( char *path, struct stat *statRetorno ){
 			statRetorno->st_size = inodoArchivo->file_size;
 		}
 
-
-		/*statRetorno->st_ino = (punteroInodo - INODE_TABLE_START) / BLOCK_SIZE; // esto daria el numero de inodo
-		statRetorno->st_mode = S_IFDIR | 0777 ; // NO SE COMO SE USA
-		statRetorno->st_size = inodoArchivo->file_size;
-		statRetorno->st_blksize = BLOCK_SIZE;
-		statRetorno->st_blocks = cantidadBloquesAsignados(inodoArchivo->blocks);
-		statRetorno->st_mtim.tv_nsec = inodoArchivo->modification_date;*/
 
 		return 0;
 	}
@@ -78,8 +68,10 @@ int myGetattr( char *path, struct stat *statRetorno ){
 
 // MKDIR
 int crearDirectorio(char *path ){ // mode ni lo usamos
-	GFile *directorioPadre;
-	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
+	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO);
+
+	GFile *directorioPadre = (GFile*) obtenerBloque(punteroAInodoPadre);
+
 	char** pathDividida = string_split(path, "/");
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
 	ptrGBloque punteroAInodo = reservarInodo(DIRECTORIO);
@@ -88,6 +80,8 @@ int crearDirectorio(char *path ){ // mode ni lo usamos
 	int hayEntradaLibre;
 	GDirectoryBlock* bloqueDeDirectorio;
 
+	printf("crearDirectorio \n");
+	printf("El path mandado es: %s \n", path);
 
 
 	gettimeofday(&tiempo, NULL);
@@ -113,6 +107,7 @@ int crearDirectorio(char *path ){ // mode ni lo usamos
 			inodo->father_block = punteroAInodoPadre;
 			inodo->file_size = 0;
 			memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
+			memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
 			inodo->modification_date = tiempo.tv_usec;
 			inodo->state = DIRECTORIO;
 
@@ -132,10 +127,13 @@ int crearDirectorio(char *path ){ // mode ni lo usamos
 
 // RMDIR
 int eliminarDirectorio( char *path){
-	GFile *directorio;
-	GFile *directorioPadre;
-	ptrGBloque punteroAInodo = buscarInodoArchivo(path, NORMAL, directorio);
-	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
+	ptrGBloque punteroAInodo = buscarInodoArchivo(path, NORMAL);
+	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO);
+	GFile *directorio = (GFile*) obtenerBloque(punteroAInodo);
+	GFile *directorioPadre = (GFile*) obtenerBloque(punteroAInodoPadre);
+
+	printf("eliminarDirectorio \n");
+	printf("El path mandado es: %s \n", path);
 
 	if(punteroAInodo != 0){
 		if(noTieneHijos(punteroAInodo)){
@@ -155,10 +153,13 @@ int eliminarDirectorio( char *path){
 
 // READDIR (LS)
 int myReaddir( char *path, void *buffer ){
-	GFile *directorio;
-	ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL, directorio);
+	ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL);
+	GFile *directorio = (GFile*) obtenerBloque(punteroInodo);
 	t_list *listaDeArchivos;
 	int archivosEnDirectorio;
+
+	printf("myReaddir \n");
+	printf("El path mandado es: %s \n", path);
 
 	char* nombre(GDirEntry *entrada){
 		return &entrada->fname;
@@ -193,9 +194,11 @@ int myReaddir( char *path, void *buffer ){
 
 // FUNCIONES ARCHIVOS
 // MKNOD
-int crearArchivo( char *path ){ // no usamos ni mode ni dev
-	GFile *directorioPadre;
-	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO, directorioPadre);
+int crearArchivo( char *path ){
+	ptrGBloque punteroAInodoPadre = buscarInodoArchivo(path, SIN_EL_ULTIMO);
+
+	GFile *directorioPadre = (GFile*) obtenerBloque(punteroAInodoPadre);
+
 	char** pathDividida = string_split(path, "/");
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
 	ptrGBloque numeroInodo = reservarInodo(ARCHIVO);
@@ -226,6 +229,7 @@ int crearArchivo( char *path ){ // no usamos ni mode ni dev
 			inodo->father_block = punteroAInodoPadre;
 			inodo->file_size = 0;
 			memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
+			memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
 			inodo->modification_date = tiempo.tv_usec;
 			inodo->state = DIRECTORIO;
 
@@ -251,10 +255,11 @@ uint8_t abrirArchivo( char *path, int socketProceso){ // debemos ver si hay que 
 	// SI NO LO ESTA, SE CARGA EN LA LISTA, Y RECIEN AHI SE PASA LA POSICION
 	if(!list_any_satisfy(tablaProcesosAbiertosGlobal, (void*)buscador)){
 		pthread_mutex_lock(&mx_tablaGlobal);
-		GFile *inodoArchivo;
-		ptrGBloque punteroArchivo;
 
-		punteroArchivo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
+		ptrGBloque punteroArchivo = buscarInodoArchivo(path, NORMAL);
+
+		GFile *inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
+
 		if(punteroArchivo){
 			fdNode = malloc(sizeof(GlobalFdNode));
 
@@ -285,13 +290,15 @@ uint8_t abrirArchivo( char *path, int socketProceso){ // debemos ver si hay que 
 }
 
 int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
-	GFile *inodoArchivo;
+
 	uint32_t hastaDondeEscribo;
 	FileOffset *offsetInicial;
 	FileOffset *offsetFinal;
 
 	// BUSCAR EL INODO DEL ARCHIVO
-	buscarInodoArchivo(path, NORMAL, inodoArchivo);
+	ptrGBloque punteroArchivo = buscarInodoArchivo(path, NORMAL);
+
+	GFile *inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
 	// VERIFICAR QUE EL OFFSET SEA MENOR AL TAMANIO MAXIMO DE UN ARCHIVO
 	if(MAX_FILE_SIZE >= offset){
 		offsetInicial = malloc(sizeof(FileOffset));
@@ -323,13 +330,13 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 }
 
 int leerArchivo( char *path, char *buffer, size_t size, off_t offset ){
-	GFile *inodoArchivo;
 	uint32_t loQueEsLeido;
 	FileOffset *offsetInicial;
 	FileOffset *offsetFinal;
 
 	// BUSCAR EL INODO DEL ARCHIVO
-	buscarInodoArchivo(path, NORMAL, inodoArchivo);
+	ptrGBloque punteroArchivo = buscarInodoArchivo(path, NORMAL);
+	GFile *inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
 	// VERIFICAR QUE EL OFFSET SEA MENOR QUE EL TAMANIO DEL ARCHIVO
 	if(inodoArchivo->file_size >= offset){
 		offsetInicial = malloc(sizeof(FileOffset));
@@ -380,8 +387,9 @@ int cerrarArchivo( char *path, int socketProceso){ // TODAVIA NO SE QUE PARAMETR
 // UNLINK
 int eliminarArchivo( char *path){
 
-	GFile *inodoArchivo;
-	ptrGBloque punteroAlInodo = buscarInodoArchivo(path, NORMAL, inodoArchivo);
+	ptrGBloque punteroAlInodo = buscarInodoArchivo(path, NORMAL);
+
+	GFile *inodoArchivo = (GFile*) obtenerBloque(punteroAlInodo);
 
 	if(inodoArchivo){
 		// VERIFICAR QUE EL ARCHIVO NO ESTE ABIERTO POR NINGUN PROCESO. SI LO ESTA, LA FUNCION SE CANCELARA
@@ -417,7 +425,7 @@ t_list* listarDirectorio(GFile *directorio){
 		int numeroBloqueDeDatos = 0;
 		int BloquesAsignados = (cantidadBloquesAsignados(directorio->blocks));
 
-		buscarInodoArchivo()
+		//buscarInodoArchivo()
 
 		// TODO RECORRER LA TABLA DE INODOS Y CARGAR EN UNA ESTRUCTURA CUSTOM, SOLO LA METADATA, SIN LA LISTA DE BLOQUES
 		// TODOS LOS INODOS QUE TENGAN EL MISMO NUMERO DE INODO PADRE, SON LOS QUE ESTAN DENTRO DE DICHO DIRECTORIO
@@ -493,39 +501,68 @@ t_list* listarDirectorio(GFile *directorio){
 	}
 }*/
 
-ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo){
+ptrGBloque buscarInodoArchivo( char *path, int mode){
 	char** directorios = string_split(path, "/");
-	inodoArchivo = directorioRaiz();
-	ptrGBloque punteroAlInodo = INODE_TABLE_START;
-	ptrGBloque punteroDirAnterior = INODE_TABLE_START;
+	GFile* inodoArchivoTable = directorioRaiz();
+	ptrGBloque punteroDirAnterior = 0; // PORQUE INICIALMENTE BUSCO EL DIRECTORIO RAIZ, QUE TIENE PADRE=0
+	uint16_t posicionTablaInodos = 0; // esto ira de 0 a 1023
+	GFile* inodoArchivo = inodoArchivoTable + posicionTablaInodos ;
+	char* auxName = malloc(MAX_FILENAME_LENGTH + 1);
+	memset(auxName, '\0', (MAX_FILENAME_LENGTH + 1) * sizeof(char));
+	memcpy(auxName, inodoArchivo->fname, MAX_FILENAME_LENGTH);
 
 	int cantidadDirectorios = cantidadElementosCharAsteriscoAsterisco(directorios);
 
-	/*if(mode == SIN_EL_ULTIMO){
+	if(mode == SIN_EL_ULTIMO){
 		cantidadDirectorios --;
 	}
 	if(mode == SIN_LOS_DOS_ULTIMOS){
 		cantidadDirectorios -= 2;
-	}*/
-	int directorioActual = 1;
+	}
+	int directorioActual = 0;
 
-	while((directorioActual < cantidadDirectorios) && (inodoArchivo != NULL)){
-		while(strcmp(directorios[directorioActual]) && inodoArchivo->father_block != punteroDirAnterior){
+	bool encontrado = false;
 
+	while((directorioActual < cantidadDirectorios)/* && (inodoArchivo != NULL)*/){
+		bool tieneElMismoNombre = !strcmp(directorios[directorioActual], auxName);
+		while( !encontrado && (posicionTablaInodos < 1024) ){
+
+				inodoArchivo = inodoArchivoTable + posicionTablaInodos ;
+
+				memset(auxName, '\0', (MAX_FILENAME_LENGTH + 1) * sizeof(char));
+				memcpy(auxName, inodoArchivo->fname, MAX_FILENAME_LENGTH);
+
+				if(tieneElMismoNombre && (inodoArchivo->father_block == punteroDirAnterior)){
+					encontrado = true;
+				}
+
+				/*if (inodoArchivo->state > 0){
+					printf("inodoArchivo %u - State: %i\t Name: %s\tSize: %u\n", posicionTablaInodos, inodoArchivo->state, auxName, inodoArchivo->file_size);
+				} else {
+					printf("inodoArchivo %u - State: %i\n", posicionTablaInodos, inodoArchivo->state);
+				}*/
+			posicionTablaInodos ++;
 		}
-		if(directorioActual < (cantidadDirectorios + 1) && inodoArchivo->state != DIRECTORIO){
-			inodoArchivo = NULL;
+		if(strcmp(directorios[directorioActual], auxName) || inodoArchivo->state == BORRADO){
 			return 0;
 		}
+		punteroDirAnterior = posicionTablaInodos + INODE_TABLE_START;
+		posicionTablaInodos = 0;
 		directorioActual ++;
 	}
 
-	if(inodoArchivo->state == BORRADO){ // TODO, REVISAR QUE NO GENERE PROBLEMAS. LO HICE PARA QUE NO DEVUELVA INODO SI ES UNO BORRADO
+	printf("Posicion de inodo: %i\n", posicionTablaInodos + INODE_TABLE_START);
+
+	/*if(inodoArchivo->state == BORRADO){ // TODO, REVISAR QUE NO GENERE PROBLEMAS. LO HICE PARA QUE NO DEVUELVA INODO SI ES UNO BORRADO
 		inodoArchivo = NULL;
 		return 0;
-	}
+	}*/
 
-	return punteroAlInodo;
+	liberarCharAsteriscoAsterisco(directorios);
+	free(auxName);
+
+
+	return posicionTablaInodos + INODE_TABLE_START;
 }
 
 /*GFile buscarInodoDirectorio(const char *path, int mode){

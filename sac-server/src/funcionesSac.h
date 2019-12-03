@@ -47,7 +47,7 @@ t_list* listarDirectorio(GFile *directorio);
 
 // Busca el inodo de un archivo, y retorna el puntero a su inodo. el inodo en si es devuelto en el parametro inodoDirectorio;
 // En caso de que no exista el archivo, el inodo devuelto es igual a NULL y el retorno es 0
-ptrGBloque buscarInodoArchivo( char *path, int mode, GFile *inodoArchivo);
+ptrGBloque buscarInodoArchivo( char *path, int mode);
 
 ptrGBloque buscarArchivoEnDirectorio(GFile *directorio, char* archivo);
 
