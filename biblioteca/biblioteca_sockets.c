@@ -125,8 +125,9 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 			posicion += parametro->valor;
 
 		}
+		list_destroy_and_destroy_elements(paquete.parametros,(void*) destruir_parametro);
 	}
-	list_destroy_and_destroy_elements(paquete.parametros,(void*) destruir_parametro);
+
 
 	send(socket_servidor,buffer,tam_buffer,0);
 
