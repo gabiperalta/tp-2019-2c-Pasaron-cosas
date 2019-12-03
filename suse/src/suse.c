@@ -1,7 +1,6 @@
 #include "suse.h"
 
 int main(){
-	estimacion_inicial = 0;
 	puts("Proceso SUSE");
 	inicializar_listas();
 	inicializar_semaforos();

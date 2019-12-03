@@ -34,11 +34,10 @@ char* ip;
 int puerto;
 int grado_multiprogramacion;
 int tiempo_metricas;
-int alpha_planificacion;
+float alpha_planificacion;
 char** ids_sem;
 char** inicio_sem;
 char** max_sem;
-int estimacion_inicial;
 int tiempo_metrics;
 
 t_log* suse_log;
@@ -70,7 +69,7 @@ typedef struct{
 	uint8_t tid; // id del hilo
 	uint8_t pid; // proceso en el que esta el hilo
 	int tid_joineado;
-	double rafagas_estimadas;
+	int rafagas_estimadas;
 	uint32_t tiempo_ejecucion;
 	uint32_t tiempo_ejecucion_total;
 	uint32_t tiempo_espera;

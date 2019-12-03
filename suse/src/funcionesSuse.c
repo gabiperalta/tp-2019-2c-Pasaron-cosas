@@ -301,13 +301,14 @@ void aplicarSJFConDesalojo(process* proceso) {
 
 
 thread* CalcularEstimacion(thread* unHilo) {
-	unHilo->rafagas_estimadas = (alpha_planificacion  * estimacion_inicial)
-			+ ((1 - alpha_planificacion) * (unHilo->rafagas_ejecutadas));
+		unHilo->rafagas_estimadas = (alpha_planificacion * unHilo->rafagas_estimadas) +
+		((1 - alpha_planificacion) * (unHilo->rafagas_ejecutadas));
 	return unHilo;
 }
 
 bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo) {
-	return unHilo->rafagas_estimadas <= otroHilo->rafagas_estimadas;}
+	return unHilo->rafagas_estimadas <= otroHilo->rafagas_estimadas;
+}
 
 
 process* obtener_proceso_asociado(thread* hilo){
