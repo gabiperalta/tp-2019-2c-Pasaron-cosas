@@ -810,12 +810,30 @@ void funcion_map(t_paquete paquete,int socket_muse){
 		return;
 	}
 
-	//pthread_mutex_lock(&mutex_acceso_upcm);
-
 	printf("id_programa: %s\t",proceso_encontrado->id_programa);
 	printf("socket: %d\t\n",proceso_encontrado->socket);
 
 	FILE* archivo_solicitado = fopen(path_recibido,"r+");
+
+	// si falla, se tiene que crear el archivo con el length solicitado
+	if(archivo_solicitado == NULL){
+		printf("No existe el archivo, se procede a crearlo\n");
+		archivo_solicitado = fopen(path_recibido,"w+");
+		printf("path_recibido %s\n",path_recibido);
+		if(archivo_solicitado == NULL){
+			printf("Error: no se pudo crear el archivo\n");
+			pthread_mutex_lock(&mutex_acceso_upcm);
+		}
+		void* buffer_archivo_vacio = malloc(length_recibido);
+		memset(buffer_archivo_vacio,'\0',length_recibido);
+		fwrite(buffer_archivo_vacio,length_recibido,1,archivo_solicitado);
+		fclose(archivo_solicitado);
+		free(buffer_archivo_vacio);
+
+		archivo_solicitado = fopen(path_recibido,"r+");
+	}
+
+
 	int fd_archivo_solicitado = fileno(archivo_solicitado);
 	t_archivo_mmap* archivo_mmap_encontrado = buscar_archivo_mmap(fd_archivo_solicitado);
 
