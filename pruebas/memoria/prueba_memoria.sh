@@ -14,7 +14,7 @@ cd
 cd tp-2019-2c-Pasaron-cosas/LibMuse/Debug/
 make clean
 make
-sudo cp liblibmuse.so /usr/lib/
+sudo cp liblibMuse.so /usr/lib/
 cd
 
 cd tp-2019-2c-Pasaron-cosas/muse/Debug/
