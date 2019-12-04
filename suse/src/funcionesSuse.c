@@ -59,7 +59,11 @@ int signal_suse(int tid, char* id_sem){
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
 		pthread_mutex_lock(&mut_blocked);
-		list_remove(hilos_blocked, tid);
+
+		bool condition(thread* hilo){
+			return hilo->tid == tid;
+		}
+		list_remove_by_condition(hilos_blocked,(void*)condition);
 		pthread_mutex_unlock(&mut_blocked);
 		log_info(suse_log,"Desbloqueo thread");
 	}
@@ -260,8 +264,8 @@ void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
 		process* proceso = list_find(lista_procesos, (void*) buscadorProceso);
 
 		t_list* hilos_listos = proceso->hilos_ready;
-		while(!list_is_empty(hilos_listos)){
-			aplicarSJFConDesalojo(proceso);// sockets
+		while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
+			aplicarSJF(proceso);// sockets
 		}
 		sem_post(&sem_planificacion);
 		log_info(suse_log, "Se planifico por SJF");
@@ -277,15 +281,15 @@ void aplicarFIFO(){
 		hilo_elegido->timestamp_inicio_espera = getCurrentTime();
 	}
 
-void aplicarSJFConDesalojo(process* proceso) {
+void aplicarSJF(process* proceso) {
 		t_list* aux = list_map(proceso->hilos_ready, (void*) CalcularEstimacion);
 		list_sort(aux, (void*) ComparadorDeRafagas);
 		thread* hilo_aux = (thread*) list_remove(aux, 0);
-		bool comparator(thread* unHilo, thread* otroHIlo){
-			return unHilo->tid == otroHIlo->tid;
+		bool comparator(thread* unHilo, thread* otroHilo){
+			return unHilo->tid == otroHilo->tid;
 		}
-
-		thread* hilo_a_ejecutar = list_remove_by_condition(proceso->hilos_ready,(void*)comparator);
+		int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
+		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready, index);
 		hilo_a_ejecutar->timestamp_final_espera = getCurrentTime();
 		uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final_espera - hilo_a_ejecutar->timestamp_inicio_espera);
 		hilo_a_ejecutar->tiempo_espera += tiempoReady;
@@ -310,6 +314,19 @@ bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo) {
 	return unHilo->rafagas_estimadas <= otroHilo->rafagas_estimadas;
 }
 
+int list_get_index(t_list* self,void* elemento,bool (*comparator)(void *,void *)){
+	int longitud_de_lista = list_size(self);
+	int i;
+	int cont = 0;
+	for(i = 0; i < longitud_de_lista; i++ ){
+		if(!comparator(list_get(self,i),elemento)){
+			cont++;
+		}else{
+			break;
+		}
+	}
+	return cont;
+}
 
 process* obtener_proceso_asociado(thread* hilo){
 	pthread_mutex_lock(&mut_procesos);

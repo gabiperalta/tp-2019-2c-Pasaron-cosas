@@ -24,6 +24,7 @@ void aplicarSJF(process* proceso);
 void aplicarSJFConDesalojo(process* proceso);
 thread* CalcularEstimacion(thread* unHilo);
 bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo);
+int list_get_index(t_list* self,void* elemento,bool (*comparator)(void *,void *));
 
 process* obtener_proceso_asociado(thread* hilo);
 
