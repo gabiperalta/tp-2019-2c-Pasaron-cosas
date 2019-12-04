@@ -158,8 +158,8 @@ void funcion_init(t_paquete paquete,int socket_muse){
 }
 
 void funcion_close(t_paquete paquete,int socket_muse){
-	log_estado_del_sistema();
-
+	// hay un problema cuando se divide por cero, revisar
+	//log_estado_del_sistema();
 }
 
 void funcion_alloc(t_paquete paquete,int socket_muse){
@@ -657,8 +657,6 @@ void funcion_get(t_paquete paquete,int socket_muse){
 
 void funcion_cpy(t_paquete paquete,int socket_muse){
 
-	// AGREGAR EL CONTROL ANTE UN INGRESO INVALIDO (SIGSEGV)
-
 	uint32_t resultado_cpy = 1;
 	printf("\nInicio muse_cpy\n");
 
@@ -722,6 +720,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 
 	// controlo que la cant de pagina necesarias no supere a las paginas reales
 	cantidad_paginas_necesarias = (int)fminf((float)cantidad_paginas_necesarias,(float)list_size(segmento_obtenido->tabla_paginas));
+	printf("cantidad_paginas_necesarias %d\n",cantidad_paginas_necesarias);
 
 	buffer = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
 	for(int i=0; i<cantidad_paginas_necesarias;i++){
@@ -759,7 +758,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 			}
 			break;
 		case SEGMENTO_MMAP:
-			if((desplazamiento_obtenido + (nro_pagina_obtenida*TAM_PAGINA)) >= tam_bloque_datos_recibido){
+			if((desplazamiento_obtenido + (cantidad_paginas_necesarias*TAM_PAGINA)) >= tam_bloque_datos_recibido){
 				memcpy(&buffer[desplazamiento_obtenido],bloque_datos_recibido,tam_bloque_datos_recibido);
 
 				// vuelvo a cargar los datos al upcm
@@ -771,6 +770,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 			}
 			else{
 				// no puedo almacenar los datos pq ingreso a una posicion invalida
+				printf("no puedo almacenar los datos pq ingreso a una posicion invalida\n");
 				resultado_cpy = 2;
 			}
 			break;
@@ -982,7 +982,8 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 
 	if((nro_pagina_obtenida*TAM_PAGINA) <= segmento_obtenido->tam_archivo_mmap){
 		fseek(segmento_obtenido->archivo_mmap,nro_pagina_obtenida*TAM_PAGINA,SEEK_SET);
-		int bytes_a_escribir = (int)fmin(length_recibido,((nro_pagina_obtenida*TAM_PAGINA) + length_recibido) - segmento_obtenido->tam_archivo_mmap);
+		int bytes_a_escribir = (int)fmin(length_recibido,segmento_obtenido->tam_archivo_mmap);
+		printf("bytes_a_escribir %d\n",bytes_a_escribir);
 		fwrite(buffer,bytes_a_escribir,1,segmento_obtenido->archivo_mmap);
 	}
 	else{

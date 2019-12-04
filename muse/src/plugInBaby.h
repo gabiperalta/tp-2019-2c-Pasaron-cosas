@@ -20,8 +20,8 @@
 #define CREAR_DATOS 2
 
 // usar estos dos si no esta agregada mman.h
-#define MAP_PRIVATE 0
-#define MAP_SHARED 1
+#define MAP_PRIVATE 1
+#define MAP_SHARED 2
 
 //#define SIZE_HEAP_METADATA_v2 sizeof((t_heap_metadata*)->size) + sizeof((t_heap_metadata*)->isFree)
 

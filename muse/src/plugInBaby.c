@@ -224,7 +224,7 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 			pagina = crear_pagina(bit_presencia,segmento->tipo_segmento);
 			//printf("Hasta aca funciona\n");
 			list_add(segmento->tabla_paginas,pagina);
-			printf("Se actualizo la tabla de paginas\n");
+			//printf("Se actualizo la tabla de paginas\n");
 			if(!bit_presencia)
 				continue;
 		}
@@ -438,7 +438,7 @@ void liberar_frame_swap(int numero_frame_swap){
 }
 
 void eliminar_pagina(t_pagina* pagina){
-	printf("Eliminando pagina\n");
+	//printf("Eliminando pagina\n");
 	if(pagina->bit_presencia){
 		//memset(obtener_datos_frame(pagina),NULL,TAM_PAGINA);
 		int igualFrameClock(t_pagina* p) {
@@ -455,7 +455,7 @@ void eliminar_pagina(t_pagina* pagina){
 	}
 
 	free(pagina);
-	printf("Se elimino la pagina\n");
+	//printf("Se elimino la pagina\n");
 }
 
 void eliminar_segmento(t_segmento* segmento){

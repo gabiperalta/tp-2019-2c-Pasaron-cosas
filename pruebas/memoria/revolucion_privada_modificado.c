@@ -1,11 +1,16 @@
+
+// REVOLUCION PRIVADO
+
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "../tp-2019-2c-Pasaron-cosas/LibMuse/libmuse.h"
-#include <hilolay/hilolay.h>
+#include "libmuse.h"
+//#include <hilolay/hilolay.h>
 #include <string.h>
 #include <semaphore.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #define NOMBRE_SEM_1 "/presion_emitida"
 #define NOMBRE_SEM_2 "/presion_recibida"
@@ -26,12 +31,11 @@ sem_t* presion_recibida;
 sem_t* revolucion_emitida;
 sem_t* revolucion_recibida;
 
-uint32_t leer_archivo(uint32_t arch, uint32_t leido)
-{
+uint32_t leer_archivo(uint32_t arch, uint32_t leido){
 	uint32_t offset;
-	char * palabra = malloc(100);
+	char * palabra = malloc(1000);
 	//hilolay_wait(revolucion_emitida);
-	sem_wait(revolucion_emitida);
+	//sem_wait(revolucion_emitida);
 	muse_get(&offset, arch, sizeof(uint32_t));
 	uint32_t len = offset - leido;
 	muse_get(palabra, arch + offset, len);
@@ -49,8 +53,7 @@ uint32_t leer_archivo(uint32_t arch, uint32_t leido)
 	return offset;
 }
 
-void *revolucionar()
-{
+void *revolucionar(){
 	//hilolay_wait(presion_emitida);
 	sem_wait(presion_emitida);
 	uint32_t arch = muse_map(RUTA_ARCHIVO, 4096, MAP_PRIVATE);
@@ -71,8 +74,12 @@ void *revolucionar()
 }
 
 
-int main(void)
-{
+int main(void){
+	//sem_unlink(NOMBRE_SEM_1);
+	//sem_unlink(NOMBRE_SEM_2);
+	//sem_unlink(NOMBRE_SEM_3);
+	//sem_unlink(NOMBRE_SEM_4);
+
 	//struct hilolay_t revolucion;
 	pthread_t revolucion;
 
@@ -92,7 +99,7 @@ int main(void)
 	pthread_create(&revolucion,NULL,&revolucionar,NULL);
 
 	//hilolay_join(&revolucion);
-	pthread_join(revolucionar,NULL);
+	pthread_join(revolucion,NULL);
 
 	//hilolay_sem_close(presion_emitida);
 	//hilolay_sem_close(presion_recibida);
@@ -104,5 +111,7 @@ int main(void)
 	sem_close(revolucion_recibida);
 
 	//return hilolay_return(0);
+
 	return 0;
 }
+

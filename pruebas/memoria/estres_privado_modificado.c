@@ -1,12 +1,17 @@
+
+// ESTRES PRIVADO
+
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "../tp-2019-2c-Pasaron-cosas/LibMuse/libmuse.h"
-#include <hilolay/hilolay.h>
+#include "libmuse.h"
+//#include <hilolay/hilolay.h>
 #include <string.h>
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #define NOMBRE_SEM_1 "/presion_emitida"
 #define NOMBRE_SEM_2 "/presion_recibida"
@@ -29,6 +34,7 @@ void grabar_archivo(uint32_t arch, char* palabra)
 	muse_get(&offset, arch, sizeof(uint32_t));
 	muse_cpy(arch + offset, palabra, strlen(palabra) + 1);
 	offset += strlen(palabra) + 1;
+	printf("offset %d\n",offset);
 	muse_cpy(arch, &offset, sizeof(uint32_t));
 	sleep(1);
 }
@@ -59,17 +65,25 @@ void *presionar()
 	pthread_mutex_lock(&mutex_sem_post);
 	int valor_actual_sem;
 	sem_getvalue(presion_emitida,&valor_actual_sem);
-	if(valor_actual_sem < 1)
+	if(valor_actual_sem < 1){
 		sem_post(presion_emitida);
+		printf("WARNING: se modifico el valor de un semaforo\n");
+	}
 	pthread_mutex_unlock(&mutex_sem_post);
 
 	muse_unmap(arch);
 	return 0;
 }
 
+void* prueba(){
+	muse_map(RUTA_ARCHIVO, 4096, MAP_PRIVATE);
+	return 0;
+}
 
-int main(void)
-{
+int main(void){
+	//sem_unlink(NOMBRE_SEM_1);
+	//sem_unlink(NOMBRE_SEM_2);
+
 	//struct hilolay_t presion;
 	pthread_t presion;
 
@@ -82,6 +96,7 @@ int main(void)
 	presion_recibida = sem_open(NOMBRE_SEM_2,O_CREAT,S_IRWXU,1);
 
 	//hilolay_create(&presion, NULL, &presionar, NULL);
+	//pthread_create(&presion,NULL,&presionar,NULL);
 	pthread_create(&presion,NULL,&presionar,NULL);
 
 	//hilolay_join(&presion);
@@ -93,5 +108,6 @@ int main(void)
 	sem_close(presion_recibida);
 
 	//return hilolay_return(0);
+
 	return 0;
 }

@@ -110,8 +110,9 @@ int muse_get(void* dst, uint32_t src, size_t n){
 	}
 
 	void* bloque_datos_recibido = obtener_bloque_datos(paquete_recibido.parametros);
-	printf("Get exitoso\n");
 	memcpy(dst,bloque_datos_recibido,n);
+
+	printf("Get exitoso\n");
 
 	return 0;
 }
