@@ -43,7 +43,7 @@ int cerrarArchivo( char *path, int socketProceso); // TODAVIA NO SE QUE PARAMETR
 #define SIN_EL_ULTIMO 1
 #define SIN_LOS_DOS_ULTIMOS 2
 
-t_list* listarDirectorio(GFile *directorio);
+t_list* listarDirectorio(ptrGBloque punteroDirectorio);
 
 // Busca el inodo de un archivo, y retorna el puntero a su inodo. el inodo en si es devuelto en el parametro inodoDirectorio;
 // En caso de que no exista el archivo, el inodo devuelto es igual a NULL y el retorno es 0

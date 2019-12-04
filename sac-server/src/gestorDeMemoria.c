@@ -25,16 +25,16 @@ ptrGBloque bloqueLibre(){
 
 ptrGBloque inodoLibre(){
 	int nInodo = 0;
-	GFile *nodeTable = obtenerBloque(INODE_TABLE_START);
+	GFile *nodeTable = directorioRaiz();
 
-	while((nodeTable+nInodo)->state == BORRADO && nInodo < NODE_TABLE_SIZE){
+	while((nodeTable+nInodo)->state != BORRADO && nInodo < NODE_TABLE_SIZE){
 		nInodo ++;
 	}
-	if((nodeTable+nInodo)->state != BORRADO){
+	if(nInodo >= NODE_TABLE_SIZE){
 		return 0;
 	}
 
-	return nInodo;
+	return nInodo + INODE_TABLE_START;
 }
 
 void liberarBloqueDeDatos(ptrGBloque bloque){
@@ -51,7 +51,7 @@ ptrGBloque reservarInodo(int tipoDeArchivo){
 
 	if(inode){
 		// SETEAR EL STATUS DEL INODO CON tipoDeArchivo
-		nuevoInodo = obtenerBloque(inode);
+		nuevoInodo = (GFile*) obtenerBloque(inode);
 
 		nuevoInodo->state = tipoDeArchivo;
 	}

@@ -38,6 +38,7 @@ int myGetattr( char *path, struct stat *statRetorno ){
 
 	inodoArchivo = (GFile*) obtenerBloque(punteroInodo);
 
+
 	printf("ARCHIVO: name: %s \t pather: %i\t state: %i\n", inodoArchivo->fname, inodoArchivo->father_block, inodoArchivo->state);
 
 
@@ -58,8 +59,6 @@ int myGetattr( char *path, struct stat *statRetorno ){
 
 	return -1;
 }
-
-
 
 
 
@@ -118,6 +117,8 @@ int crearDirectorio(char *path ){ // mode ni lo usamos
 
 			liberarCharAsteriscoAsterisco(pathDividida);
 
+			printf("Directorio creado: name = %s\t father_block = %i\t punteroInodo = %i", inodo->fname, inodo->father_block, punteroAInodo);
+
 			return 0;
 		}
 		inodo->state = BORRADO; // EN CASO DE QUE NO HAYA UNA ENTRADA DISPONILBE, LIBERA EL INODO QUE LE FUE ASIGNADO PREVIAMENTE
@@ -170,20 +171,34 @@ int myReaddir( char *path, void *buffer ){
 	if(punteroInodo != 0){
 
 		int posicion = 0;
+		int longitudNombre;
 
-		listaDeArchivos = listarDirectorio(directorio);
+		listaDeArchivos = listarDirectorio(punteroInodo);
 
 		t_list *listaDeNombres = list_map(listaDeArchivos, (void*)nombre);
 
 		archivosEnDirectorio = list_size(listaDeNombres);
 
+		int tamanioDelBuffer = MAX_FILENAME_LENGTH * archivosEnDirectorio + archivosEnDirectorio ;
 		buffer = malloc( MAX_FILENAME_LENGTH * archivosEnDirectorio + archivosEnDirectorio); // ESTE TAMANIO ES POR LOS NOMBRES Y LOS ";" QUE LOS SEPARAN
+		memset(buffer, 0, tamanioDelBuffer);
+
 
 		for(int i=0; i<archivosEnDirectorio; i++){
-			memcpy(buffer + posicion, list_get(listaDeNombres, i) , MAX_FILENAME_LENGTH);
-			memcpy(buffer + posicion + 1, ";", 1);
-			posicion += MAX_FILENAME_LENGTH + 1;
+			printf("%s\n", list_get(listaDeNombres, i));
+			longitudNombre = strlen(list_get(listaDeNombres, i));
+			printf("%i\n", longitudNombre);
+			strncpy(buffer + posicion, list_get(listaDeNombres, i), longitudNombre);
+			posicion += longitudNombre;
+			strncpy(buffer + posicion, ";", 1);
+			posicion += 1;
+			printf("BUFFER: %s\n", buffer);
 		}
+
+		printf("BUFFER: %s\n", buffer);
+
+		list_destroy_and_destroy_elements(listaDeNombres, (void*)free);
+
 		return 0;
 	}
 
@@ -414,51 +429,27 @@ int eliminarArchivo( char *path){
 
 //////// FUNCIONES AUXILIARES ////////
 
-t_list* listarDirectorio(GFile *directorio){
-	if(elEstadoDelArchivoEs(directorio, DIRECTORIO)){
+t_list* listarDirectorio(ptrGBloque punteroDirectorio){
 		t_list* lista = list_create();
-		GPointerBlock *bloqueDePunteros;
-		GDirectoryBlock *bloqueDeDirectorio;
-		//GDirEntry entrada;
-		int numeroEntrada = 0;
-		int numeroBloqueDePunteros = 0;
-		int numeroBloqueDeDatos = 0;
-		int BloquesAsignados = (cantidadBloquesAsignados(directorio->blocks));
-
-		//buscarInodoArchivo()
+		int posicionTablaInodos = 0;
+		GFile* inodoArchivoTable = directorioRaiz();
+		GFile* inodoArchivo = inodoArchivoTable + posicionTablaInodos ;
 
 		// TODO RECORRER LA TABLA DE INODOS Y CARGAR EN UNA ESTRUCTURA CUSTOM, SOLO LA METADATA, SIN LA LISTA DE BLOQUES
 		// TODOS LOS INODOS QUE TENGAN EL MISMO NUMERO DE INODO PADRE, SON LOS QUE ESTAN DENTRO DE DICHO DIRECTORIO
 
-		do{
-			// OBTENER BLOQUE DE PUNTEROS
-			bloqueDePunteros = (GPointerBlock*) obtenerBloque(directorio->blocks[numeroBloqueDePunteros]);
-			do{
-				// OBTENER BLOQUE DE DATOS
-				bloqueDeDirectorio = (GDirectoryBlock*) obtenerBloque(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
-				do{
 
-					// LEER ENTRADAS
-					/*memcpy(entrada, bloqueDeDirectorio->entries[numeroEntrada],sizeof(GDirEntry));
-					if(!entradaVacia(entrada)){
-						list_add(lista,entrada);
-					}*/
-					// CREO QUE ES MEJOR ASI
-					if(!entradaVacia(bloqueDeDirectorio->entries[numeroEntrada])){
-						list_add(lista, &bloqueDeDirectorio->entries[numeroEntrada]); // TODO, QUE PASA ACA?
-					}
+		while( posicionTablaInodos < 1023 ){
+			if( inodoArchivo->father_block == punteroDirectorio ){
+				list_add(lista, string_duplicate(inodoArchivo->fname));
+			}
+			posicionTablaInodos ++;
+			inodoArchivo = inodoArchivoTable + posicionTablaInodos ;
+		}
 
-					numeroEntrada ++;
 
-				}while( numeroEntrada < ENTRADAS_POR_BLOQUE_DE_DIRECTORIO);
-				numeroBloqueDeDatos ++;
-			}while( numeroBloqueDeDatos < 1024);
-			numeroBloqueDePunteros ++;
-		}while( numeroBloqueDePunteros < BloquesAsignados);
+
 		return lista;
-	}else {
-		return NULL;
-	}
 }
 
 /*t_list* listarDirectorio(GFile *directorio){
@@ -511,6 +502,8 @@ ptrGBloque buscarInodoArchivo( char *path, int mode){
 	memset(auxName, '\0', (MAX_FILENAME_LENGTH + 1) * sizeof(char));
 	memcpy(auxName, inodoArchivo->fname, MAX_FILENAME_LENGTH);
 
+	bool tieneElMismoNombre;
+
 	int cantidadDirectorios = cantidadElementosCharAsteriscoAsterisco(directorios);
 
 	if(mode == SIN_EL_ULTIMO){
@@ -524,13 +517,15 @@ ptrGBloque buscarInodoArchivo( char *path, int mode){
 	bool encontrado = false;
 
 	while((directorioActual < cantidadDirectorios)/* && (inodoArchivo != NULL)*/){
-		bool tieneElMismoNombre = !strcmp(directorios[directorioActual], auxName);
+
 		while( !encontrado && (posicionTablaInodos < 1024) ){
 
 				inodoArchivo = inodoArchivoTable + posicionTablaInodos ;
 
 				memset(auxName, '\0', (MAX_FILENAME_LENGTH + 1) * sizeof(char));
 				memcpy(auxName, inodoArchivo->fname, MAX_FILENAME_LENGTH);
+
+				tieneElMismoNombre = !strcmp(directorios[directorioActual], auxName);
 
 				if(tieneElMismoNombre && (inodoArchivo->father_block == punteroDirAnterior)){
 					encontrado = true;
@@ -699,7 +694,7 @@ GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){
 	}
 	// TENGO QUE VER UNA FORMA DE QUE SI ESTOY BUSCANDO UNA ENTRADA VACIA, Y NECESITO UN NUEVO BLOQUE, SE LO ASIGNE
 
-	t_list* listaDeArchivos = listarDirectorio(directorio);
+	t_list* listaDeArchivos = listarDirectorio(directorioPadre);
 
 	if(listaDeArchivos != NULL){
 		entrada = list_find(listaDeArchivos, (void*)esElArchivo);

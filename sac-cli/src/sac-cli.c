@@ -29,22 +29,23 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
-	printf("RETORNO = %i\n", retorno);
+	//printf("RETORNO = %i\n", retorno);
 
 	if(retorno == 0){
 		statRetorno->st_nlink = obtener_valor(paquete_respuesta.parametros);
 		statRetorno->st_mode = obtener_valor(paquete_respuesta.parametros);
 		if(statRetorno->st_nlink == 2){
 
-			printf("RECIBI UN DIRECTORIO \n");
+			//printf("RECIBI UN DIRECTORIO \n");
 		}
 		if(statRetorno->st_nlink == 1){
 			statRetorno->st_size = obtener_valor(paquete_respuesta.parametros);
 
-			printf("RECIBI UN ARCHIVO \n");
+			//printf("RECIBI UN ARCHIVO \n");
 		}
-		else
-		 printf("RECIBI ALGO PERO NO SE QUE ES \n");
+	}
+	else{
+		retorno = -ENOENT;
 	}
 
 	return retorno;
@@ -118,14 +119,13 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	char* bufferAuxiliar;
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_READDIR,
 			.parametros = list_create()
 	};
 
 	// MANDO UNICAMENTE EL PATH, Y QUE EL SERVIDOR ME DEVUELVA LOS PARAMETROS QUE NECESITO
 	//agregar_string(paquete_solicitud.parametros, path_formateado);
 	agregar_string(paquete_solicitud.parametros, path);
-	agregar_string(paquete_solicitud.parametros, bufferAuxiliar);
 	enviar_paquete(paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
@@ -133,6 +133,8 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 	bufferAuxiliar = obtener_string(paquete_respuesta.parametros);
+
+	printf("BUFFER: %s\n", bufferAuxiliar);
 
 	char** bufferAuxiliarSplitteado = string_split(bufferAuxiliar, ";");
 
@@ -160,7 +162,7 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_MKNOD,
 			.parametros = list_create()
 	};
 
@@ -200,7 +202,7 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 
@@ -232,7 +234,7 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_WRITE,
 			.parametros = list_create()
 	};
 
@@ -269,7 +271,7 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_READ,
 			.parametros = list_create()
 	};
 
@@ -296,7 +298,7 @@ static int sac_cli_unlink(const char *path){
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_UNLINK,
 			.parametros = list_create()
 	};
 
@@ -324,7 +326,7 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_MKDIR,
 			.parametros = list_create()
 	};
 
@@ -332,11 +334,16 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
+	printf("ENVIO UN MKDIR\n");
+
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
 
+	if(retorno!=0){
+		retorno = -EEXIST;
+	}
 
 	return retorno;
 }
@@ -347,7 +354,7 @@ static int sac_cli_rmdir(const char *path){
 
 
 	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
+			.header = FUSE_RMDIR,
 			.parametros = list_create()
 	};
 
@@ -369,8 +376,8 @@ static struct fuse_operations sac_cli_oper = {
 		.getattr = sac_cli_getattr,
 		.open = sac_cli_open,
 		.mknod = sac_cli_mknod,
-		// .readdir = sac_cli_readdir,
-		.read = sac_cli_readdir,
+		.readdir = sac_cli_readdir,
+		//.read = sac_cli_readdir,
 		.write = sac_cli_write,
 		.read = sac_cli_read,
 		.unlink = sac_cli_unlink,

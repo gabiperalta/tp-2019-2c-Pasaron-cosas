@@ -38,30 +38,39 @@ void procesar_solicitud(void *socket_cliente){
 			break;
 		case FUSE_GETATTR:
 			funcion_fuse = funcion_getattr;
+			printf("FUSE_GETATTR \n");
 			break;
 		case FUSE_READDIR:
 			funcion_fuse = funcion_readdir;
+			printf("FUSE_READDIR \n");
 			break;
 		case FUSE_MKNOD:
 			funcion_fuse = funcion_mknod;
+			printf("FUSE_MKNOD \n");
 			break;
 		case FUSE_OPEN:
 			funcion_fuse = funcion_open;
+			printf("FUSE_OPEN \n");
 			break;
 		case FUSE_WRITE:
 			funcion_fuse = funcion_write;
+			printf("FUSE_WRITE \n");
 			break;
 		case FUSE_READ:
 			funcion_fuse = funcion_read;
+			printf("FUSE_READ \n");
 			break;
 		case FUSE_UNLINK:
 			funcion_fuse = funcion_unlink;
+			printf("FUSE_UNLINK \n");
 			break;
 		case FUSE_MKDIR:
 			funcion_fuse = funcion_mkdir;
+			printf("FUSE_MKDIR \n");
 			break;
 		case FUSE_RMDIR:
 			funcion_fuse = funcion_rmdir;
+			printf("FUSE_RMDIR \n");
 			break;
 		}
 
@@ -110,19 +119,15 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 
 	agregar_valor(paquete_respuesta.parametros, retorno);
 
-	printf("soyUnServidor\n");
-
 	if( retorno == 0 ){
 		if(statRetorno.st_nlink == 2){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
-			printf("ENVIE UN DIRECTORIO\n");
 		}
 		if(statRetorno.st_nlink == 1){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
-			printf("ENVIE UN ARCHIVO\n");
 		}
 	}
 
@@ -137,10 +142,12 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 void funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
-	char* buffer = obtener_string(paquete.parametros);
+	char* buffer;
 
 
 	int retorno = myReaddir( path, buffer ); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
+
+	printf("BUFFER: %s\n", buffer);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_READDIR,
@@ -154,7 +161,7 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 	///////////////////////////////////////////////////////
 
 	free(path);
-	free(buffer);
+	// free(buffer);
 
 }
 
@@ -276,6 +283,8 @@ void funcion_unlink(t_paquete paquete,int socket_fuse){
 void funcion_mkdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
+
+	printf("MKDIR: Me llego el path: %s \n", path);
 
 	int retorno = crearDirectorio(path);
 
