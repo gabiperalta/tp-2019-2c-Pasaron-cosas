@@ -1,9 +1,8 @@
-cd tp-2019-2c-Pasaron-cosas/biblioteca/Debug/
-make clean
-make
 cd
 
 cd tp-2019-2c-Pasaron-cosas/biblioteca/Debug/
+make clean
+make
 sudo cp libbiblioteca.so /usr/lib/
 cd
 
@@ -15,9 +14,6 @@ cd
 cd tp-2019-2c-Pasaron-cosas/LibMuse/Debug/
 make clean
 make
-cd
-
-cd tp-2019-2c-Pasaron-cosas/LibMuse/Debug/
 sudo cp liblibmuse.so /usr/lib/
 cd
 
