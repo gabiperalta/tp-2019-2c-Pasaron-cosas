@@ -8,8 +8,8 @@
 #ifndef SUSE_H_
 #define SUSE_H_
 
-#include "biblioteca_sockets.h"
-#include "biblioteca.h"
+#include "../../biblioteca/biblioteca_sockets.h"
+#include "../../biblioteca/biblioteca.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -85,7 +85,7 @@ typedef struct{
 }thread;
 
 typedef struct{
-	uint32_t pid; //id del proceso
+	uint8_t pid; //id del proceso
 	t_list* hilos_ready;
 	thread* hilo_exec;
 }process;

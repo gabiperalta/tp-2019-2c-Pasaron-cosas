@@ -13,6 +13,7 @@
 
 
 //tid y id del semaforo
+
 int wait(int tid, char* id_sem, int pid){
 
 	//uint8_t tid = hilo->tid;
@@ -148,9 +149,11 @@ int close_suse(int tid, int pid){
 int crear(int tid, int pid){
 
 	printf("Inicio crear\n");
-
+	bool condicion(thread* hilo){
+		return hilo-> pid ==  pid;
+	}
 	thread* hilo = malloc(sizeof(thread));
-	//CHEQUEAAAAAAR
+
 	hilo->tid= tid;
 	hilo->pid= pid;
 	hilo->rafagas_estimadas=0;
@@ -169,29 +172,16 @@ int crear(int tid, int pid){
 	hilo->timestamp_final_espera = 0;
 
 	hilo->timestamp_inicio_ejec = getCurrentTime();
-	//NO SE QUE PONER EN RAFAGA Y ESTIMACION
-	//ver si inicializamos lo de las metricas en 0 o que
-	bool buscador(process* proceso){
-		return proceso->pid == pid;
-	}
 
 	//printf("size lista procesos %d\n",list_size(lista_procesos));
-
 	pthread_mutex_lock(&mut_procesos);
-	process* proceso = list_find(lista_procesos, (void*)buscador);
+	process* proceso = obtener_proceso_asociado(hilo);
 	pthread_mutex_unlock(&mut_procesos);
 
-	if(proceso == NULL)
-		printf("No se encontro proceso\n");
-
-	//proceso = list_get(lista_procesos,0);
-	//printf("pid %d\n",proceso->pid);
-	//printf("pid recibido %d\n",pid);
-
-	bool condicion(thread* hilo){
-		return hilo-> pid ==  pid;
+	if(proceso == NULL){
+		log_error(suse_log, "No se encontro proceso");
 	}
-
+	else{
 	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
 		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
 			list_add(proceso->hilos_ready, hilo);
@@ -202,6 +192,7 @@ int crear(int tid, int pid){
 		pthread_mutex_lock(&mut_new);
 		list_add(hilos_new, hilo);
 		pthread_mutex_unlock(&mut_new);
+		}
 	}
 	printf("Fin crear\n");
 	return 1;
@@ -216,11 +207,11 @@ int join(int tid, int pid){
 	}
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+	printf("entre\0");
 	bool condicion(thread* hilo){
 		return hilo->tid == tid;
 	}
 	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
-
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
@@ -329,9 +320,10 @@ int list_get_index(t_list* self,void* elemento,bool (*comparator)(void *,void *)
 }
 
 process* obtener_proceso_asociado(thread* hilo){
-	pthread_mutex_lock(&mut_procesos);
-	return list_get(lista_procesos,hilo->pid);
-	pthread_mutex_unlock(&mut_procesos);
+	bool buscador(process* proceso){
+		return proceso->pid == hilo->pid;
+	}
+	return list_find(lista_procesos,(void*) buscador);
 }
 
 

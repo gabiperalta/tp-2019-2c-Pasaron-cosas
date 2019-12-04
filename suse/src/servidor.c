@@ -35,19 +35,11 @@ void procesar_solicitud(void* socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_suse)(t_paquete,int);
 
-	//por cada conexion nueva, agrego al proceso/hilo a la lista de threads
-
 	while(paquete.error != 1){
 		switch(paquete.header){
-			case SUSE_INIT:
-				funcion_suse = funcion_init;
-				break;
 			case SUSE_CREATE:
 				funcion_suse = funcion_create;
 				break;
-		//	case SUSE_CREATE_HILO:
-		//		funcion_suse = funcion_create_hilo;
-		//		break;
 			case SUSE_SCHEDULE_NEXT:
 				funcion_suse = funcion_schedule_next;
 				break;
@@ -75,28 +67,6 @@ void procesar_solicitud(void* socket_cliente){
 
 
 // void funcion_create_hilo(t_paquete paquete,int socket_suse){
-
-void funcion_init(t_paquete paquete,int socket_suse){
-	uint32_t pid_recibido = obtener_valor(paquete.parametros);
-
-	process* proceso = malloc(sizeof(process));
-	//proceso->pid = pid_recibido;
-	proceso->pid = socket_suse;
-	proceso->hilos_ready = list_create();//inicializar lista proceso ready
-	proceso->hilo_exec = NULL;
-	list_add(lista_procesos,proceso);//list_add();
-	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
-
-	t_paquete paquete_respuesta = {
-			.header = SUSE_INIT,
-			.parametros = list_create()
-	};
-
-	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros,1); // solo para confirmar que la comunicacion fue exitosa
-	enviar_paquete(paquete_respuesta,socket_suse);
-	///////////////////////////////////////////////////////
-}
 
 void funcion_join(t_paquete paquete,int socket_suse){
 
@@ -194,33 +164,33 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 
 void funcion_create(t_paquete paquete,int socket_suse){
 
-	//los parametros vienen en una lista, tengo que respetar ese orden al poner obtenervalor/obtenerint
-
-	//
 	int tid = obtener_valor(paquete.parametros);
 
+	//uint8_t pid_recibido = obtener_valor(paquete.parametros);
 
-	//aca le das la orden a suse
-
-	int retorno = crear(tid,socket_suse);//funcion suse)(tid); //podria tener una respuesta
-
-	//en caso que tenga retorno int retorno = crearArchivo( path );
-
-
-	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
-
+	process* proceso = malloc(sizeof(process));
+	proceso->pid = socket_suse;
+	proceso->hilos_ready = list_create();//inicializar lista proceso ready
+	proceso->hilo_exec = NULL;
+	bool condicion(process* proceso){
+		return proceso->pid == socket_suse;
+	}
+	if(!list_any_satisfy(lista_procesos, (void*) condicion)){
+		list_add(lista_procesos,proceso);
+		log_info(suse_log, "Se agrego el proceso correctamente");
+	}
+	else{
+		log_error(suse_log, "Ya existe el mismo proceso");
+	}
+	int retorno = crear(tid,socket_suse); //funcion suse)(tid); //podria tener una respuesta
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CREATE,
 	.parametros = list_create()
 	};
-
-	// agregas valor al paquete de respuesta
-
 	///////////////// Parametros a enviar /////////////////
 	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
-
 }
 
 
