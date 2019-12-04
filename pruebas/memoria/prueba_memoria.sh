@@ -28,3 +28,7 @@ cd
 
 cp tp-2019-2c-Pasaron-cosas/pruebas/memoria/suse.config tp-2019-2c-Pasaron-cosas/suse/src/
 cp tp-2019-2c-Pasaron-cosas/pruebas/memoria/muse.config tp-2019-2c-Pasaron-cosas/muse/
+ 
+cd linuse-tests-programs/
+make && make entrega
+cd
