@@ -201,17 +201,34 @@ int crear(int tid, int pid){
 //el tid que viene por parametro puede tener cualquier estado
 
 int join(int tid, int pid){
+	printf("llegue al join\0");
+	log_info(suse_log, "inicio join");
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
 	}
 	process* proceso = list_find(lista_procesos, (void*)buscador);
+	printf("proceso: %i\0", proceso->pid);
 	pthread_mutex_unlock(&mut_procesos);
-	printf("entre\0");
 	bool condicion(thread* hilo){
-		return hilo->tid == tid;
+			return hilo->tid == tid;
 	}
-	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
+	printf("entre\0");
+
+	thread* hilo_prioritario = list_find(hilos_new, (void*)condicion);
+	if(hilo_prioritario == NULL){
+		thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
+		if(hilo_prioritario == NULL){
+			thread* hilo_prioritario = list_find(hilos_blocked, (void*)condicion);
+			if(hilo_prioritario == NULL){
+				thread* hilo_prioritario = list_find(hilos_exit, (void*)condicion);
+			}
+			else{
+					log_error(suse_log, "El hilo no se encuentra");
+			}
+		}
+	}
+	printf("el hilo prioritario es: %i\0", hilo_prioritario->tid);
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
