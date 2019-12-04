@@ -15,6 +15,7 @@ cd tp-2019-2c-Pasaron-cosas/pruebas/tests_adaptados/
 cp archivo_de_swap_supermasivo.c /home/utnso/linuse-tests-programs/
 cp Makefile /home/utnso/linuse-tests-programs/
 cp recursiva.c /home/utnso/linuse-tests-programs/
+cp hilolay_alumnos.c /home/utnso/linuse-tests-programs/
 
 
 #cd linuse-tests-programs/
