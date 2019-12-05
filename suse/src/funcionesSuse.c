@@ -80,8 +80,7 @@ int signal_suse(int tid, char* id_sem){
 //Cuando se llame a esta funcion se elige el proximo tid y lo pasa estado ejecutando ademas de retornarlo
 
 int next_tid(int pid){
-	//tiene que dar proximo hilo segun el programa
-
+	printf("entre al next\n");
 	planificarCortoPlazo(pid);
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
@@ -206,20 +205,16 @@ int crear(int tid, int pid){
 //el tid que viene por parametro puede tener cualquier estado
 
 int join(int tid, int pid){
-	printf("llegue al join\n");
 	log_info(suse_log, "inicio join");
-	printf("inicio join\n");
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
 	}
 	process* proceso = list_find(lista_procesos, (void*)buscador);
-	printf("proceso: %i\0", proceso->pid);
 	pthread_mutex_unlock(&mut_procesos);
 	bool condicion(thread* hilo){
 			return hilo->tid == tid;
 	}
-	printf("entre\0");
 
 	thread* hilo_prioritario = list_find(hilos_new, (void*)condicion);
 	if(hilo_prioritario == NULL){
@@ -234,7 +229,6 @@ int join(int tid, int pid){
 			}
 		}
 	}
-	printf("el hilo prioritario es: %i\0", hilo_prioritario->tid);
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
@@ -255,7 +249,6 @@ int join(int tid, int pid){
 		}
 	 }
 	log_info(suse_log, "Se hizo un join");
-	printf("Fin join\n");
 	return 1;
 }
 
