@@ -3,8 +3,8 @@
 int main(){
 	puts("Proceso SUSE");
 	inicializar_listas();
-	inicializar_semaforos();
 	leer_config();
+	inicializar_semaforos();
 	iniciarLog();
 	log_info(suse_log,"====================== SUSE ======================");
 	inicializarServidor();

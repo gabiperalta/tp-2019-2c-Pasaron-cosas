@@ -40,6 +40,7 @@ int wait(int tid, char* id_sem, int pid){
 	semaforo->cant_instancias_disponibles -=1;
 
 	log_info(suse_log,"Se bloqueo el thread");
+	printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 	return 1;
 }
 
@@ -56,6 +57,7 @@ int signal_suse(int tid, char* id_sem){
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 	pthread_mutex_unlock(&mut_semaforos);
 	if(semaforo->cant_instancias_disponibles <= 0){ //ver si la lista es vacia
+		printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
 		list_add(proceso->hilos_ready,hilo_desbloqueado);
@@ -191,17 +193,18 @@ int crear(int tid, int pid){
 		log_error(suse_log, "No se encontro proceso");
 	}
 	else{
-	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
-		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
-			list_add(proceso->hilos_ready, hilo);
-			log_info(suse_log, "creo hilo principal en ready");
-		}
-	}
-	else{
+	//if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
+		//if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
+			//list_add(proceso->hilos_ready, hilo);
+			//log_info(suse_log, "creo hilo principal en ready");
+		//}
+	//}
+	//else{
 		pthread_mutex_lock(&mut_new);
 		list_add(hilos_new, hilo);
+		printf("size hilos new %d\n",list_size(hilos_new));
 		pthread_mutex_unlock(&mut_new);
-		}
+		//}
 	}
 	printf("Fin crear\n");
 	return 1;
@@ -262,12 +265,16 @@ int join(int tid, int pid){
 
 
 void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo hilo
+	while(1){
 		int i = 0;
+		//printf("size hilos new %d\t",list_size(hilos_new));
+		//printf("grado_multiprogramacion %d\n",grado_multiprogramacion);
 		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){ //VER: esto seria cuando planificar? Solo cuando pedimos next_tid, no es necesario
 			sem_wait(&sem_planificacion);
 			aplicarFIFO();
 			i++;
 		}
+	}
 	log_info(suse_log,"Se planifico por FIFO");
 }
 
@@ -284,6 +291,7 @@ void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
 		}
 		sem_post(&sem_planificacion);
 		log_info(suse_log, "Se planifico por SJF");
+		log_info(suse_log, "El hilo ejecutando es %d\n",proceso->hilo_exec->tid);
 }
 
 void aplicarFIFO(){
@@ -347,6 +355,7 @@ int list_get_index(t_list* self,void* elemento,bool (*comparator)(void *,void *)
 }
 
 process* obtener_proceso_asociado(thread* hilo){
+	printf("pid %d\n",hilo->pid);
 	bool buscador(process* proceso){
 		return proceso->pid == hilo->pid;
 	}
