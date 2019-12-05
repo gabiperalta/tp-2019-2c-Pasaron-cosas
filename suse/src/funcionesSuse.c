@@ -96,6 +96,7 @@ int next_tid(int pid){
 	}
 
 	log_info(suse_log,"Se planifica y se devuelve el next_tid");
+	printf("Fin next\n");
 	return -1;
 }
 
@@ -153,6 +154,7 @@ int close_suse(int tid, int pid){
 int crear(int tid, int pid){
 
 	printf("Inicio crear\n");
+	printf("tid %d\n",tid);
 	bool condicion(thread* hilo){
 		return hilo-> pid ==  pid;
 	}
@@ -272,7 +274,8 @@ void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
 		process* proceso = list_find(lista_procesos, (void*) buscadorProceso);
 
 		t_list* hilos_listos = proceso->hilos_ready;
-		while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
+		//while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
+		while(!list_is_empty(hilos_listos)){
 			aplicarSJF(proceso);// sockets
 		}
 		sem_post(&sem_planificacion);

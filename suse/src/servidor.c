@@ -234,6 +234,8 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 	.parametros = list_create()
 	};
 
+	printf("next_tid esta retornando %d\n",retorno);
+
 	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
