@@ -81,23 +81,25 @@ int signal_suse(int tid, char* id_sem){
 
 int next_tid(int pid){
 	printf("entre al next\n");
-	planificarCortoPlazo(pid);
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
 	}
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+	planificarCortoPlazo(pid);
 	if(proceso->hilo_exec != NULL){
 		return proceso->hilo_exec->tid;
+		log_info(suse_log, "se planifico una vez");
 	}
 	else{
-		log_error(suse_log, "No hay hilo en ejecucion");
+		planificarCortoPlazo(pid);
+		return proceso->hilo_exec->tid;
+		log_info(suse_log, "se volvio a planificar");
 	}
-
 	log_info(suse_log,"Se planifica y se devuelve el next_tid");
 	printf("Fin next\n");
-	return -1;
+	return 0;
 }
 
 
@@ -245,6 +247,7 @@ int join(int tid, int pid){
 			pthread_mutex_unlock(&mut_blocked);
 			proceso->hilo_exec = hilo_prioritario;
 			hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
+			log_info(suse_log, "se guardo el hilo en blocked");
 		}
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
