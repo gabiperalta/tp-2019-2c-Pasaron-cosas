@@ -89,17 +89,18 @@ int next_tid(int pid){
 	pthread_mutex_unlock(&mut_procesos);
 	planificarCortoPlazo(pid);
 	if(proceso->hilo_exec != NULL){
-		return proceso->hilo_exec->tid;
 		log_info(suse_log, "se planifico una vez");
+		return proceso->hilo_exec->tid;
 	}
 	else{
 		planificarCortoPlazo(pid);
+			log_info(suse_log, "se volvio a planificar");
 		return proceso->hilo_exec->tid;
-		log_info(suse_log, "se volvio a planificar");
 	}
 	log_info(suse_log,"Se planifica y se devuelve el next_tid");
 	printf("Fin next\n");
-	return 0;
+	pthread_mutex_unlock(&mut_join);
+	return 1;
 }
 
 
@@ -210,12 +211,13 @@ int crear(int tid, int pid){
 
 int join(int tid, int pid){
 	log_info(suse_log, "inicio join");
-	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
 	}
+	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+	log_info(suse_log, "el hilo ejecutando es: %i \n", proceso->hilo_exec);
 	bool condicion(thread* hilo){
 			return hilo->tid == tid;
 	}
@@ -237,9 +239,10 @@ int join(int tid, int pid){
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
 	if(existe_en_exit){
-		 log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
+		log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
 	}
 	else{
+		pthread_mutex_lock(&mut_join);
 		if(proceso->hilo_exec != NULL){
 			thread* hilo_en_ejecucion= proceso->hilo_exec;
 			pthread_mutex_lock(&mut_blocked);
@@ -252,21 +255,19 @@ int join(int tid, int pid){
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
 		}
-	 }
+	}
 	log_info(suse_log, "Se hizo un join");
 	return 1;
 }
 
 
 void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo hilo
-	while(1){
 		int i = 0;
 		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){ //VER: esto seria cuando planificar? Solo cuando pedimos next_tid, no es necesario
 			sem_wait(&sem_planificacion);
 			aplicarFIFO();
 			i++;
 		}
-	}
 	log_info(suse_log,"Se planifico por FIFO");
 }
 
@@ -290,8 +291,10 @@ void aplicarFIFO(){
 		thread* hilo_elegido = list_remove(hilos_new,0);
 		pthread_mutex_unlock(&mut_new);
 		process* proceso = obtener_proceso_asociado(hilo_elegido);
+		log_info(suse_log, "el proceso es: %i \n", proceso->pid);
 		t_list* hilos_listos = proceso->hilos_ready;
 		list_add(hilos_listos,hilo_elegido);
+		log_info(suse_log, "hay %i hilos en ready \n", list_size(hilos_listos));
 		hilo_elegido->timestamp_inicio_espera = getCurrentTime();
 	}
 
@@ -373,6 +376,7 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mut_new, NULL);
 	pthread_mutex_init(&mut_semaforos, NULL);
 	pthread_mutex_init(&mut_procesos, NULL);
+	pthread_mutex_init(&mut_join,NULL);
 	sem_init(&sem_planificacion, 0, grado_multiprogramacion);
 	sem_init(&sem_ejecute,0,1);
 }
@@ -393,6 +397,7 @@ void destructor_semaforos(){
 	pthread_mutex_destroy(&mut_new);
 	pthread_mutex_destroy(&mut_semaforos);
 	pthread_mutex_destroy(&mut_procesos);
+	pthread_mutex_destroy(&mut_join);
 }
 void leer_config(){
 	t_config* archivo_config = config_create(PATH_CONFIG);
