@@ -119,7 +119,6 @@ int me_create(int tid){
 	t_paquete paquete_respuesta = recibir_paquete(socket_suse);
 
 	int retorno = obtener_valor(paquete_respuesta.parametros); //la de funciones suse, lo que te retorna
-
 	return retorno;
 	}
 	//ponele un 0 si esta ok

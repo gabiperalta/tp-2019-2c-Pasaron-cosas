@@ -66,8 +66,8 @@ pthread_t threadMetrics;
 
 
 typedef struct{
-	uint8_t tid; // id del hilo
-	uint8_t pid; // proceso en el que esta el hilo
+	uint32_t tid; // id del hilo
+	uint32_t pid; // proceso en el que esta el hilo
 	int tid_joineado;
 	int rafagas_estimadas;
 	uint32_t tiempo_ejecucion;
@@ -85,7 +85,7 @@ typedef struct{
 }thread;
 
 typedef struct{
-	uint8_t pid; //id del proceso
+	uint32_t pid; //id del proceso
 	t_list* hilos_ready;
 	thread* hilo_exec;
 }process;

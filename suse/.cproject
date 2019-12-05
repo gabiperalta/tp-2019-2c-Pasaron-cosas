@@ -122,15 +122,9 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="suse.cdt.managedbuild.target.gnu.exe.790385754" name="Executable" projectType="cdt.managedbuild.target.gnu.exe"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.673209227;cdt.managedbuild.config.gnu.exe.debug.673209227.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1022174626;cdt.managedbuild.tool.gnu.c.compiler.input.842625071">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.1711200422;cdt.managedbuild.config.gnu.exe.release.1711200422.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.572980650;cdt.managedbuild.tool.gnu.c.compiler.input.815782716">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+	</storageModule>
 </cproject>
