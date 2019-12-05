@@ -30,12 +30,10 @@ void procesar_solicitud(void *socket_cliente){
 	t_paquete paquete = recibir_paquete(socket_cliente);
 	void (*funcion_fuse)(t_paquete,int);
 
+	funcion_init(socket_cliente);
 
 	while(paquete.error != 1){
 		switch(paquete.header){
-		case FUSE_INIT:
-			funcion_fuse = funcion_init;
-			break;
 		case FUSE_GETATTR:
 			funcion_fuse = funcion_getattr;
 			printf("FUSE_GETATTR \n");
@@ -79,29 +77,38 @@ void procesar_solicitud(void *socket_cliente){
 		paquete = recibir_paquete(socket_cliente);
 	}
 
+	funcion_finish(socket_cliente);
+
 	close(socket_cliente);
 
 	return;
 }
 
-void funcion_init(t_paquete paquete,int socket_fuse){
+void funcion_init(/*t_paquete paquete,*/ int socket_fuse){
 
 	ProcessTableNode* nodoListaProcesosAbiertos = malloc(sizeof(ProcessTableNode));
 	nodoListaProcesosAbiertos->socket = socket_fuse;
-	nodoListaProcesosAbiertos->archivos_abiertos = list_create;
+	nodoListaProcesosAbiertos->archivos_abiertos = list_create();
 
 	list_add(listaDeTablasDeArchivosPorProceso, nodoListaProcesosAbiertos);
+}
 
-	t_paquete paquete_respuesta = {
-			.header = FUSE_INIT,
-			.parametros = list_create()
-	};
+void funcion_finish(int socket_fuse){
 
-	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros,1); // solo para confirmar que la comunicacion fue exitosa
-	enviar_paquete(paquete_respuesta,socket_fuse);
-	///////////////////////////////////////////////////////
+	printf("FINALIZANDO PROCESO\n");
 
+	bool buscadorDeNodo(ProcessTableNode* unNodo){
+		return unNodo->socket == socket_fuse;
+	}
+
+	void destructorTableNode(ProcessTableNode* unNodo){
+		list_destroy_and_destroy_elements(unNodo->archivos_abiertos, (void*)free);
+		free(unNodo);
+	}
+
+	list_remove_and_destroy_by_condition(listaDeTablasDeArchivosPorProceso, (void*)buscadorDeNodo, (void*)destructorTableNode);
+
+	printf("TERMINAMOS DE FINALIZAR EL PROCESO\n");
 }
 
 void funcion_getattr(t_paquete paquete,int socket_fuse){
@@ -142,10 +149,9 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 void funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
-	char* buffer;
 
 
-	int retorno = myReaddir( path, buffer ); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
+	char* buffer = myReaddir( path ); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
 
 	printf("BUFFER: %s\n", buffer);
 
@@ -155,8 +161,16 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 	};
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno);
-	agregar_string(paquete_respuesta.parametros, buffer);
+	if(buffer){
+		int retorno = 0;
+		agregar_valor(paquete_respuesta.parametros, retorno);
+		agregar_string(paquete_respuesta.parametros, buffer);
+	}
+	else{
+		int retorno = -1;
+		agregar_valor(paquete_respuesta.parametros, retorno);
+	}
+
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
@@ -212,6 +226,8 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 	char* buffer = obtener_string(paquete.parametros);
 	size_t size = obtener_valor(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
+
+	printf("ESTOY POR ESCRIBIR EN EL ARCHIVO\n");
 
 	int retorno = escribirArchivo(path, buffer, size, offset);
 
@@ -305,7 +321,9 @@ void funcion_mkdir(t_paquete paquete,int socket_fuse){
 
 void funcion_rmdir(t_paquete paquete,int socket_fuse){
 
-	char* path = obtener_valor(paquete.parametros);
+	char* path = obtener_string(paquete.parametros);
+
+	printf("---RMDIR: Me llego el path: %s \n", path);
 
 	int retorno = eliminarDirectorio(path);
 

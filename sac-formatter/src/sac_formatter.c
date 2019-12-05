@@ -82,10 +82,10 @@ void dumpNodeTable(GBlock *diskPointer){
 		memcpy(auxName, node.fname, MAX_FILENAME_LENGTH);
 
 		if (node.state > 0){
-			printf("Node %u - State: %s\t Name: %s\tSize: %u\n", nFile, nameByCode(node.state), auxName, node.file_size);
+			printf("Node %u - State: %s\t Name: %s\tSize: %u FatherBlock: %i\n", nFile, nameByCode(node.state), auxName, node.file_size, node.father_block);
 			printf("bloques:\n");
-			for(int i = 0; i < 20; i++){
-				printf("%i\n", nodeTable->blocks[i]);
+			for(int i = 0; i < 10; i++){
+				printf("%i\n", node.blocks[i]);
 			}
 		} else {
 			printf("Node %u - State: %s\n", nFile, nameByCode(node.state));

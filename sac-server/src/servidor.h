@@ -21,7 +21,8 @@ void procesar_solicitud(void *socket_cliente);
 
 /////////  FUNCIONES SAC SERVER  /////////
 
-void funcion_init(t_paquete paquete,int socket_fuse);
+void funcion_init( int socket_fuse);
+void funcion_finish( int socket_fuse);
 void funcion_getattr(t_paquete paquete,int socket_muse);
 void funcion_readdir(t_paquete paquete,int socket_muse);
 void funcion_mknod(t_paquete paquete,int socket_muse);

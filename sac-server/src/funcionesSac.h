@@ -1,6 +1,7 @@
 #ifndef FUNCIONES_SAC_H_
 #define FUNCIONES_SAC_H_
 
+#include <errno.h>
 #include "gestorDeMemoria.h"
 #include "sac-server.h"
 
@@ -19,7 +20,7 @@ int crearDirectorio( char *path );
 
 int eliminarDirectorio( char *path);
 
-int myReaddir( char *path, void *buffer );
+char* myReaddir( char *path );
 
 // FUNCIONES CON ARCHIVOS
 int crearArchivo( char *path );

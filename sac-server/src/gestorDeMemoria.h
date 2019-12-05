@@ -40,6 +40,7 @@
 
 
 t_bitarray* bitmap;
+char* miBitarray;
 pthread_mutex_t mutexBitmap;
 pthread_mutex_t mutexEscrituraInodeTable;
 
