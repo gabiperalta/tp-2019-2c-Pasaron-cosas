@@ -132,7 +132,14 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
-	bufferAuxiliar = obtener_string(paquete_respuesta.parametros);
+
+	if(retorno == 0){
+		bufferAuxiliar = obtener_string(paquete_respuesta.parametros);
+	}
+	else{
+		return -1;
+	}
+
 
 	printf("BUFFER: %s\n", bufferAuxiliar);
 
@@ -361,11 +368,14 @@ static int sac_cli_rmdir(const char *path){
 	// agregar_string(paquete_solicitud.parametros, path_formateado);
 	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
-
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
 	retorno = obtener_valor(paquete_respuesta.parametros );
+
+	if(retorno == -1){
+		retorno = -ENOTEMPTY;
+	}
 
 
 	return retorno;

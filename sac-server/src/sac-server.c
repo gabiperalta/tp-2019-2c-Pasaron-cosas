@@ -27,24 +27,21 @@ int main(int argc, char *argv[]){
 		header->estaElDirectorioRaiz = true;
 	}
 
-	printf("hasta aca llegue palurdo\n");
 
 	PUERTO = config_get_int_value(archivo_config, "PUERTO_ESCUCHA");
 
-	printf("hasta aca llegue2\n");
+	/*int pruebaBitarray1 = bloqueLibre();
+	int pruebaBitarray2 = bloqueLibre();
+	int pruebaBitarray3 = bloqueLibre();
+	int pruebaBitarray4 = bloqueLibre();*/
 
 	config_destroy(archivo_config);
 
-	printf("hasta aca llegue3\n");
-
 	tablaProcesosAbiertosGlobal = list_create();
 
-	printf("hasta aca llegue4\n");
-
 	listaDeTablasDeArchivosPorProceso = list_create();
-	printf("hasta aca llegue5\n");
+
 	inicializarServidor();
-	printf("hasta aca llegue6\n");
 
 	system("clear");
 
@@ -79,7 +76,8 @@ void cargarDisco(char* diskName){
 	diskFD = open(diskName, O_RDWR);
 	myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
-	bitmap = bitarray_create_with_mode( myDisk + 1, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
+	miBitarray = obtenerBloque(BITMAP_START_BLOCK);
+	bitmap = bitarray_create_with_mode( miBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
 
 	msync(myDisk, sizeof(bitmap), MS_SYNC);
 }
