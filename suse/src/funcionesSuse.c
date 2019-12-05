@@ -56,7 +56,7 @@ int signal_suse(int tid, char* id_sem){
 	pthread_mutex_lock(&mut_semaforos);
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 	pthread_mutex_unlock(&mut_semaforos);
-	if(semaforo->cant_instancias_disponibles <= 0){ //ver si la lista es vacia
+	if(semaforo->cant_instancias_disponibles <= 0 && list_size(semaforo->hilos_bloqueados) > 0){ //ver si la lista es vacia
 		printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
@@ -70,10 +70,12 @@ int signal_suse(int tid, char* id_sem){
 		pthread_mutex_unlock(&mut_blocked);
 		log_info(suse_log,"Desbloqueo thread");
 	}
+	else{
 
 	if(semaforo->cant_instancias_disponibles < semaforo->max_valor){
 
 		semaforo->cant_instancias_disponibles +=1;
+		}
 	}
 	return 1;
 }
