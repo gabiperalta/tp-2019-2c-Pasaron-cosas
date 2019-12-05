@@ -3,13 +3,14 @@
 ptrGBloque bloqueLibre(){
 	ptrGBloque bloque = DATA_BLOCKS_START;
 	bool ocupado;
-	int tamanioBitarray;
+	ptrGBloque tamanioBitarray;
 
 
 	pthread_mutex_lock(&mutexBitmap);
 
 	ocupado = bitarray_test_bit(bitmap, bloque);
-	tamanioBitarray = bitarray_get_max_bit(bitmap);
+	//tamanioBitarray = *(uint32_t*) bitarray_get_max_bit(bitmap);
+	tamanioBitarray = bitmap->size;
 
 	while((bloque < tamanioBitarray) && ocupado ){
 		bloque++;
