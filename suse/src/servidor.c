@@ -227,7 +227,6 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
-
 	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
 
 	t_paquete paquete_respuesta = {
