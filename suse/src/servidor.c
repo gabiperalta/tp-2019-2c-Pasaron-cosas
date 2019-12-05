@@ -37,6 +37,9 @@ void procesar_solicitud(void* socket_cliente){
 
 	while(paquete.error != 1){
 		switch(paquete.header){
+			case SUSE_INIT:
+				funcion_suse = funcion_init;
+				break;
 			case SUSE_CREATE:
 				funcion_suse = funcion_create;
 				break;
@@ -67,6 +70,28 @@ void procesar_solicitud(void* socket_cliente){
 
 
 // void funcion_create_hilo(t_paquete paquete,int socket_suse){
+
+void funcion_init(t_paquete paquete,int socket_suse){
+	uint32_t pid_recibido = obtener_valor(paquete.parametros);
+
+	process* proceso = malloc(sizeof(process));
+	//proceso->pid = pid_recibido;
+	proceso->pid = socket_suse;
+	proceso->hilos_ready = list_create();//inicializar lista proceso ready
+	proceso->hilo_exec = NULL;
+	list_add(lista_procesos,proceso);//list_add();
+	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
+
+	t_paquete paquete_respuesta = {
+			.header = SUSE_INIT,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros,1); // solo para confirmar que la comunicacion fue exitosa
+	enviar_paquete(paquete_respuesta,socket_suse);
+	///////////////////////////////////////////////////////
+}
 
 void funcion_join(t_paquete paquete,int socket_suse){
 

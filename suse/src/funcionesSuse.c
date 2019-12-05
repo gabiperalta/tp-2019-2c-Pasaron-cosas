@@ -201,8 +201,9 @@ int crear(int tid, int pid){
 //el tid que viene por parametro puede tener cualquier estado
 
 int join(int tid, int pid){
-	printf("llegue al join\0");
+	printf("llegue al join\n");
 	log_info(suse_log, "inicio join");
+	printf("inicio join\n");
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
@@ -249,6 +250,7 @@ int join(int tid, int pid){
 		}
 	 }
 	log_info(suse_log, "Se hizo un join");
+	printf("Fin join\n");
 	return 1;
 }
 
