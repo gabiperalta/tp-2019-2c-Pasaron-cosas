@@ -61,6 +61,7 @@ pthread_mutex_t mut_blocked;
 pthread_mutex_t mut_semaforos;
 pthread_mutex_t mut_procesos;
 pthread_mutex_t mut_join;
+pthread_mutex_t mut_planificacion;
 
 pthread_t threadMetrics;
 
