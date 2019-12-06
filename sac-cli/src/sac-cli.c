@@ -112,8 +112,8 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	(void) fi;
 
 
-	if (strcmp(path, "/") != 0)
-			return -ENOENT;
+	//if (strcmp(path, "/") != 0)
+		//	return -ENOENT;
 
 	int retorno = 0;
 	char* bufferAuxiliar;
@@ -137,7 +137,7 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 		bufferAuxiliar = obtener_string(paquete_respuesta.parametros);
 	}
 	else{
-		return -1;
+		return -ENOENT;
 	}
 
 
@@ -355,6 +355,7 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 	return retorno;
 }
 
+
 /** Remove a directory */
 static int sac_cli_rmdir(const char *path){
 	int retorno = 0;
@@ -382,6 +383,17 @@ static int sac_cli_rmdir(const char *path){
 }
 
 
+int sac_cli_truncate(const char * path, off_t offset) {
+	// funcion dummy para que no se queje de "function not implemented"
+	return 0;
+}
+
+int sac_cli_flush(const char * path, struct fuse_file_info *fi) {
+	// funcion dummy para que no se queje de "function not implemented"
+	return 0;
+}
+
+
 static struct fuse_operations sac_cli_oper = {
 		.getattr = sac_cli_getattr,
 		.open = sac_cli_open,
@@ -393,6 +405,8 @@ static struct fuse_operations sac_cli_oper = {
 		.unlink = sac_cli_unlink,
 		.mkdir = sac_cli_mkdir,
 		.rmdir = sac_cli_rmdir,
+		.truncate = sac_cli_truncate,
+		.flush = sac_cli_flush,
 };
 
 

@@ -153,23 +153,29 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* buffer = myReaddir( path ); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
 
-	printf("BUFFER: %s\n", buffer);
+	printf("HOLA BUFFER: %s\n", buffer);
+	printf("HOLA COMUNISTA\n");
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_READDIR,
 			.parametros = list_create()
 	};
 
+	printf("HOLA COMUNISTA\n");
 	///////////////// Parametros a enviar /////////////////
 	if(buffer){
 		int retorno = 0;
 		agregar_valor(paquete_respuesta.parametros, retorno);
+		printf("HOLA COMUNISTA 1\n");
 		agregar_string(paquete_respuesta.parametros, buffer);
+		printf("HOLA COMUNISTA 2\n");
 	}
 	else{
 		int retorno = -1;
 		agregar_valor(paquete_respuesta.parametros, retorno);
 	}
+
+	printf("HOLA COMUNISTA\n");
 
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////

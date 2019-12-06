@@ -21,7 +21,7 @@
 #define DIR_ENTRY_SIZE
 #define INODE_TABLE_START 131073
 #define DATA_BLOCKS_START 132097
-#define MAX_FILE_SIZE 4294967296
+#define MAX_FILE_SIZE_IN_BLOCKS 1048576
 #define NEXT_BLOCK(A) A + 1
 #define OFFSET(offset) offset * 4096
 
@@ -113,7 +113,7 @@ typedef struct sac_process_fd_node{
 typedef struct sac_file_offset{
 	uint16_t bloqueDePunteros;
 	uint16_t bloqueDeDatos; // NUMERO DE BLOQUE DE DATOS DENTRO DEL BLOQUE DE PUNTEROS
-	uint8_t posicionEnBloqueDeDatos; // POSICION DENTRO DEL BLOQUE DE DATOS
+	uint16_t posicionEnBloqueDeDatos; // POSICION DENTRO DEL BLOQUE DE DATOS
 } FileOffset;
 
 ptrGBloque bloqueLibre();

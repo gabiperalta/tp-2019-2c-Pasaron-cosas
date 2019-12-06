@@ -61,6 +61,8 @@ void writeNodeTable(GBlock *diskPointer){
 
 	for (int nFile = 0; nFile < MAX_FILE_NUMBER; nFile++){
 		nodeTable[nFile].state = 0;
+		memset(nodeTable[nFile].fname, '\0', MAX_FILENAME_LENGTH );
+		nodeTable[nFile].father_block = 0;
 	}
 }
 

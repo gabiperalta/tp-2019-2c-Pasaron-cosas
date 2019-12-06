@@ -91,7 +91,7 @@ void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque
 
 //////////////////////////////////////////////////
 // FUNCIONES AUXILIARES PARA EL MANEJO DE ARCHIVOS
-void posicionEnArchivo(uint32_t offset, FileOffset* offsetDelArchivo);
+FileOffset *posicionEnArchivo(uint32_t offset);
 
 void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 

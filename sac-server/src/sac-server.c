@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
 		header->estaElDirectorioRaiz = true;
 	}
 
+	posicionEnArchivo(941);
 
 	PUERTO = config_get_int_value(archivo_config, "PUERTO_ESCUCHA");
 
