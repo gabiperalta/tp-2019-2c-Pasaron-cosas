@@ -28,6 +28,9 @@ int wait(int tid, char* id_sem, int pid){
 	bool buscadorProceso(process* proceso){
 		return proceso->pid == pid;
 	}
+	bool buscadorThread(thread* hilo){
+		return hilo->tid == tid;
+	}
 
 	process* proceso = list_find(lista_procesos, (void*)buscadorProceso);
 
@@ -35,7 +38,9 @@ int wait(int tid, char* id_sem, int pid){
 
 	list_add(semaforo->hilos_bloqueados, hilo_wait); // uso las dos colas para no hacer finds
 	pthread_mutex_lock(&mut_blocked);
-	list_add(hilos_blocked, hilo_wait);
+	thread* hilo_bloqueado = list_find(hilos_blocked,(void*) buscadorThread);
+	if(hilo_bloqueado == NULL)
+		list_add(hilos_blocked, hilo_wait);
 	pthread_mutex_unlock(&mut_blocked);//paso el thread a la cola de bloqueado
 	semaforo->cant_instancias_disponibles -=1;
 
@@ -88,9 +93,22 @@ int next_tid(int pid){
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
 	}
+
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
+
+	pthread_mutex_lock(&mut_planificacion);
+	printf("size hilos new %d\n",list_size(hilos_new));
+	printf("size hilos ready %d\n",list_size(proceso->hilos_ready));
+	printf("size hilos blocked %d\n",list_size(hilos_blocked));
+	printf("size hilos exit %d\n",list_size(hilos_exit));
+	if(list_size(hilos_exit) > 0){
+		thread* hilo_prueba = list_get(hilos_exit,0);
+		printf("hilo exit tid %d\n",hilo_prueba->tid);
+	}
+	pthread_mutex_unlock(&mut_planificacion);
+
 	planificarCortoPlazo(pid);
 	if(proceso->hilo_exec != NULL){
 		log_info(suse_log, "se planifico una vez");
@@ -154,7 +172,7 @@ int close_suse(int tid, int pid){
 			log_info(suse_log, "Se cerro la conexión");
 		}
 	}
-	free(hilo_ejecutando);
+	//free(hilo_ejecutando);
 	return 1;
 }
 
