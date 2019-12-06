@@ -160,12 +160,11 @@ int close_suse(int tid, int pid){
 		//cambiar la lista por un solo int hilo joineado
 
 	//printf("hilo_ejecutando->tid_joineado %d\n",hilo_ejecutando->tid_joineado);
-	//log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
-	//log_info(suse_log, "tid_joineado %d\n",hilo_ejecutando->tid_joineado);
+	log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
+	log_info(suse_log, "tid_joineado %d\n",list_size(hilo_ejecutando->tid_joineado));
 	if(list_size(hilo_ejecutando->tid_joineado) > 0){
 
-		for(int i=0; list_size(hilo_ejecutando->tid_joineado); i++){
-
+		for(int i=0; i<list_size(hilo_ejecutando->tid_joineado); i++){
 
 			int tid_joineado = list_get(hilo_ejecutando->tid_joineado, i);
 
@@ -181,14 +180,12 @@ int close_suse(int tid, int pid){
 
 			pthread_mutex_unlock(&mut_blocked);
 
-
 			thread* hilo_a_agregar = list_find(proceso->hilos_ready,(void*) buscador2);
 			if(hilo_a_agregar == NULL){
 				list_add(proceso->hilos_ready,hilo_joineado);
 			}
 
 			log_info(suse_log, "pongo en ready %d\n",hilo_joineado->tid);
-
 		}
 		//log_info(suse_log, "deberia ser el main %d\n",hilo_joineado->tid);
 
@@ -197,29 +194,48 @@ int close_suse(int tid, int pid){
 	list_add(hilos_exit,hilo_ejecutando);
 	pthread_mutex_unlock(&mut_exit);
 
+	if(proceso->hilo_exec->tid == tid){
+		proceso->hilo_exec = NULL;
+	}
+
+	bool buscarHiloEjecutando(thread* hilo){
+		return hilo->tid == hilo_ejecutando->tid;
+	}
+	list_remove_by_condition(proceso->hilos_ready,(void*) buscarHiloEjecutando);
+
 	log_info(suse_log, "Se hizo un close");
 
 	bool condicion(thread* hilo){
 		return hilo->tid == tid;
 	}
-	log_info(suse_log, "Close size hilos ready %d\n",list_size(proceso->hilos_ready));
-	log_info(suse_log, "Close tid hilo ready 1 %d\n",proceso->hilos_ready[0]);
-	log_info(suse_log, "Close tid hilo ready 2 %d\n",proceso->hilos_ready[1]);
-	log_info(suse_log, "Close size hilos new %d\n",list_size(hilos_new));
-	log_info(suse_log, "Close size hilos blocked %d\n",list_size(hilos_blocked));
-	log_info(suse_log, "Close size hilos exit %d\n",list_size(hilos_exit));
+	log_info(suse_log, "Close size hilos ready %d",list_size(proceso->hilos_ready));
+	//thread* hilo_prueba_log = list_get(proceso->hilos_ready,0);
+	//log_info(suse_log, "Close tid hilo ready %d",hilo_prueba_log->tid);
+	//hilo_prueba_log = list_get(proceso->hilos_ready,1);
+	//log_info(suse_log, "Close tid hilo ready %d\n",hilo_prueba_log->tid);
+	log_info(suse_log, "Close size hilos new %d",list_size(hilos_new));
+	log_info(suse_log, "Close size hilos blocked %d",list_size(hilos_blocked));
+	log_info(suse_log, "Close size hilos exit %d",list_size(hilos_exit));
+	//hilo_prueba_log = list_get(hilos_exit,0);
+	//log_info(suse_log, "Close tid hilo exit %d",hilo_prueba_log->tid);
+
+	if(proceso->hilo_exec != NULL){
+		log_info(suse_log, "proceso->hilo_exec tid %d",proceso->hilo_exec->tid);
+	}
+	else{
+		log_info(suse_log, "No hay hilo ejecutando");
+	}
+
 	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
 		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
 			bool condicionProceso(process* proceso){
 				return proceso->pid == pid;
-		}
-
-
+			}
 			pthread_mutex_lock(&mut_procesos);
 			list_remove_and_destroy_by_condition(lista_procesos,(void*)condicionProceso,(void*)destructor_de_procesos);
 			pthread_mutex_unlock(&mut_procesos);
-			log_info(suse_log, "Voy a cerrar el pid %d\n");
-			close(pid);
+			//log_info(suse_log, "Voy a cerrar el pid %d");
+			//close(pid);
 					//kill()
 			log_info(suse_log, "Se cerro la conexión");
 		}
@@ -451,6 +467,7 @@ void aplicarSJF(process* proceso) {
 	log_info(suse_log, "pongo a ejecutar %d\n",proceso->hilo_exec->tid);
 
 	printf("proceso->hilo_exec %d\n",proceso->hilo_exec->tid);
+
 	hilo_a_ejecutar->rafagas_ejecutadas++;
 	//sem_post(&sem_ejecute);
 	hilo_a_ejecutar->timestamp_final_cpu = getCurrentTime();
