@@ -55,6 +55,7 @@ t_list* hilos_exit;
 
 sem_t sem_planificacion;
 sem_t sem_ejecute;
+sem_t sem_join;
 pthread_mutex_t mut_exit;
 pthread_mutex_t mut_new;
 pthread_mutex_t mut_blocked;
