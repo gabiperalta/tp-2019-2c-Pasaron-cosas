@@ -158,27 +158,40 @@ int close_suse(int tid, int pid){
 	thread* hilo_ejecutando = proceso->hilo_exec;
 		//ver aca memoria
 		//cambiar la lista por un solo int hilo joineado
-	bool buscador2(thread* hilo){
-		return hilo->tid == hilo_ejecutando->tid_joineado;
-	}
-	printf("hilo_ejecutando->tid_joineado %d\n",hilo_ejecutando->tid_joineado);
-	log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
-	log_info(suse_log, "tid_joineado %d\n",hilo_ejecutando->tid_joineado);
-	if(hilo_ejecutando->tid_joineado >= 0){
-		pthread_mutex_lock(&mut_blocked);
-		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador2);
-		log_info(suse_log, "deberia ser el main %d\n",hilo_joineado->tid);
-		list_remove_by_condition(hilos_blocked, (void*) buscador2);
-		pthread_mutex_unlock(&mut_blocked);
-		bool buscadorThread(thread* hilo){
-			return hilo->tid == hilo_joineado->tid ;
-		}
-		thread* hilo_a_agregar = list_find(proceso->hilos_ready,(void*) buscadorThread);
-		if(hilo_a_agregar == NULL){
-			list_add(proceso->hilos_ready,hilo_joineado);
-		}
 
-		log_info(suse_log, "pongo en ready %d\n",hilo_joineado->tid);
+	//printf("hilo_ejecutando->tid_joineado %d\n",hilo_ejecutando->tid_joineado);
+	//log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
+	//log_info(suse_log, "tid_joineado %d\n",hilo_ejecutando->tid_joineado);
+	if(list_size(hilo_ejecutando->tid_joineado) > 0){
+
+		for(int i=0; list_size(hilo_ejecutando->tid_joineado); i++){
+
+
+			int tid_joineado = list_get(hilo_ejecutando->tid_joineado, i);
+
+			bool buscador2(thread* hilo){
+				return hilo->tid == tid_joineado;
+			}
+
+			pthread_mutex_lock(&mut_blocked);
+
+			thread* hilo_joineado= list_find(hilos_blocked, (void*) buscador2);
+
+			list_remove_by_condition(hilos_blocked, (void*) buscador2);
+
+			pthread_mutex_unlock(&mut_blocked);
+
+
+			thread* hilo_a_agregar = list_find(proceso->hilos_ready,(void*) buscador2);
+			if(hilo_a_agregar == NULL){
+				list_add(proceso->hilos_ready,hilo_joineado);
+			}
+
+			log_info(suse_log, "pongo en ready %d\n",hilo_joineado->tid);
+
+		}
+		//log_info(suse_log, "deberia ser el main %d\n",hilo_joineado->tid);
+
 	}
 	pthread_mutex_lock(&mut_exit);
 	list_add(hilos_exit,hilo_ejecutando);
@@ -229,7 +242,7 @@ int crear(int tid, int pid){
 	hilo->tid= tid;
 	hilo->pid= pid;
 	hilo->rafagas_estimadas=0;
-	hilo->tid_joineado = -1;
+	hilo->tid_joineado= list_create();
 	hilo->rafagas_ejecutadas=0;
 	hilo->porcentaje_tiempo = 0;
 	hilo->tiempo_ejecucion = 0;
@@ -341,7 +354,7 @@ int join(int tid, int pid){
 			list_add(hilos_blocked, hilo_en_ejecucion);
 			pthread_mutex_unlock(&mut_blocked);
 			pthread_mutex_lock(&mut_join);
-			hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
+			list_add(hilo_prioritario->tid_joineado,hilo_en_ejecucion->tid);
 			proceso->hilo_exec = NULL;
 			//pthread_mutex_unlock(&mut_join);
 			//log_info(suse_log, "paso a ejecutar el tid:%i \n", proceso->hilo_exec->tid);
