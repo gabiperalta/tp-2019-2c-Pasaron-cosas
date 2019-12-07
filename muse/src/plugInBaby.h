@@ -9,7 +9,6 @@
 #define PLUGINBABY_H_
 
 #include "muse.h"
-//#include <stdio.h>
 
 #define SEGMENTO_HEAP 0
 #define SEGMENTO_MMAP 1
@@ -23,7 +22,6 @@
 #define MAP_PRIVATE 1
 #define MAP_SHARED 2
 
-//#define SIZE_HEAP_METADATA_v2 sizeof((t_heap_metadata*)->size) + sizeof((t_heap_metadata*)->isFree)
 
 typedef struct{
 	char* id_programa;
@@ -43,15 +41,11 @@ typedef struct{
 }t_segmento;
 
 typedef struct{
-	//uint16_t numero_pagina;
 	uint16_t frame;
 	uint8_t bit_presencia;
 	uint8_t bit_modificado;
 	uint8_t bit_usado;
 	uint8_t tipo_segmento;
-	//int socket_proceso;
-	//uint32_t base_segmento;
-	//int nro_pagina;
 }t_pagina;
 
 typedef struct{
@@ -79,7 +73,6 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
 int obtener_frame_libre();
 int obtener_frame_swap_libre();
 int obtener_tam_archivo(int fd_archivo);
-int filtrarHeap(t_segmento* p);
 void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
 bool espacio_en_upcm();
 

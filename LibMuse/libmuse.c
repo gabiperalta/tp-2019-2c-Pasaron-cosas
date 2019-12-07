@@ -26,7 +26,7 @@ int muse_init(int id, char* ip, int puerto){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	printf("Conexion exitosa?: %d\n",valor_recibido);
+	//printf("Conexion exitosa?: %d\n",valor_recibido);
 	///////////////////////////////////////////////////////
 
 	return 0;
@@ -58,7 +58,7 @@ uint32_t muse_alloc(uint32_t tam){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t direccion_recibida = obtener_valor(paquete_recibido.parametros);
-	printf("Direccion recibida: %d\n",direccion_recibida);
+	//printf("Direccion recibida: %d\n",direccion_recibida);
 	///////////////////////////////////////////////////////
 
 	//printf("Fin muse_alloc\n");
@@ -82,7 +82,7 @@ void muse_free(uint32_t dir){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t valor_recibido = obtener_valor(paquete_recibido.parametros);
-	printf("Free exitoso?: %d\n",valor_recibido);
+	//printf("Free exitoso?: %d\n",valor_recibido);
 	///////////////////////////////////////////////////////
 }
 
@@ -112,7 +112,7 @@ int muse_get(void* dst, uint32_t src, size_t n){
 	void* bloque_datos_recibido = obtener_bloque_datos(paquete_recibido.parametros);
 	memcpy(dst,bloque_datos_recibido,n);
 
-	printf("Get exitoso\n");
+	//printf("Get exitoso\n");
 
 	return 0;
 }
@@ -141,8 +141,7 @@ int muse_cpy(uint32_t dst, void* src, int n){
 		return -1;
 	}
 
-	printf("Cpy exitoso\n");
-
+	//printf("Cpy exitoso\n");
 	return 0;
 }
 
@@ -163,7 +162,7 @@ uint32_t muse_map(char *path, size_t length, int flags){
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
 	uint32_t direccion_recibida = obtener_valor(paquete_recibido.parametros);
-	printf("Direccion recibida: %d\n",direccion_recibida);
+	//printf("Direccion recibida: %d\n",direccion_recibida);
 	///////////////////////////////////////////////////////
 
 	//printf("Fin muse_map\n");
@@ -198,7 +197,7 @@ int muse_sync(uint32_t addr, size_t len){
 		return -1;
 	}
 
-	printf("Sync exitoso\n");
+	//printf("Sync exitoso\n");
 
 	return 0;
 }
@@ -229,7 +228,6 @@ int muse_unmap(uint32_t dir){
 		return -1;
 	}
 
-	printf("unmap exitoso\n");
-
+	//printf("unmap exitoso\n");
 	return 0;
 }

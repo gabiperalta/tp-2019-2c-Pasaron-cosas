@@ -12,9 +12,7 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <pthread.h>
-//#include <sys/mman.h>
 #include <sys/stat.h>
-//#include "biblioteca_sockets.h"
 #include "../biblioteca/biblioteca_sockets.h" // en ubuntu server funciona de esta forma
 #include "commons/collections/list.h"
 #include "commons/bitarray.h"
@@ -22,8 +20,6 @@
 
 #include "madness.h"
 
-#define IP "127.0.0.1"
-//#define PUERTO 34043
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/muse/muse.config"
 #define PATH_LOG "muse.log"
 #define PATH_SWAP "archivo_swap.bin"
