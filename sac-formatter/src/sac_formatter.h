@@ -56,6 +56,10 @@ typedef struct sac_file_t {
 	ptrGBloque blocks[1000];
 } GFile;
 
+typedef struct sac_block_IS{ // BLOQUE DE PUNTEROS
+	ptrGBloque blocks[1024];
+}GPointerBlock;
+
 int main(int argc, char **argv);
 void writeHeader(GBlock *diskPointer);
 void dumpHeader(GBlock *diskPointer);
@@ -63,6 +67,7 @@ void writeBitmap(char* myDiskBitmap);
 void dumpBitmap(GBlock *diskPointer);
 void dumpNodeTable(GBlock *diskPointer);
 void writeNodeTable(GBlock *diskPointer);
+void dumpPointerBlock(GBlock* bloque);
 char* nameByCode(int code);
 size_t getFileSize(char* file);
 

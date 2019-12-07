@@ -53,6 +53,9 @@ int main(int argc, char **argv){
 		printf("Contenidos Del NodeTable:\n");
 		dumpNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
 
+		//printf("Dumpeando bloque %u\n", 133123);
+		//dumpPointerBlock(myDisk + 133123);
+
 	}
 }
 
@@ -155,6 +158,14 @@ void dumpHeader(GBlock *diskPointer){
 	printf("\tVersion: %u\n", myNewHeader->version);
 
 	free(auxName);
+}
+
+void dumpPointerBlock(GBlock* bloque){
+	GPointerBlock* bloqueAuxiliar = (GPointerBlock*) bloque;
+	for(int i = 0; i < 1024; i ++){
+		printf("%u\t", bloqueAuxiliar->blocks[i]);
+	}
+	printf("\n");
 }
 
 size_t getFileSize(char* file){

@@ -51,48 +51,6 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	return retorno;
 }
 
-
-/*static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
-	int retorno = 0;
-
-	//char* path_formateado = formatearPath(path);
-
-	t_paquete paquete_solicitud = {
-			.header = FUSE_GETATTR,
-			.parametros = list_create()
-	};
-
-	// MANDO UNICAMENTE EL PATH, Y QUE EL SERVIDOR ME DEVUELVA LOS PARAMETROS QUE NECESITO
-	// agregar_string(paquete_solicitud.parametros, path_formateado);
-	agregar_string(paquete_solicitud.parametros, path);
-	enviar_paquete(paquete_solicitud, my_socket);
-
-
-	// RECIBO LA RESPUESTA DEL SAC-SERVER
-	t_paquete paquete_respuesta = recibir_paquete(my_socket);
-
-	retorno = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_ino = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_mode = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_size = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_blksize = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_blocks = obtener_valor(paquete_respuesta.parametros );
-	statRetorno->st_mtim.tv_nsec = obtener_valor(paquete_respuesta.parametros );
-
-	printf("statRetorno: \n"
-			"ino: %i \n"
-			"mode: %i \n"
-			"size: %i \n"
-			"blksize: %i \n"
-			"blocks: %i \n"
-			"mtim: %i \n", statRetorno->st_ino, statRetorno->st_mode, statRetorno->st_size,
-			statRetorno->st_blksize, statRetorno->st_blocks, statRetorno->st_mtim.tv_nsec);
-
-	//free(path_formateado);
-
-	return retorno;
-}*/
-
 /** Read directory
  *
  * This supersedes the old getdir() interface.  New applications
@@ -151,8 +109,8 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 		filler( buffer, bufferAuxiliarSplitteado[i], NULL, 0);
 	}
 
-	// liberarCharAsteriscoAsterisco(bufferAuxiliarSplitteado);
-	// free(bufferAuxiliar); TODO LO DEJO COMENTADO PORQUE NO SE COMO VA A AFECTAR AL BUFFER FILLEADO
+	liberarCharAsteriscoAsterisco(bufferAuxiliarSplitteado);
+	free(bufferAuxiliar); // TODO LO DEJO COMENTADO PORQUE NO SE COMO VA A AFECTAR AL BUFFER FILLEADO
 
 	return retorno;
 }
@@ -312,6 +270,7 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 
 	}
 
+	free(bufferAuxiliar);
 
 	return retorno;
 }
@@ -461,7 +420,6 @@ static struct fuse_operations sac_cli_oper = {
 		.open = sac_cli_open,
 		.mknod = sac_cli_mknod,
 		.readdir = sac_cli_readdir,
-		//.read = sac_cli_readdir,
 		.write = sac_cli_write,
 		.read = sac_cli_read,
 		.unlink = sac_cli_unlink,

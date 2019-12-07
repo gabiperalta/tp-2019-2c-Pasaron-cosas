@@ -3,6 +3,7 @@
 	<name>sac-server</name>
 	<comment></comment>
 	<projects>
+		<project>biblioteca</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

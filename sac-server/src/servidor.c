@@ -189,7 +189,7 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 	///////////////////////////////////////////////////////
 
 	free(path);
-	// free(buffer);
+	free(buffer);
 
 }
 
