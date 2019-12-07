@@ -37,6 +37,9 @@
 #define ARCHIVO 1
 #define DIRECTORIO 2
 
+// NUEVAS FUNCIONES QUE TUVE QUE IMPLEMENTAR
+#define FUSE_TRUNCATE 20
+#define FUSE_RENAME 21
 
 
 t_bitarray* bitmap;

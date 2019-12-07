@@ -141,7 +141,7 @@ static int sac_cli_readdir( const char *path, void *buffer, fuse_fill_dir_t fill
 	}
 
 
-	printf("BUFFER: %s\n", bufferAuxiliar);
+	//printf("BUFFER: %s\n", bufferAuxiliar);
 
 	char** bufferAuxiliarSplitteado = string_split(bufferAuxiliar, ";");
 
@@ -245,6 +245,9 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 			.parametros = list_create()
 	};
 
+	printf("\n\n\n\n---------EL BUFFER ES----------\n");
+	printf("%s\n\n\n\n", buffer);
+
 	// agregar_string( paquete_solicitud.parametros, path_formateado);
 	agregar_string( paquete_solicitud.parametros, path);
 	agregar_string( paquete_solicitud.parametros, buffer);
@@ -275,7 +278,9 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
  */
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
 	int retorno = 0;
+	char* bufferAuxiliar;
 
+	printf("DATOS QUE LLEGARON: Size: %u, Offset: %u\n", (uint32_t) size, (uint32_t)offset);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_READ,
@@ -284,7 +289,6 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 
 	// agregar_string( paquete_solicitud.parametros, path_formateado);
 	agregar_string( paquete_solicitud.parametros, path);
-	agregar_string( paquete_solicitud.parametros, buffer);
 	agregar_valor( paquete_solicitud.parametros, size);
 	agregar_valor( paquete_solicitud.parametros, offset);
 	enviar_paquete( paquete_solicitud, my_socket);
@@ -293,7 +297,20 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
 	retorno = obtener_valor( paquete_respuesta.parametros );
-	buffer = obtener_string( paquete_respuesta.parametros );
+	if(retorno > 0){
+		printf("----------------------RETORNO : %i", retorno);
+		memset(buffer, '\0', retorno);
+		bufferAuxiliar = obtener_string( paquete_respuesta.parametros );
+		memcpy(buffer, bufferAuxiliar, retorno);
+
+		printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
+		printf("%s\n\n\n\n", bufferAuxiliar);
+
+		printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
+		printf("%s\n\n\n\n", buffer);
+
+
+	}
 
 
 	return retorno;
@@ -322,6 +339,57 @@ static int sac_cli_unlink(const char *path){
 	return retorno;
 }
 
+
+// Agranda o achica un archivo //
+static int sac_cli_truncate(const char * path, off_t offset) {
+	int retorno = 0;
+
+	printf("PARAMETROS QUE LLEGARON:::   Path: %s, Offset: %u\n", path, offset);
+
+
+	t_paquete paquete_solicitud = {
+			.header = FUSE_TRUNCATE,
+			.parametros = list_create()
+	};
+
+	// agregar_string( paquete_solicitud.parametros, path_formateado);
+	agregar_string( paquete_solicitud.parametros, path);
+	agregar_valor( paquete_solicitud.parametros, offset);
+	enviar_paquete( paquete_solicitud, my_socket);
+
+	// RECIVO LA RESPUESTA DEL SAC-SERVER
+	t_paquete paquete_respuesta = recibir_paquete(my_socket);
+
+	retorno = obtener_valor( paquete_respuesta.parametros );
+
+	return retorno;
+}
+
+static int sac_cli_rename(const char * pathVieja , const char * pathNueva){
+	int retorno = 0;
+
+	printf("PARAMETROS QUE LLEGARON:::   PathVieja: %s, PathNueva: %s\n", pathVieja, pathNueva);
+
+
+	t_paquete paquete_solicitud = {
+			.header = FUSE_RENAME,
+			.parametros = list_create()
+	};
+
+	// agregar_string( paquete_solicitud.parametros, path_formateado);
+	agregar_string( paquete_solicitud.parametros, pathVieja);
+	agregar_string( paquete_solicitud.parametros, pathNueva);
+	enviar_paquete( paquete_solicitud, my_socket);
+
+	// RECIVO LA RESPUESTA DEL SAC-SERVER
+	t_paquete paquete_respuesta = recibir_paquete(my_socket);
+
+	retorno = obtener_valor( paquete_respuesta.parametros );
+
+	return retorno;
+}
+
+
 /** Create a directory
  *
  * Note that the mode argument may not have the type specification
@@ -341,7 +409,7 @@ static int sac_cli_mkdir(const char *path, mode_t mode){
 	agregar_string(paquete_solicitud.parametros, path);
 	enviar_paquete(paquete_solicitud, my_socket);
 
-	printf("ENVIO UN MKDIR\n");
+	//printf("ENVIO UN MKDIR\n");
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
@@ -382,12 +450,6 @@ static int sac_cli_rmdir(const char *path){
 	return retorno;
 }
 
-
-int sac_cli_truncate(const char * path, off_t offset) {
-	// funcion dummy para que no se queje de "function not implemented"
-	return 0;
-}
-
 int sac_cli_flush(const char * path, struct fuse_file_info *fi) {
 	// funcion dummy para que no se queje de "function not implemented"
 	return 0;
@@ -406,6 +468,7 @@ static struct fuse_operations sac_cli_oper = {
 		.mkdir = sac_cli_mkdir,
 		.rmdir = sac_cli_rmdir,
 		.truncate = sac_cli_truncate,
+		.rename = sac_cli_rename,
 		.flush = sac_cli_flush,
 };
 

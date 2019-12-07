@@ -29,11 +29,15 @@ uint8_t abrirArchivo( char *path, int socketProceso);
 
 int escribirArchivo( char *path, char *buffer, size_t size, off_t offset );
 
-int leerArchivo( char *path, char *buffer, size_t size, off_t offset );
+char* leerArchivo( char *path, size_t size, off_t offset );
 
 int eliminarArchivo( char *path);
 
 int cerrarArchivo( char *path, int socketProceso); // TODAVIA NO SE QUE PARAMETROS LLEVA
+
+int myTruncate( char *path, off_t offset);
+
+int myRename(char* pathViejo, char* pathNuevo);
 
 
 //////// FUNCIONES AUXILIARES ////////
@@ -95,9 +99,11 @@ FileOffset *posicionEnArchivo(uint32_t offset);
 
 void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
-void leerBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
+char* leerBloques(GFile* inodoArchivo, int longitudDelBuffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
 GBlock *asignarBloqueDeDatos(GFile* directorio);
+
+void liberarBloqueTruncate(GFile* inodoArchivo);
 
 //////////////// MANEJO char** ///////////////////
 uint8_t cantidadElementosCharAsteriscoAsterisco(char** array);

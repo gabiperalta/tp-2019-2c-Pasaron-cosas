@@ -21,6 +21,10 @@
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-cli/src/Config"
 
+// NUEVAS FUNCIONES QUE TUVE QUE IMPLEMENTAR
+#define FUSE_TRUNCATE 20
+#define FUSE_RENAME 21
+
 int my_socket;
 int path_length;
 
@@ -34,6 +38,8 @@ static int sac_cli_open( const char *path, struct fuse_file_info *fi );
 static int sac_cli_write( const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi );
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ); // aqui no tendria que tener como parametro un FD?
 static int sac_cli_unlink(const char *path);
+static int sac_cli_truncate(const char * path, off_t offset);
+static int sac_cli_rename(const char * pathVieja , const char * pathNueva);
 
 // DIRECTORIOS
 

@@ -70,6 +70,14 @@ void procesar_solicitud(void *socket_cliente){
 			funcion_fuse = funcion_rmdir;
 			printf("FUSE_RMDIR \n");
 			break;
+		case FUSE_TRUNCATE:
+			funcion_fuse = funcion_truncate;
+			printf("FUSE_TRUNCATE \n");
+			break;
+		case FUSE_RENAME:
+			funcion_fuse = funcion_rename;
+			printf("FUSE_RENAME \n");
+			break;
 		}
 
 		funcion_fuse(paquete, socket_cliente);
@@ -153,29 +161,29 @@ void funcion_readdir(t_paquete paquete,int socket_fuse){
 
 	char* buffer = myReaddir( path ); // TODO, TENGO QUE VERO COMO HAGO CON EL FILLER, SI COMO LE DIJE A JULI O DE OTRA FORMA
 
-	printf("HOLA BUFFER: %s\n", buffer);
-	printf("HOLA COMUNISTA\n");
+	//printf("HOLA BUFFER: %s\n", buffer);
+	//printf("HOLA COMUNISTA\n");
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_READDIR,
 			.parametros = list_create()
 	};
 
-	printf("HOLA COMUNISTA\n");
+	//printf("HOLA COMUNISTA\n");
 	///////////////// Parametros a enviar /////////////////
 	if(buffer){
 		int retorno = 0;
 		agregar_valor(paquete_respuesta.parametros, retorno);
-		printf("HOLA COMUNISTA 1\n");
+		//printf("HOLA COMUNISTA 1\n");
 		agregar_string(paquete_respuesta.parametros, buffer);
-		printf("HOLA COMUNISTA 2\n");
+		//printf("HOLA COMUNISTA 2\n");
 	}
 	else{
 		int retorno = -1;
 		agregar_valor(paquete_respuesta.parametros, retorno);
 	}
 
-	printf("HOLA COMUNISTA\n");
+	//printf("HOLA COMUNISTA\n");
 
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
@@ -233,7 +241,7 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 	size_t size = obtener_valor(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
 
-	printf("ESTOY POR ESCRIBIR EN EL ARCHIVO\n");
+	//printf("ESTOY POR ESCRIBIR EN EL ARCHIVO\n");
 
 	int retorno = escribirArchivo(path, buffer, size, offset);
 
@@ -254,24 +262,33 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 
 
 void funcion_read(t_paquete paquete,int socket_fuse){
+	int retorno;
 
 	char* path = obtener_string(paquete.parametros);
-	char* buffer = obtener_string(paquete.parametros);
 	size_t size = obtener_valor(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
 
 
-	int retorno = leerArchivo(path, buffer, size, offset);
+	char* buffer = leerArchivo(path, size, offset);
+
+	printf("\n\n\n\n---------EL BUFFER QUE SE ENVIARA ES----------\n");
+	printf("%s\n\n\n\n", buffer);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 
+	if(buffer != NULL){
+		retorno = strlen(buffer);
+		agregar_valor(paquete_respuesta.parametros, retorno);
+		agregar_string(paquete_respuesta.parametros, buffer);
+	}else{
+		retorno = -EBADF;
+		agregar_valor(paquete_respuesta.parametros, retorno);
+	}
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno);
-	agregar_string(paquete_respuesta.parametros, buffer);
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
 
@@ -301,12 +318,52 @@ void funcion_unlink(t_paquete paquete,int socket_fuse){
 
 }
 
+void funcion_truncate(t_paquete paquete,int socket_fuse){
+	char* path = obtener_string(paquete.parametros);
+	off_t offset = obtener_valor(paquete.parametros);
+
+	int retorno = myTruncate(path, offset);
+
+	t_paquete paquete_respuesta = {
+			.header = FUSE_TRUNCATE,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno);
+	enviar_paquete(paquete_respuesta, socket_fuse);
+	///////////////////////////////////////////////////////
+
+	free(path);
+
+}
+
+void funcion_rename(t_paquete paquete,int socket_fuse){
+	char* pathViejo = obtener_string(paquete.parametros);
+	char* pathNuevo = obtener_string(paquete.parametros);
+
+	int retorno = myRename(pathViejo, pathNuevo);
+
+	t_paquete paquete_respuesta = {
+			.header = FUSE_RENAME,
+			.parametros = list_create()
+	};
+
+	///////////////// Parametros a enviar /////////////////
+	agregar_valor(paquete_respuesta.parametros, retorno);
+	enviar_paquete(paquete_respuesta, socket_fuse);
+	///////////////////////////////////////////////////////
+
+	free(pathNuevo);
+	free(pathViejo);
+}
+
 
 void funcion_mkdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
-	printf("MKDIR: Me llego el path: %s \n", path);
+	//printf("MKDIR: Me llego el path: %s \n", path);
 
 	int retorno = crearDirectorio(path);
 
@@ -329,7 +386,7 @@ void funcion_rmdir(t_paquete paquete,int socket_fuse){
 
 	char* path = obtener_string(paquete.parametros);
 
-	printf("---RMDIR: Me llego el path: %s \n", path);
+	//printf("---RMDIR: Me llego el path: %s \n", path);
 
 	int retorno = eliminarDirectorio(path);
 

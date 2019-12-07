@@ -30,6 +30,8 @@ void funcion_open(t_paquete paquete,int socket_muse);
 void funcion_write(t_paquete paquete,int socket_muse);
 void funcion_read(t_paquete paquete,int socket_muse);
 void funcion_unlink(t_paquete paquete,int socket_muse);
+void funcion_truncate(t_paquete paquete,int socket_fuse);
+void funcion_rename(t_paquete paquete,int socket_fuse);
 void funcion_mkdir(t_paquete paquete,int socket_muse);
 void funcion_rmdir(t_paquete paquete,int socket_muse);
 
