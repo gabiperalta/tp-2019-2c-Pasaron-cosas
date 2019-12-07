@@ -224,7 +224,6 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
 	int retorno= next_tid(socket_suse);//funcion suse)(tid); //podria tener una respuesta
-
 	//en caso que tenga retorno int retorno = crearArchivo( path );
 
 	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)

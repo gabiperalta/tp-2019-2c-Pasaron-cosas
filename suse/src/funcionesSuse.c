@@ -101,6 +101,8 @@ int next_tid(int pid){
 		return proceso->pid== pid;
 	}
 
+	usleep(1000);
+
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
@@ -120,15 +122,17 @@ int next_tid(int pid){
 	if(proceso->hilo_exec !=NULL){
 		log_info(suse_log, "ya habia hilo ejecutando\n");
 		return proceso->hilo_exec->tid;
-
-
 	}
 	else{
 		planificarCortoPlazo(pid);
 		log_info(suse_log, "se planificó porque no habia hilo ejecutando\n");
+
+		printf("Hasta aca funciona\n");
+		printf("proceso->hilo_exec->tid %d\n",proceso->hilo_exec->tid);
+
 		return proceso->hilo_exec->tid;
 	}
-
+	//pthread_mutex_unlock(&mut_planificacion);
 	//if(proceso->hilo_exec != NULL){
 	//	log_info(suse_log, "se planifico una vez");
 	//	printf("proceso->hilo_exec->tid %d\n",proceso->hilo_exec->tid);
@@ -365,7 +369,7 @@ int join(int tid, int pid){
 	else{
 		//pthread_mutex_lock(&mut_join);
 		if(proceso->hilo_exec != NULL){
-			thread* hilo_en_ejecucion= proceso->hilo_exec;
+			thread* hilo_en_ejecucion = proceso->hilo_exec;
 			pthread_mutex_lock(&mut_blocked);
 			list_add(hilos_blocked, hilo_en_ejecucion);
 			pthread_mutex_unlock(&mut_blocked);
@@ -434,11 +438,14 @@ void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
 }
 
 void aplicarFIFO(){
+	log_info(suse_log, "Se aplica FIFO");
 	pthread_mutex_lock(&mut_planificacion);
 	pthread_mutex_lock(&mut_new);
 	thread* hilo_elegido = list_remove(hilos_new,0);
 	pthread_mutex_unlock(&mut_new);
+	pthread_mutex_lock(&mut_procesos);
 	process* proceso = obtener_proceso_asociado(hilo_elegido);
+	pthread_mutex_unlock(&mut_procesos);
 	log_info(suse_log, "el proceso es: %i \n", proceso->pid);
 	t_list* hilos_listos = proceso->hilos_ready;
 	list_add(hilos_listos,hilo_elegido);
