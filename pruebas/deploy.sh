@@ -1,9 +1,9 @@
 cd
 
-git clone https://github.com/sisoputnfrba/so-commons-library.git
-cd so-commons-library/
-sudo make install
-cd
+#git clone https://github.com/sisoputnfrba/so-commons-library.git
+#cd so-commons-library/
+#sudo make install
+#cd
 
 git clone https://github.com/sisoputnfrba/hilolay.git
 cd hilolay/
@@ -16,7 +16,7 @@ cp archivo_de_swap_supermasivo.c /home/utnso/linuse-tests-programs/
 cp Makefile /home/utnso/linuse-tests-programs/
 cp recursiva.c /home/utnso/linuse-tests-programs/
 cp hilolay_alumnos.c /home/utnso/linuse-tests-programs/
-
+cp estres_privado.c /home/utnso/linuse-tests-programs/
 
 #cd linuse-tests-programs/
 #make && make entrega
