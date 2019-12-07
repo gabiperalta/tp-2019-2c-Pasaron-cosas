@@ -692,6 +692,7 @@ void liberarCharAsteriscoAsterisco(char** array){
 
 void iniciarMetricas(){
 	pthread_create(&threadMetrics, NULL,(void*) suse_metricas, NULL);
+	pthread_detach(threadMetrics);
 }
 
 void iniciarLog(){
@@ -700,7 +701,4 @@ void iniciarLog(){
 void destruirLog(){
 	log_destroy(suse_log);
 }
-void destruirMetricas(){
-	pthread_detach(threadMetrics);
-}
-//#endif
+

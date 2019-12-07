@@ -44,6 +44,5 @@ void suse_metricas();
 void iniciarMetricas();
 void iniciarLog();
 void destruirLog();
-void destruirMetricas();
 
 #endif /* FUNCIONESSUSE_H_ */
