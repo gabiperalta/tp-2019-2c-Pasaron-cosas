@@ -31,13 +31,9 @@
 #include "../biblioteca/biblioteca_sockets.h"
 
 
-// ver si conviene hacer un struct
-//__thread char* id_proceso_hilo;
-
 // en el issue #1516 se aclara q la tabla de segmentos es por proceso
 int socket_muse;
 
-//__thread bool conexion_realizada;
 
 /**
  * Inicializa la biblioteca de MUSE.
