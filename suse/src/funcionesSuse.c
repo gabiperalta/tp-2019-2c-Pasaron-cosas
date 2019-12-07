@@ -28,6 +28,9 @@ int wait(int tid, char* id_sem, int pid){
 	bool buscadorProceso(process* proceso){
 		return proceso->pid == pid;
 	}
+	bool buscadorThread(thread* hilo){
+		return hilo->tid == tid;
+	}
 
 	process* proceso = list_find(lista_procesos, (void*)buscadorProceso);
 
@@ -35,12 +38,14 @@ int wait(int tid, char* id_sem, int pid){
 
 	list_add(semaforo->hilos_bloqueados, hilo_wait); // uso las dos colas para no hacer finds
 	pthread_mutex_lock(&mut_blocked);
-	list_add(hilos_blocked, hilo_wait);
+	thread* hilo_bloqueado = list_find(hilos_blocked,(void*) buscadorThread);
+	if(hilo_bloqueado == NULL)
+		list_add(hilos_blocked, hilo_wait);
 	pthread_mutex_unlock(&mut_blocked);//paso el thread a la cola de bloqueado
 	semaforo->cant_instancias_disponibles -=1;
 
 	log_info(suse_log,"Se bloqueo el thread");
-	printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
+	//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 	return 1;
 }
 
@@ -57,10 +62,17 @@ int signal_suse(int tid, char* id_sem){
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 	pthread_mutex_unlock(&mut_semaforos);
 	if(semaforo->cant_instancias_disponibles <= 0 && list_size(semaforo->hilos_bloqueados) > 0){ //ver si la lista es vacia
-		printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
+		//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
 		process* proceso = obtener_proceso_asociado(hilo_desbloqueado);
-		list_add(proceso->hilos_ready,hilo_desbloqueado);
+		bool buscadorThread(thread* hilo){
+				return hilo->tid == hilo_desbloqueado->tid ;
+		}
+		thread* hilo_a_agregar = list_find(proceso->hilos_ready,(void*) buscadorThread);
+		if(hilo_a_agregar == NULL){
+			list_add(proceso->hilos_ready,hilo_desbloqueado);
+		}
+
 		pthread_mutex_lock(&mut_blocked);
 
 		bool condition(thread* hilo){
@@ -88,28 +100,54 @@ int next_tid(int pid){
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
 	}
+
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
-	planificarCortoPlazo(pid);
-	if(proceso->hilo_exec != NULL){
-		log_info(suse_log, "se planifico una vez");
+
+	pthread_mutex_lock(&mut_planificacion);
+	printf("NTIsize hilos new %d\n",list_size(hilos_new));
+	printf("NTIsize hilos ready %d\n",list_size(proceso->hilos_ready));
+	printf("NTIsize hilos blocked %d\n",list_size(hilos_blocked));
+	printf("NTIsize hilos exit %d\n",list_size(hilos_exit));
+	//printf("NTIhilo exec antes del tid%d\n", proceso->hilo_exec->tid);
+	if(list_size(hilos_exit) > 0){
+		thread* hilo_prueba = list_get(hilos_exit,0);
+		printf("hilo exit tid %d\n",hilo_prueba->tid);
+	}
+	pthread_mutex_unlock(&mut_planificacion);
+
+	if(proceso->hilo_exec !=NULL){
+		log_info(suse_log, "ya habia hilo ejecutando\n");
 		return proceso->hilo_exec->tid;
+
+
 	}
 	else{
 		planificarCortoPlazo(pid);
-			log_info(suse_log, "se volvio a planificar");
+		log_info(suse_log, "se planificó porque no habia hilo ejecutando\n");
 		return proceso->hilo_exec->tid;
 	}
-	log_info(suse_log,"Se planifica y se devuelve el next_tid");
+
+	//if(proceso->hilo_exec != NULL){
+	//	log_info(suse_log, "se planifico una vez");
+	//	printf("proceso->hilo_exec->tid %d\n",proceso->hilo_exec->tid);
+	//	return proceso->hilo_exec->tid;
+	//}
+	//else{
+	//	planificarCortoPlazo(pid);
+	//log_info(suse_log, "se volvio a planificar");
+	//	return proceso->hilo_exec->tid;
+	//}
+	log_info(suse_log,"Se devuelve el next_tid");
 	printf("Fin next\n");
-	pthread_mutex_unlock(&mut_join);
+	//pthread_mutex_unlock(&mut_join);
 	return 1;
 }
 
 
 int close_suse(int tid, int pid){
-	sem_wait(&sem_ejecute);
+	//sem_wait(&sem_ejecute);
 	pthread_mutex_lock(&mut_procesos);
 	bool buscador(process* proceso){
 		return proceso->pid == pid;
@@ -120,26 +158,74 @@ int close_suse(int tid, int pid){
 	thread* hilo_ejecutando = proceso->hilo_exec;
 		//ver aca memoria
 		//cambiar la lista por un solo int hilo joineado
-	bool buscador2(thread* hilo){
-		return hilo->tid == hilo_ejecutando->tid_joineado;
-	}
 
-	if(hilo_ejecutando->tid_joineado != 0){
-		pthread_mutex_lock(&mut_blocked);
-		thread* hilo_joineado = list_find(hilos_blocked, (void*) buscador2);
-		list_remove_by_condition(hilos_blocked, (void*) buscador2);
-		pthread_mutex_unlock(&mut_blocked);
-		list_add(proceso->hilos_ready, hilo_joineado);
+	//printf("hilo_ejecutando->tid_joineado %d\n",hilo_ejecutando->tid_joineado);
+	log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
+	log_info(suse_log, "tid_joineado %d\n",list_size(hilo_ejecutando->tid_joineado));
+	if(list_size(hilo_ejecutando->tid_joineado) > 0){
+
+		for(int i=0; i<list_size(hilo_ejecutando->tid_joineado); i++){
+
+			int tid_joineado = list_get(hilo_ejecutando->tid_joineado, i);
+
+			bool buscador2(thread* hilo){
+				return hilo->tid == tid_joineado;
+			}
+
+			pthread_mutex_lock(&mut_blocked);
+
+			thread* hilo_joineado= list_find(hilos_blocked, (void*) buscador2);
+
+			list_remove_by_condition(hilos_blocked, (void*) buscador2);
+
+			pthread_mutex_unlock(&mut_blocked);
+
+			thread* hilo_a_agregar = list_find(proceso->hilos_ready,(void*) buscador2);
+			if(hilo_a_agregar == NULL){
+				list_add(proceso->hilos_ready,hilo_joineado);
+			}
+
+			log_info(suse_log, "pongo en ready %d\n",hilo_joineado->tid);
+		}
+		//log_info(suse_log, "deberia ser el main %d\n",hilo_joineado->tid);
+
 	}
 	pthread_mutex_lock(&mut_exit);
 	list_add(hilos_exit,hilo_ejecutando);
 	pthread_mutex_unlock(&mut_exit);
+
+	if(proceso->hilo_exec->tid == tid){
+		proceso->hilo_exec = NULL;
+	}
+
+	bool buscarHiloEjecutando(thread* hilo){
+		return hilo->tid == hilo_ejecutando->tid;
+	}
+	list_remove_by_condition(proceso->hilos_ready,(void*) buscarHiloEjecutando);
 
 	log_info(suse_log, "Se hizo un close");
 
 	bool condicion(thread* hilo){
 		return hilo->tid == tid;
 	}
+	log_info(suse_log, "Close size hilos ready %d",list_size(proceso->hilos_ready));
+	//thread* hilo_prueba_log = list_get(proceso->hilos_ready,0);
+	//log_info(suse_log, "Close tid hilo ready %d",hilo_prueba_log->tid);
+	//hilo_prueba_log = list_get(proceso->hilos_ready,1);
+	//log_info(suse_log, "Close tid hilo ready %d\n",hilo_prueba_log->tid);
+	log_info(suse_log, "Close size hilos new %d",list_size(hilos_new));
+	log_info(suse_log, "Close size hilos blocked %d",list_size(hilos_blocked));
+	log_info(suse_log, "Close size hilos exit %d",list_size(hilos_exit));
+	//hilo_prueba_log = list_get(hilos_exit,0);
+	//log_info(suse_log, "Close tid hilo exit %d",hilo_prueba_log->tid);
+
+	if(proceso->hilo_exec != NULL){
+		log_info(suse_log, "proceso->hilo_exec tid %d",proceso->hilo_exec->tid);
+	}
+	else{
+		log_info(suse_log, "No hay hilo ejecutando");
+	}
+
 	if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
 		if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
 			bool condicionProceso(process* proceso){
@@ -148,12 +234,14 @@ int close_suse(int tid, int pid){
 			pthread_mutex_lock(&mut_procesos);
 			list_remove_and_destroy_by_condition(lista_procesos,(void*)condicionProceso,(void*)destructor_de_procesos);
 			pthread_mutex_unlock(&mut_procesos);
-			close(pid);
+			//log_info(suse_log, "Voy a cerrar el pid %d");
+			//close(pid);
 					//kill()
 			log_info(suse_log, "Se cerro la conexión");
 		}
 	}
-	free(hilo_ejecutando);
+
+	//free(hilo_ejecutando);
 	return 1;
 }
 
@@ -170,7 +258,7 @@ int crear(int tid, int pid){
 	hilo->tid= tid;
 	hilo->pid= pid;
 	hilo->rafagas_estimadas=0;
-	hilo->tid_joineado =0;
+	hilo->tid_joineado= list_create();
 	hilo->rafagas_ejecutadas=0;
 	hilo->porcentaje_tiempo = 0;
 	hilo->tiempo_ejecucion = 0;
@@ -195,18 +283,19 @@ int crear(int tid, int pid){
 		log_error(suse_log, "No se encontro proceso");
 	}
 	else{
-	//if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
-		//if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
-			//list_add(proceso->hilos_ready, hilo);
-			//log_info(suse_log, "creo hilo principal en ready");
-		//}
-	//}
-	//else{
-		pthread_mutex_lock(&mut_new);
-		list_add(hilos_new, hilo);
-		printf("size hilos new %d\n",list_size(hilos_new));
-		pthread_mutex_unlock(&mut_new);
-		//}
+		if(list_is_empty(proceso->hilos_ready) && proceso->hilo_exec == NULL){
+			if(!list_any_satisfy(hilos_new, (void*) condicion) && !list_any_satisfy(hilos_blocked, (void*) condicion)){
+				//list_add(proceso->hilos_ready, hilo);
+				proceso->hilo_exec = hilo;
+				log_info(suse_log, "creo hilo principal en ready");
+			}
+		}
+		else{
+			pthread_mutex_lock(&mut_new);
+			list_add(hilos_new, hilo);
+			printf("size hilos new %d\n",list_size(hilos_new));
+			pthread_mutex_unlock(&mut_new);
+		}
 	}
 	printf("Fin crear\n");
 	return 1;
@@ -222,45 +311,81 @@ int join(int tid, int pid){
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
-	log_info(suse_log, "el hilo ejecutando es: %i \n", proceso->hilo_exec);
+	log_info(suse_log, "el hilo ejecutando es: %i \n", proceso->hilo_exec->tid);
 	bool condicion(thread* hilo){
-			return hilo->tid == tid;
+		return hilo->tid == tid;
 	}
 
-	thread* hilo_prioritario = list_find(hilos_new, (void*)condicion);
+	//printf("tid recibido %d\n",tid);
+	//printf("size hilos new %d\n",list_size(hilos_new));
+	//printf("size hilos ready %d\n",list_size(proceso->hilos_ready));
+	//printf("size hilos blocked %d\n",list_size(hilos_blocked));
+	//printf("size hilos exit %d\n",list_size(hilos_exit));
+	//printf("exec tid %d\n",proceso->hilo_exec->tid);
+	//printf("exec pid %d\n",proceso->pid);
+	//thread* hilo_prueba = list_get(proceso->hilos_ready,0);
+	//sleep(3);
+	//printf("hilo ready tid %d\n",hilo_prueba->pid);
+
+	//thread* hilo_prueba = list_find(hilos_new, (void*)condicion);
+	//perror("algo");
+	//printf("tendria q romper %d\n",hilo_prueba->pid);
+
+	pthread_mutex_lock(&mut_planificacion);
+
+	printf("size hilos new %d\n",list_size(hilos_new));
+	printf("size hilos ready %d\n",list_size(proceso->hilos_ready));
+	printf("size hilos blocked %d\n",list_size(hilos_blocked));
+	printf("size hilos exit %d\n",list_size(hilos_exit));
+	printf("hilo EXEC%d\n", proceso->hilo_exec->tid);
+
+	thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
+	//thread* hilo_prioritario = list_find(hilos_new, (void*)condicion);
+
 	if(hilo_prioritario == NULL){
-		thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
+		//thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)condicion);
+		hilo_prioritario = list_find(hilos_new, (void*)condicion);
 		if(hilo_prioritario == NULL){
-			thread* hilo_prioritario = list_find(hilos_blocked, (void*)condicion);
+			hilo_prioritario = list_find(hilos_blocked, (void*)condicion);
 			if(hilo_prioritario == NULL){
-				thread* hilo_prioritario = list_find(hilos_exit, (void*)condicion);
+				hilo_prioritario = list_find(hilos_exit, (void*)condicion);
 			}
 			else{
-					log_error(suse_log, "El hilo no se encuentra");
+				log_error(suse_log, "El hilo no se encuentra");
 			}
 		}
 	}
+	pthread_mutex_unlock(&mut_planificacion);
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
 	if(existe_en_exit){
-		log_error(suse_log, "El hilo a ejecutar ya esta finalizado");
+		log_error(suse_log, "El hilo a ejecutar prioritario ya esta finalizado");
 	}
 	else{
-		pthread_mutex_lock(&mut_join);
+		//pthread_mutex_lock(&mut_join);
 		if(proceso->hilo_exec != NULL){
 			thread* hilo_en_ejecucion= proceso->hilo_exec;
 			pthread_mutex_lock(&mut_blocked);
 			list_add(hilos_blocked, hilo_en_ejecucion);
 			pthread_mutex_unlock(&mut_blocked);
-			proceso->hilo_exec = hilo_prioritario;
-			hilo_prioritario->tid_joineado = hilo_en_ejecucion->tid;
-			log_info(suse_log, "se guardo el hilo en blocked");
+			pthread_mutex_lock(&mut_join);
+			list_add(hilo_prioritario->tid_joineado,hilo_en_ejecucion->tid);
+			proceso->hilo_exec = NULL;
+			//pthread_mutex_unlock(&mut_join);
+			//log_info(suse_log, "paso a ejecutar el tid:%i \n", proceso->hilo_exec->tid);
+			//log_info(suse_log, "Prioritario: paso a ejecutar el tid:%i \n", hilo_prioritario->tid);
+			//printf("hilo_prioritario->tid_joineado %d\n",hilo_prioritario->tid_joineado);
+			//printf("hilo_en_ejecucion->tid %d\n",hilo_en_ejecucion->tid);
+
+			log_info(suse_log, "se guardo el hilo en blocked %i \n", hilo_en_ejecucion->tid );
 		}
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
 		}
 	}
+	//pthread_mutex_unlock(&mut_join);
+
 	log_info(suse_log, "Se hizo un join");
 	return 1;
 }
@@ -271,65 +396,84 @@ void planificarLargoPlazo(){ // tendria que planificar cuando llega el proximo h
 		int i = 0;
 		//printf("size hilos new %d\t",list_size(hilos_new));
 		//printf("grado_multiprogramacion %d\n",grado_multiprogramacion);
+		//pthread_mutex_lock(&mut_planificacion);
 		while(!list_is_empty(hilos_new) && i<grado_multiprogramacion){ //VER: esto seria cuando planificar? Solo cuando pedimos next_tid, no es necesario
 			sem_wait(&sem_planificacion);
 			aplicarFIFO();
 			i++;
 		}
+		//pthread_mutex_unlock(&mut_planificacion);
 	}
 	log_info(suse_log,"Se planifico por FIFO");
 }
 
 void planificarCortoPlazo(int pid){ //le mando el proceso por parametro??
-		bool buscadorProceso(process* proceso){
-			return proceso->pid == pid;//agarrar proceso
-		}
-		process* proceso = list_find(lista_procesos, (void*) buscadorProceso);
+	//pthread_mutex_lock(&mut_join);
 
-		t_list* hilos_listos = proceso->hilos_ready;
-		//while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
-		while(!list_is_empty(hilos_listos)){
-			aplicarSJF(proceso);// sockets
-		}
-		sem_post(&sem_planificacion);
-		log_info(suse_log, "Se planifico por SJF");
-		log_info(suse_log, "El hilo ejecutando es %d\n",proceso->hilo_exec->tid);
+	bool buscadorProceso(process* proceso){
+		return proceso->pid == pid;//agarrar proceso
+	}
+	process* proceso = list_find(lista_procesos, (void*) buscadorProceso);
+
+
+	log_info(suse_log, "Planificar Corto Plazo: size hilos ready%d\n", list_size(proceso->hilos_ready));
+	t_list* hilos_listos = proceso->hilos_ready;
+	//while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
+
+	if(!list_is_empty(hilos_listos)){
+		aplicarSJF(proceso);// sockets
+
+		printf("proceso->hilo_exec %d\n",proceso->hilo_exec->tid);
+	}
+	sem_post(&sem_planificacion);
+	log_info(suse_log, "Se planifico por SJF");
+	printf("size hilos_ready %d\n",list_size(proceso->hilos_ready));
+	//if(proceso->hilo_exec != NULL){
+	//	log_info(suse_log, "El hilo ejecutando es %d\n",proceso->hilo_exec->tid);
+	//}
 }
 
 void aplicarFIFO(){
-		pthread_mutex_lock(&mut_new);
-		thread* hilo_elegido = list_remove(hilos_new,0);
-		pthread_mutex_unlock(&mut_new);
-		process* proceso = obtener_proceso_asociado(hilo_elegido);
-		log_info(suse_log, "el proceso es: %i \n", proceso->pid);
-		t_list* hilos_listos = proceso->hilos_ready;
-		list_add(hilos_listos,hilo_elegido);
-		log_info(suse_log, "hay %i hilos en ready \n", list_size(hilos_listos));
-		hilo_elegido->timestamp_inicio_espera = getCurrentTime();
-	}
+	pthread_mutex_lock(&mut_planificacion);
+	pthread_mutex_lock(&mut_new);
+	thread* hilo_elegido = list_remove(hilos_new,0);
+	pthread_mutex_unlock(&mut_new);
+	process* proceso = obtener_proceso_asociado(hilo_elegido);
+	log_info(suse_log, "el proceso es: %i \n", proceso->pid);
+	t_list* hilos_listos = proceso->hilos_ready;
+	list_add(hilos_listos,hilo_elegido);
+	log_info(suse_log, "hay %i hilos en ready \n", list_size(hilos_listos));
+	hilo_elegido->timestamp_inicio_espera = getCurrentTime();
+	pthread_mutex_unlock(&mut_planificacion);
+}
 
 void aplicarSJF(process* proceso) {
-		t_list* aux = list_map(proceso->hilos_ready, (void*) CalcularEstimacion);
-		list_sort(aux, (void*) ComparadorDeRafagas);
-		thread* hilo_aux = (thread*) list_remove(aux, 0);
-		bool comparator(thread* unHilo, thread* otroHilo){
-			return unHilo->tid == otroHilo->tid;
-		}
-		int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
-		thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready, index);
-		printf("el hilo a ejecutar es: %i \n", hilo_a_ejecutar->tid);
-		hilo_a_ejecutar->timestamp_final_espera = getCurrentTime();
-		uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final_espera - hilo_a_ejecutar->timestamp_inicio_espera);
-		hilo_a_ejecutar->tiempo_espera += tiempoReady;
-
-		hilo_a_ejecutar->timestamp_inicio_cpu = getCurrentTime();
-		proceso->hilo_exec = hilo_a_ejecutar;
-		hilo_a_ejecutar->rafagas_ejecutadas++;
-		sem_post(&sem_ejecute);
-		hilo_a_ejecutar->timestamp_final_cpu = getCurrentTime();
-		uint32_t tiempoCPU = (hilo_a_ejecutar->timestamp_final_cpu - hilo_a_ejecutar->timestamp_inicio_cpu);
-		hilo_a_ejecutar->tiempo_uso_CPU += tiempoCPU;
+	t_list* aux = list_map(proceso->hilos_ready, (void*) CalcularEstimacion);
+	list_sort(aux, (void*) ComparadorDeRafagas);
+	thread* hilo_aux = (thread*) list_remove(aux, 0);
+	bool comparator(thread* unHilo, thread* otroHilo){
+		return unHilo->tid == otroHilo->tid;
 	}
+	int index = list_get_index(proceso->hilos_ready,hilo_aux,(void*)comparator);
+	thread* hilo_a_ejecutar = list_remove(proceso->hilos_ready, index);
+	printf("el hilo a ejecutar es: %i \n", hilo_a_ejecutar->tid);
+	hilo_a_ejecutar->timestamp_final_espera = getCurrentTime();
+	uint32_t tiempoReady = (hilo_a_ejecutar->timestamp_final_espera - hilo_a_ejecutar->timestamp_inicio_espera);
+	hilo_a_ejecutar->tiempo_espera += tiempoReady;
+
+	hilo_a_ejecutar->timestamp_inicio_cpu = getCurrentTime();
+
+	proceso->hilo_exec = hilo_a_ejecutar;
+	log_info(suse_log, "pongo a ejecutar %d\n",proceso->hilo_exec->tid);
+
+	printf("proceso->hilo_exec %d\n",proceso->hilo_exec->tid);
+
+	hilo_a_ejecutar->rafagas_ejecutadas++;
+	//sem_post(&sem_ejecute);
+	hilo_a_ejecutar->timestamp_final_cpu = getCurrentTime();
+	uint32_t tiempoCPU = (hilo_a_ejecutar->timestamp_final_cpu - hilo_a_ejecutar->timestamp_inicio_cpu);
+	hilo_a_ejecutar->tiempo_uso_CPU += tiempoCPU;
+}
 
 
 thread* CalcularEstimacion(thread* unHilo) {
@@ -388,8 +532,10 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mut_semaforos, NULL);
 	pthread_mutex_init(&mut_procesos, NULL);
 	pthread_mutex_init(&mut_join,NULL);
+	pthread_mutex_init(&mut_planificacion,NULL);
 	sem_init(&sem_planificacion, 0, grado_multiprogramacion);
 	sem_init(&sem_ejecute,0,1);
+	sem_init(&sem_join,0,1);
 }
 
 void destructor_listas(){

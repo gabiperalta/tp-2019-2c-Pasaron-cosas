@@ -55,19 +55,21 @@ t_list* hilos_exit;
 
 sem_t sem_planificacion;
 sem_t sem_ejecute;
+sem_t sem_join;
 pthread_mutex_t mut_exit;
 pthread_mutex_t mut_new;
 pthread_mutex_t mut_blocked;
 pthread_mutex_t mut_semaforos;
 pthread_mutex_t mut_procesos;
 pthread_mutex_t mut_join;
+pthread_mutex_t mut_planificacion;
 
 pthread_t threadMetrics;
 
 
 
 typedef struct{
-	uint32_t tid; // id del hilo
+	int tid; // id del hilo
 	uint32_t pid; // proceso en el que esta el hilo
 	int tid_joineado;
 	int rafagas_estimadas;

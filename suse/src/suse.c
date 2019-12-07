@@ -28,12 +28,12 @@ int main(){
 
 		free(linea);
 	}
-	destruirLog();
-	destruirMetricas();
-	destructor_listas();
-	destructor_semaforos();
-	liberarCharAsteriscoAsterisco(ids_sem);
-	liberarCharAsteriscoAsterisco(inicio_sem);
-	liberarCharAsteriscoAsterisco(max_sem);
+	//destruirLog();
+	//destruirMetricas();
+	//destructor_listas();
+	//destructor_semaforos();
+	//liberarCharAsteriscoAsterisco(ids_sem);
+	//liberarCharAsteriscoAsterisco(inicio_sem);
+	//liberarCharAsteriscoAsterisco(max_sem);
 	return 0;
 }
