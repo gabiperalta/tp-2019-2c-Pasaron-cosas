@@ -17,31 +17,4 @@ cp Makefile /home/utnso/linuse-tests-programs/
 cp recursiva.c /home/utnso/linuse-tests-programs/
 cp hilolay_alumnos.c /home/utnso/linuse-tests-programs/
 cp estres_privado.c /home/utnso/linuse-tests-programs/
-
-#cd linuse-tests-programs/
-#make && make entrega
-#cd
-
-#cd tp-2019-2c-Pasaron-cosas/biblioteca/Debug/
-#make clean
-#make
-#cd
-
-#cd tp-2019-2c-Pasaron-cosas/biblioteca/Debug/
-#sudo cp libbiblioteca.so /usr/lib/
-#cd
-
-#cd tp-2019-2c-Pasaron-cosas/suse/Debug/
-#make clean
-#make
-#cd
-
-#cd tp-2019-2c-Pasaron-cosas/muse/Debug/
-#make clean
-#make
-#cd
-
-#cd workspace/tp-2019-2c-Pasaron-cosas/sac-server/Debug/
-#make clean
-#make
-#cd
+cp revolucion_privada.c /home/utnso/linuse-tests-programs/
