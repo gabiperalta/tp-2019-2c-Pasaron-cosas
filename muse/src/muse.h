@@ -22,6 +22,7 @@
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/muse/muse.config"
 #define PATH_LOG "muse.log"
+//#define PATH_SWAP "/home/utnso/directorio_prueba/archivo_swap.bin"
 #define PATH_SWAP "archivo_swap.bin"
 
 void* upcm;
