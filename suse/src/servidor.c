@@ -79,6 +79,8 @@ void funcion_init(t_paquete paquete,int socket_suse){
 	proceso->pid = socket_suse;
 	proceso->hilos_ready = list_create();//inicializar lista proceso ready
 	proceso->hilo_exec = NULL;
+	pthread_mutex_init(&proceso->mut_ready, NULL);
+	pthread_mutex_init(&proceso->mut_exec, NULL);
 	list_add(lista_procesos,proceso);//list_add();
 	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
 

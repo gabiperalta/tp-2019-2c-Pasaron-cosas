@@ -56,6 +56,7 @@ t_list* hilos_exit;
 sem_t sem_planificacion;
 sem_t sem_ejecute;
 sem_t sem_join;
+sem_t sem_new;
 pthread_mutex_t mut_exit;
 pthread_mutex_t mut_new;
 pthread_mutex_t mut_blocked;
@@ -91,6 +92,8 @@ typedef struct{
 	uint32_t pid; //id del proceso
 	t_list* hilos_ready;
 	thread* hilo_exec;
+	pthread_mutex_t mut_ready;
+	pthread_mutex_t mut_exec;
 }process;
 
 
