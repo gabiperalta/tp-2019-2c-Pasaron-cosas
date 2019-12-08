@@ -415,6 +415,12 @@ int sac_cli_flush(const char * path, struct fuse_file_info *fi) {
 }
 
 
+int sac_setattr(const char * path, struct fuse_file_info *fi) {
+	// funcion dummy para que no se queje de "function not implemented"
+	return 0;
+}
+
+
 static struct fuse_operations sac_cli_oper = {
 		.getattr = sac_cli_getattr,
 		.open = sac_cli_open,
@@ -428,6 +434,7 @@ static struct fuse_operations sac_cli_oper = {
 		.truncate = sac_cli_truncate,
 		.rename = sac_cli_rename,
 		.flush = sac_cli_flush,
+		.setattr = sac_setattr,
 };
 
 

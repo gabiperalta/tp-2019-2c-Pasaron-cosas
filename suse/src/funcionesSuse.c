@@ -100,24 +100,24 @@ int next_tid(int pid){
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
 	}
-
-	usleep(1000);
-
+																																						usleep(1000);
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
 
-	pthread_mutex_lock(&mut_planificacion);
+
 	printf("NTIsize hilos new %d\n",list_size(hilos_new));
 	printf("NTIsize hilos ready %d\n",list_size(proceso->hilos_ready));
 	printf("NTIsize hilos blocked %d\n",list_size(hilos_blocked));
 	printf("NTIsize hilos exit %d\n",list_size(hilos_exit));
 	//printf("NTIhilo exec antes del tid%d\n", proceso->hilo_exec->tid);
+
+	//pthread_mutex_lock(&mut_planificacion);
 	if(list_size(hilos_exit) > 0){
 		thread* hilo_prueba = list_get(hilos_exit,0);
 		printf("hilo exit tid %d\n",hilo_prueba->tid);
 	}
-	pthread_mutex_unlock(&mut_planificacion);
+	//pthread_mutex_unlock(&mut_planificacion);
 
 	if(proceso->hilo_exec !=NULL){
 		log_info(suse_log, "ya habia hilo ejecutando\n");
@@ -335,7 +335,7 @@ int join(int tid, int pid){
 	//perror("algo");
 	//printf("tendria q romper %d\n",hilo_prueba->pid);
 
-	pthread_mutex_lock(&mut_planificacion);
+	//pthread_mutex_lock(&mut_planificacion);
 
 	printf("size hilos new %d\n",list_size(hilos_new));
 	printf("size hilos ready %d\n",list_size(proceso->hilos_ready));
@@ -359,7 +359,7 @@ int join(int tid, int pid){
 			}
 		}
 	}
-	pthread_mutex_unlock(&mut_planificacion);
+	//pthread_mutex_unlock(&mut_planificacion);
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
@@ -373,7 +373,7 @@ int join(int tid, int pid){
 			pthread_mutex_lock(&mut_blocked);
 			list_add(hilos_blocked, hilo_en_ejecucion);
 			pthread_mutex_unlock(&mut_blocked);
-			pthread_mutex_lock(&mut_join);
+			//pthread_mutex_lock(&mut_join);
 			list_add(hilo_prioritario->tid_joineado,hilo_en_ejecucion->tid);
 			proceso->hilo_exec = NULL;
 			//pthread_mutex_unlock(&mut_join);

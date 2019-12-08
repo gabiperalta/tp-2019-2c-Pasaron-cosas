@@ -19,14 +19,19 @@ int main(int argc, char **argv){
 	int diskFD = open(fileName, O_RDWR);
 	GBlock* myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
+	uint32_t tamanioBitmap = (diskSize/4096) / 4096;
+	if((diskSize/4096)%4096 > 0){
+		tamanioBitmap ++;
+	}
+
 	if (shouldFormat){
 		printf("Formateando disco %s...\n", fileName);
 
 		printf("\tEscribiendo el Header en la posicion %p\n", myDisk);
-		writeHeader(myDisk);
+		writeHeader(myDisk, tamanioBitmap);
 
 		printf("\tEscribiendo el Bitmap en la posicion %p\n", NEXT_BLOCK(myDisk));
-		writeBitmap(myDisk + 1);
+		writeBitmap(myDisk + 1, tamanioBitmap);
 
 		printf("\tEscribiendo la Tabla de Nodos en la posicion %p\n", NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
 		writeNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
@@ -48,13 +53,13 @@ int main(int argc, char **argv){
 		dumpHeader(myDisk);
 
 		printf("Contenidos Del Bitmap:\n");
-		dumpBitmap(NEXT_BLOCK(myDisk));
+		dumpBitmap(NEXT_BLOCK(myDisk), tamanioBitmap);
 
 		printf("Contenidos Del NodeTable:\n");
 		dumpNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
 
-		//printf("Dumpeando bloque %u\n", 133123);
-		//dumpPointerBlock(myDisk + 133123);
+		printf("Dumpeando bloque %u\n", 133123);
+		dumpPointerBlock(myDisk + 133123);
 
 	}
 }
@@ -98,33 +103,35 @@ void dumpNodeTable(GBlock *diskPointer){
 	}
 }
 
-void writeBitmap(char* myDiskBitmap){
+void writeBitmap(char* myDiskBitmap, uint32_t bitmapSize){
 
-	int tamanioEnBytes = BITMAP_SIZE_IN_BLOCKS*BLOCK_SIZE;
 
-	t_bitarray *bitarray = bitarray_create_with_mode(myDiskBitmap, tamanioEnBytes, MSB_FIRST);
 
-	int ocupado = BITMAP_SIZE_IN_BLOCKS + NODE_TABLE_SIZE + 1; // SUMO 1 POR EL HEADER
+	int tamanioEnBytes = bitmapSize * BLOCK_SIZE;
+
+	t_bitarray *bitarray = bitarray_create_with_mode(myDiskBitmap, tamanioEnBytes , MSB_FIRST);
+
+	int ocupado = bitmapSize + NODE_TABLE_SIZE + 1; // SUMO 1 POR EL HEADER
 
 	for(int cont=0; cont < ocupado; cont++){
 		bitarray_set_bit(bitarray, cont);
 	}
 
-	for(int cont2=ocupado; cont2 < BITMAP_SIZE_IN_BLOCKS * 4096; cont2++){
+	for(int cont2=ocupado ; cont2 < bitmapSize * 4096; cont2++){
 		bitarray_clean_bit(bitarray, cont2);
 	}
 
 	msync(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS * 4096, MS_SYNC); // ES NECESARIO ESTO?
 }
 
-void dumpBitmap(GBlock *diskPointer){
+void dumpBitmap(GBlock *diskPointer, uint32_t bitmapSize){
 	int valor;
-	int tamanioEnBytes = BITMAP_SIZE_IN_BLOCKS*BLOCK_SIZE;
-	int loQuePrinteare = BITMAP_SIZE_IN_BLOCKS + NODE_TABLE_SIZE + 30; // 1 POR EL HEADER Y 29 PARA QUE IMPRIMA UNOS CEROS
+	int tamanioEnBytes = bitmapSize*BLOCK_SIZE;
+	int loQuePrinteare = bitmapSize + NODE_TABLE_SIZE + 30; // 1 POR EL HEADER Y 29 PARA QUE IMPRIMA UNOS CEROS
 	t_bitarray *bitarray = bitarray_create_with_mode(diskPointer, tamanioEnBytes, MSB_FIRST);
 
 	// TODO SETEAR DE NUEVO EN 0
-	for(int i = 131000; i < loQuePrinteare; i++){
+	for(int i = 0 ; i < loQuePrinteare; i++){
 		if(bitarray_test_bit(bitarray, i))
 			valor = 1;
 		else
@@ -135,11 +142,11 @@ void dumpBitmap(GBlock *diskPointer){
 	return;
 }
 
-void writeHeader(GBlock *diskPointer){
+void writeHeader(GBlock *diskPointer, uint32_t tamanioBitmap){
 	struct sac_header_t* myNewHeader = (struct sac_header_t*) diskPointer;
 
 	memcpy(myNewHeader->sac, "SAC", MAGIC_NUMBER_NAME);
-	myNewHeader->bitmap_size = BITMAP_SIZE_IN_BLOCKS;
+	myNewHeader->bitmap_size = tamanioBitmap;
 	myNewHeader->bitmap_start = BITMAP_START_BLOCK;
 	myNewHeader->version = 1;
 	myNewHeader->estaElDirectorioRaiz = false;
@@ -173,6 +180,8 @@ size_t getFileSize(char* file){
 
 	fseek(fd, 0L, SEEK_END);
 	uint32_t dfSize = ftell(fd);
+
+	printf("TAMANIO DISCO: %u\n", dfSize/4096);
 
 	fclose(fd);
 	return dfSize;

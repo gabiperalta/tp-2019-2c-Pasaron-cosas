@@ -271,8 +271,8 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 
 	char* buffer = leerArchivo(path, size, offset);
 
-	printf("\n\n\n\n---------EL BUFFER QUE SE ENVIARA ES----------\n");
-	printf("%s\n\n\n\n", buffer);
+	//printf("\n\n\n\n---------EL BUFFER QUE SE ENVIARA ES----------\n");
+	//printf("%s\n\n\n\n", buffer);
 
 	t_paquete paquete_respuesta = {
 			.header = FUSE_OPEN,

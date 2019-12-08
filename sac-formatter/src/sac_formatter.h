@@ -61,10 +61,10 @@ typedef struct sac_block_IS{ // BLOQUE DE PUNTEROS
 }GPointerBlock;
 
 int main(int argc, char **argv);
-void writeHeader(GBlock *diskPointer);
+void writeHeader(GBlock *diskPointer, uint32_t bitmapSize);
 void dumpHeader(GBlock *diskPointer);
-void writeBitmap(char* myDiskBitmap);
-void dumpBitmap(GBlock *diskPointer);
+void writeBitmap(char* myDiskBitmap, uint32_t bitmapSize);
+void dumpBitmap(GBlock *diskPointer, uint32_t bitmapSize);
 void dumpNodeTable(GBlock *diskPointer);
 void writeNodeTable(GBlock *diskPointer);
 void dumpPointerBlock(GBlock* bloque);

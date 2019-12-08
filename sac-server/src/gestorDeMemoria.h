@@ -20,7 +20,7 @@
 #define NODE_TABLE_SIZE 1024  // EN BLOQUES
 #define DIR_ENTRY_SIZE
 #define INODE_TABLE_START 131073
-#define DATA_BLOCKS_START 132097
+//#define DATA_BLOCKS_START 132097
 #define MAX_FILE_SIZE_IN_BLOCKS 1048576
 #define NEXT_BLOCK(A) A + 1
 #define OFFSET(offset) offset * 4096
@@ -41,7 +41,7 @@
 #define FUSE_TRUNCATE 20
 #define FUSE_RENAME 21
 
-
+uint32_t DATA_BLOCKS_START;
 t_bitarray* bitmap;
 char* miBitarray;
 pthread_mutex_t mutexBitmap;

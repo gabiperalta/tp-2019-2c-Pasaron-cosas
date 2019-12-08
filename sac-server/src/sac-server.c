@@ -27,8 +27,6 @@ int main(int argc, char *argv[]){
 		header->estaElDirectorioRaiz = true;
 	}
 
-	posicionEnArchivo(941);
-
 	PUERTO = config_get_int_value(archivo_config, "PUERTO_ESCUCHA");
 
 	/*int pruebaBitarray1 = bloqueLibre();
@@ -75,10 +73,19 @@ size_t getFileSize(char* file){
 void cargarDisco(char* diskName){
 	size_t diskSize = getFileSize(diskName);
 	diskFD = open(diskName, O_RDWR);
-	myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
+	myDisk = mmap(NULL, diskSize , PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
+
+	printf("TAMANIO DEL DISCO %u\n", diskSize);
+
+	uint32_t tamanioBitmap = (diskSize/4096) / 4096;
+	if((diskSize/4096)%4096 > 0){
+		tamanioBitmap ++;
+	}
+
+	DATA_BLOCKS_START = tamanioBitmap + 1 + NODE_TABLE_SIZE;
 
 	miBitarray = obtenerBloque(BITMAP_START_BLOCK);
-	bitmap = bitarray_create_with_mode( miBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
+	bitmap = bitarray_create_with_mode( miBitarray, tamanioBitmap * BLOCK_SIZE, MSB_FIRST);
 
 	msync(myDisk, sizeof(bitmap), MS_SYNC);
 }
