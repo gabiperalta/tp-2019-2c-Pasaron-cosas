@@ -9,7 +9,6 @@ ptrGBloque bloqueLibre(){
 	pthread_mutex_lock(&mutexBitmap);
 
 	ocupado = bitarray_test_bit(bitmap, bloque);
-	//tamanioBitarray = *(uint32_t*) bitarray_get_max_bit(bitmap);
 	tamanioBitarray = bitmap->size;
 
 	while((bloque < tamanioBitarray) && ocupado ){

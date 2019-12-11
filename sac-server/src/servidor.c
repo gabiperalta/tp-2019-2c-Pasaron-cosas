@@ -237,7 +237,7 @@ void funcion_open(t_paquete paquete,int socket_fuse){
 
 void funcion_write(t_paquete paquete,int socket_fuse){
 	char* path = obtener_string(paquete.parametros);
-	void* buffer = obtener_bloque_datos(paquete.parametros);
+	char* buffer = obtener_bloque_datos(paquete.parametros);
 	size_t size = obtener_valor(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
 
@@ -268,37 +268,34 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 	size_t size = obtener_valor(paquete.parametros);
 	off_t offset = obtener_valor(paquete.parametros);
 
+
+	char* buffer = leerArchivo(path, size, offset);
+
 	printf("DATOS QUE LLEGARON: Size: %u, Offset: %u\n", (uint32_t) size, (uint32_t)offset);
-
-	void* buffer = leerArchivo(path, size, offset);
-
 	//printf("\n\n\n\n---------EL BUFFER QUE SE ENVIARA ES----------\n");
 	//printf("%s\n\n\n\n", buffer);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_READ,
+			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 
 	if(buffer != NULL){
-		ptrGBloque punteroInodo = buscarInodoArchivo(path, NORMAL);
-		GFile* archivo = (GFile*) obtenerBloque(punteroInodo);
-		retorno = minimo( size, archivo->file_size);
-		printf("Retorno = %u", retorno);
+		ptrGBloque punteroArchivo = buscarInodoArchivo(path, NORMAL);
+		GFile* inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
+
+		retorno = minimo(size, (inodoArchivo->file_size - offset));
+		printf("RETORNO: %u", retorno);
 		agregar_valor(paquete_respuesta.parametros, retorno);
 		agregar_bloque_datos(paquete_respuesta.parametros, buffer, retorno);
-
-		printf("buffer no null\n");
 	}else{
 		retorno = -EBADF;
 		agregar_valor(paquete_respuesta.parametros, retorno);
-		printf("buffer null\n");
 	}
 
 	///////////////// Parametros a enviar /////////////////
 	enviar_paquete(paquete_respuesta, socket_fuse);
 	///////////////////////////////////////////////////////
-	printf("Envie el paquete\n");
 
 	free(path);
 	free(buffer);
@@ -313,7 +310,7 @@ void funcion_unlink(t_paquete paquete,int socket_fuse){
 	int retorno = eliminarArchivo(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_UNLINK,
+			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 
@@ -376,7 +373,7 @@ void funcion_mkdir(t_paquete paquete,int socket_fuse){
 	int retorno = crearDirectorio(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_MKDIR,
+			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 
@@ -399,7 +396,7 @@ void funcion_rmdir(t_paquete paquete,int socket_fuse){
 	int retorno = eliminarDirectorio(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_RMDIR,
+			.header = FUSE_OPEN,
 			.parametros = list_create()
 	};
 

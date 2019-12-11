@@ -19,12 +19,10 @@ int main(int argc, char **argv){
 	int diskFD = open(fileName, O_RDWR);
 	GBlock* myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
-	uint32_t tamanioBitmap = ( diskSize / 4096 ) / ( 4096 * 8 );
-	if(( diskSize / 4096 ) % ( 4096 * 8 ) > 0 ){
+	uint32_t tamanioBitmap = (diskSize / 4096) / (4096 * 8);
+	if(( diskSize / 4096 ) % (4096 * 8) > 0){
 		tamanioBitmap ++;
 	}
-
-	printf("tamanioBitmap: %u", tamanioBitmap);
 
 	if (shouldFormat){
 		printf("Formateando disco %s...\n", fileName);
@@ -37,6 +35,15 @@ int main(int argc, char **argv){
 
 		printf("\tEscribiendo la Tabla de Nodos en la posicion %p\n", NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
 		writeNodeTable(NEXT_BLOCK(myDisk) + tamanioBitmap);
+
+		/*munmap(myDisk, diskSize);
+
+		char* myDiskBitmap = mmap(NULL, BITMAP_SIZE_IN_BLOCKS*sizeof(GBlock), PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, sizeof(GBlock));
+
+		printf("\tEscribiendo el Bitmap en la posicion %p\n", NEXT_BLOCK(myDisk));
+		writeBitmap(myDiskBitmap);
+
+		munmap(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS*sizeof(GBlock));*/
 
 		printf("FINALIZADO");
 	} else {
@@ -57,6 +64,35 @@ int main(int argc, char **argv){
 	}
 }
 
+void writeHeader(GBlock *diskPointer, uint32_t tamanioBitmap){
+	struct sac_header_t* myNewHeader = (struct sac_header_t*) diskPointer;
+
+	memcpy(myNewHeader->sac, "SAC", MAGIC_NUMBER_NAME);
+	myNewHeader->bitmap_size = tamanioBitmap;
+	myNewHeader->bitmap_start = BITMAP_START_BLOCK;
+	myNewHeader->version = 1;
+	myNewHeader->estaElDirectorioRaiz = false;
+}
+
+void writeBitmap(char* myDiskBitmap, uint32_t tamanioBitmap){
+
+	int tamanioEnBytes = tamanioBitmap * BLOCK_SIZE;
+
+	t_bitarray *bitarray = bitarray_create_with_mode(myDiskBitmap, tamanioEnBytes , MSB_FIRST);
+
+	int ocupado = tamanioBitmap + NODE_TABLE_SIZE + 1; // SUMO 1 POR EL HEADER
+
+	for(int cont=0; cont < ocupado; cont++){
+		bitarray_set_bit(bitarray, cont);
+	}
+
+	for(int cont2=ocupado ; cont2 < tamanioEnBytes * 8; cont2++){
+		bitarray_clean_bit(bitarray, cont2);
+	}
+
+	msync(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS * 4096, MS_SYNC); // ES NECESARIO ESTO?
+}
+
 void writeNodeTable(GBlock *diskPointer){
 	struct sac_file_t *nodeTable = (struct sac_file_t*) diskPointer;
 
@@ -67,10 +103,38 @@ void writeNodeTable(GBlock *diskPointer){
 	}
 }
 
-char* nameByCode(int code){
-	if(code == 0){return "Free";}
-	else if(code == 1){ return "File"; }
-	else {return "Directory";}
+
+void dumpHeader(GBlock *diskPointer){
+	struct sac_header_t* myNewHeader = (struct sac_header_t*) diskPointer;
+
+	char* auxName = malloc(MAGIC_NUMBER_NAME + 1);
+	memset(auxName, 0, MAGIC_NUMBER_NAME + 1 * sizeof(char));
+	memcpy(auxName, myNewHeader->sac, MAGIC_NUMBER_NAME);
+
+	printf("\tMagic Number: %s\n", auxName);
+	printf("\tBitmap Size: %u\n", myNewHeader->bitmap_size);
+	printf("\tBitmap Start: %u\n", myNewHeader->bitmap_start);
+	printf("\tVersion: %u\n", myNewHeader->version);
+
+	free(auxName);
+}
+
+void dumpBitmap(GBlock *diskPointer, uint32_t tamanioBitmap){
+	int valor;
+	int tamanioEnBytes = tamanioBitmap * BLOCK_SIZE;
+	int loQuePrinteare = tamanioBitmap + NODE_TABLE_SIZE + 30; // 1 POR EL HEADER Y 29 PARA QUE IMPRIMA UNOS CEROS
+	t_bitarray *bitarray = bitarray_create_with_mode(diskPointer, tamanioEnBytes, MSB_FIRST);
+
+	// TODO SETEAR DE NUEVO EN 0
+	for(int i = 0 ; i < loQuePrinteare; i++){
+		if(bitarray_test_bit(bitarray, i))
+			valor = 1;
+		else
+			valor = 0;
+		printf("%i", valor);
+	}
+	printf("\n");
+	return;
 }
 
 void dumpNodeTable(GBlock *diskPointer){
@@ -79,7 +143,7 @@ void dumpNodeTable(GBlock *diskPointer){
 	char* auxName = malloc(MAX_FILENAME_LENGTH + 1);
 
 	// TODO SETEAR DE NUEVO A MAX_FILE_NUMBER
-	for(int nFile = 0; nFile < 5; nFile++){
+	for(int nFile = 0; nFile < 15; nFile++){
 		GFile node = nodeTable[nFile];
 		memset(auxName, '\0', (MAX_FILENAME_LENGTH + 1) * sizeof(char));
 		memcpy(auxName, node.fname, MAX_FILENAME_LENGTH);
@@ -96,69 +160,6 @@ void dumpNodeTable(GBlock *diskPointer){
 	}
 }
 
-void writeBitmap(char* myDiskBitmap, uint32_t bitmapSize){
-
-
-
-	int tamanioEnBytes = bitmapSize * BLOCK_SIZE;
-
-	t_bitarray *bitarray = bitarray_create_with_mode(myDiskBitmap, tamanioEnBytes , MSB_FIRST);
-
-	int ocupado = bitmapSize + NODE_TABLE_SIZE + 1; // SUMO 1 POR EL HEADER
-
-	for(int cont=0; cont < ocupado; cont++){
-		bitarray_set_bit(bitarray, cont);
-	}
-
-	for(int cont2=ocupado ; cont2 < bitmapSize * 4096; cont2++){
-		bitarray_clean_bit(bitarray, cont2);
-	}
-
-	msync(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS * 4096, MS_SYNC); // ES NECESARIO ESTO?
-}
-
-void dumpBitmap(GBlock *diskPointer, uint32_t bitmapSize){
-	int valor;
-	int tamanioEnBytes = bitmapSize*BLOCK_SIZE;
-	int loQuePrinteare = bitmapSize + NODE_TABLE_SIZE + 30; // 1 POR EL HEADER Y 29 PARA QUE IMPRIMA UNOS CEROS
-	t_bitarray *bitarray = bitarray_create_with_mode(diskPointer, tamanioEnBytes, MSB_FIRST);
-
-	// TODO SETEAR DE NUEVO EN 0
-	for(int i = 0 ; i < loQuePrinteare; i++){
-		if(bitarray_test_bit(bitarray, i))
-			valor = 1;
-		else
-			valor = 0;
-		printf("%i", valor);
-	}
-	printf("\n");
-	return;
-}
-
-void writeHeader(GBlock *diskPointer, uint32_t tamanioBitmap){
-	struct sac_header_t* myNewHeader = (struct sac_header_t*) diskPointer;
-
-	memcpy(myNewHeader->sac, "SAC", MAGIC_NUMBER_NAME);
-	myNewHeader->bitmap_size = tamanioBitmap;
-	myNewHeader->bitmap_start = BITMAP_START_BLOCK;
-	myNewHeader->version = 1;
-	myNewHeader->estaElDirectorioRaiz = false;
-}
-
-void dumpHeader(GBlock *diskPointer){
-	struct sac_header_t* myNewHeader = (struct sac_header_t*) diskPointer;
-
-	char* auxName = malloc(MAGIC_NUMBER_NAME + 1);
-	memset(auxName, 0, MAGIC_NUMBER_NAME + 1 * sizeof(char));
-	memcpy(auxName, myNewHeader->sac, MAGIC_NUMBER_NAME);
-
-	printf("\tMagic Number: %s\n", auxName);
-	printf("\tBitmap Size: %u\n", myNewHeader->bitmap_size);
-	printf("\tBitmap Start: %u\n", myNewHeader->bitmap_start);
-	printf("\tVersion: %u\n", myNewHeader->version);
-
-	free(auxName);
-}
 
 void dumpPointerBlock(GBlock* bloque){
 	GPointerBlock* bloqueAuxiliar = (GPointerBlock*) bloque;
@@ -178,4 +179,10 @@ size_t getFileSize(char* file){
 
 	fclose(fd);
 	return dfSize;
+}
+
+char* nameByCode(int code){
+	if(code == 0){return "Free";}
+	else if(code == 1){ return "File"; }
+	else {return "Directory";}
 }

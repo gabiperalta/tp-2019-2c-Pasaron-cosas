@@ -77,21 +77,19 @@ void cargarDisco(char* diskName){
 
 	printf("TAMANIO DEL DISCO %u\n", diskSize);
 
-	uint32_t tamanioDiscoEnBloques = ( diskSize / BLOCK_SIZE );
-	uint32_t tamanioBitmapBloques = tamanioDiscoEnBloques / ( BLOCK_SIZE * 8 );
-	if( tamanioDiscoEnBloques % ( BLOCK_SIZE * 8 ) > 0 ){
-		tamanioBitmapBloques ++;
+	uint32_t tamanioBitmap = (diskSize/4096) / (4096 * 8);
+	if((diskSize/4096)% (4096 * 8) > 0){
+		tamanioBitmap ++;
 	}
 
-	BITMAP_SIZE_IN_BLOCKS = tamanioBitmapBloques;
-	INODE_TABLE_START = 1 + tamanioBitmapBloques;
-	DATA_BLOCKS_START = tamanioBitmapBloques + 1 + NODE_TABLE_SIZE;
-	printf("BITMAP_SIZE_IN_BLOCKS%u\n", BITMAP_SIZE_IN_BLOCKS);
-	printf("INODE_TABLE_START%u\n", INODE_TABLE_START);
-	printf("DATA_BLOCKS_START%u\n", DATA_BLOCKS_START);
+	BITMAP_SIZE_IN_BLOCKS = tamanioBitmap;
+	INODE_TABLE_START = BITMAP_SIZE_IN_BLOCKS + 1;
+	DATA_BLOCKS_START = INODE_TABLE_START + NODE_TABLE_SIZE;
+
+	printf("BITMAP_SIZE_IN_BLOCKS: %u\nINODE_TABLE_START: %u\nDATA_BLOCKS_START: %u\n", BITMAP_SIZE_IN_BLOCKS, INODE_TABLE_START, DATA_BLOCKS_START);
 
 	miBitarray = obtenerBloque(BITMAP_START_BLOCK);
-	bitmap = bitarray_create_with_mode( miBitarray, tamanioBitmapBloques * BLOCK_SIZE, MSB_FIRST);
+	bitmap = bitarray_create_with_mode( miBitarray, BITMAP_SIZE_IN_BLOCKS * BLOCK_SIZE, MSB_FIRST);
 
 	msync(myDisk, sizeof(bitmap), MS_SYNC);
 }

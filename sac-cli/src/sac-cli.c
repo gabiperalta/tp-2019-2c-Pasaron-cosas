@@ -203,8 +203,8 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 			.parametros = list_create()
 	};
 
-	printf("\n\n\n\n---------EL BUFFER ES----------\n");
-	printf("%s\n\n\n\n", buffer);
+	//printf("\n\n\n\n---------EL BUFFER ES----------\n");
+	//printf("%s\n\n\n\n", buffer);
 
 	// agregar_string( paquete_solicitud.parametros, path_formateado);
 	agregar_string( paquete_solicitud.parametros, path);
@@ -254,8 +254,6 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
-	printf("Recibi el paquete\n");
-
 	retorno = obtener_valor( paquete_respuesta.parametros );
 	if(retorno > 0){
 		printf("----------------------RETORNO : %i", retorno);
@@ -263,15 +261,16 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 		bufferAuxiliar = obtener_bloque_datos( paquete_respuesta.parametros );
 		memcpy(buffer, bufferAuxiliar, retorno);
 
-		/*printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
+		printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
 		printf("%s\n\n\n\n", bufferAuxiliar);
 
-		printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
-		printf("%s\n\n\n\n", buffer);*/
+		//printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
+		//printf("%s\n\n\n\n", buffer);
 
-		free(bufferAuxiliar);
+
 	}
 
+	free(bufferAuxiliar);
 
 	return retorno;
 }
@@ -416,10 +415,10 @@ int sac_cli_flush(const char * path, struct fuse_file_info *fi) {
 }
 
 
-int sac_setattr(const char * path, struct fuse_file_info *fi) {
+/*int sac_setattr(const char * path, struct fuse_file_info *fi) {
 	// funcion dummy para que no se queje de "function not implemented"
 	return 0;
-}
+}*/
 
 
 static struct fuse_operations sac_cli_oper = {
@@ -435,7 +434,7 @@ static struct fuse_operations sac_cli_oper = {
 		.truncate = sac_cli_truncate,
 		.rename = sac_cli_rename,
 		.flush = sac_cli_flush,
-		// .setattr = sac_setattr,
+		//.setattr = sac_setattr,
 };
 
 
