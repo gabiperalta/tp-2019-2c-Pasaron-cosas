@@ -107,9 +107,6 @@ int next_tid(int pid){
 	bool buscador(process* proceso){
 		return proceso->pid== pid;
 	}
-
-	usleep(1000);
-
 	pthread_mutex_lock(&mut_procesos);
 	process* proceso = list_find(lista_procesos, (void*)buscador);
 	pthread_mutex_unlock(&mut_procesos);
@@ -377,7 +374,7 @@ int join(int tid, int pid){
 	//perror("algo");
 	//printf("tendria q romper %d\n",hilo_prueba->pid);
 
-	pthread_mutex_lock(&mut_planificacion);
+	//pthread_mutex_lock(&mut_planificacion);
 
 	//printf("size hilos new %d\n",list_size(hilos_new));
 	//printf("size hilos ready %d\n",list_size(proceso->hilos_ready));
@@ -409,7 +406,7 @@ int join(int tid, int pid){
 			}
 		}
 	}
-	pthread_mutex_unlock(&mut_planificacion);
+	//pthread_mutex_unlock(&mut_planificacion);
 	pthread_mutex_lock(&mut_exit);
 	bool existe_en_exit = list_any_satisfy(hilos_exit, (void*)condicion);
 	pthread_mutex_unlock(&mut_exit);
