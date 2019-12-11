@@ -27,9 +27,9 @@ int crearArchivo( char *path );
 
 uint8_t abrirArchivo( char *path, int socketProceso);
 
-int escribirArchivo( char *path, char *buffer, size_t size, off_t offset );
+int escribirArchivo( char *path, void *buffer, size_t size, off_t offset );
 
-char* leerArchivo( char *path, size_t size, off_t offset );
+void* leerArchivo( char *path, size_t size, off_t offset );
 
 int eliminarArchivo( char *path);
 
@@ -97,9 +97,9 @@ void inicializarPrimerasEntradas(GDirectoryBlock* bloqueDeDirectorio, ptrGBloque
 // FUNCIONES AUXILIARES PARA EL MANEJO DE ARCHIVOS
 FileOffset *posicionEnArchivo(uint32_t offset);
 
-void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
+void escribirBloques(GFile* inodoArchivo, void* buffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
-char* leerBloques(GFile* inodoArchivo, int longitudDelBuffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
+void* leerBloques(GFile* inodoArchivo, int longitudDelBuffer, FileOffset* offsetInicial, FileOffset* offsetFinal);
 
 GBlock *asignarBloqueDeDatos(GFile* directorio);
 

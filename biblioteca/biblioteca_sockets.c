@@ -103,6 +103,8 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 	buffer = malloc(tam_buffer);
 
+	printf("TAM BUFFER: %i\n", tam_buffer);
+
 	memcpy(&buffer[posicion],&tam_buffer,sizeof(tam_buffer)); //mando el tamano del buffer para saber el total a recibir
 	posicion += sizeof(tam_buffer);
 	memcpy(&buffer[posicion],&paquete.header,sizeof(paquete.header));
@@ -151,6 +153,9 @@ t_paquete recibir_paquete(int socket_cliente){
 	}
 
 	buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
+
+	printf("BYTES RECIBIDOS: %i", bytesRecibidos);
+	printf("TAM BUFFER: %i\n", tam_buffer);
 
 	recv(socket_cliente,buffer, sizeof(paquete.header), 0);
 	memcpy(&paquete.header,buffer,sizeof(paquete.header));

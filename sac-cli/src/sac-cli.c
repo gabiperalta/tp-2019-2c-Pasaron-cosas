@@ -208,7 +208,7 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
 
 	// agregar_string( paquete_solicitud.parametros, path_formateado);
 	agregar_string( paquete_solicitud.parametros, path);
-	agregar_string( paquete_solicitud.parametros, buffer);
+	agregar_bloque_datos( paquete_solicitud.parametros, buffer, size);
 	agregar_valor( paquete_solicitud.parametros, size);
 	agregar_valor( paquete_solicitud.parametros, offset);
 	enviar_paquete( paquete_solicitud, my_socket);
@@ -254,23 +254,24 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
+	printf("Recibi el paquete\n");
+
 	retorno = obtener_valor( paquete_respuesta.parametros );
 	if(retorno > 0){
 		printf("----------------------RETORNO : %i", retorno);
 		memset(buffer, '\0', retorno);
-		bufferAuxiliar = obtener_string( paquete_respuesta.parametros );
+		bufferAuxiliar = obtener_bloque_datos( paquete_respuesta.parametros );
 		memcpy(buffer, bufferAuxiliar, retorno);
 
-		printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
+		/*printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
 		printf("%s\n\n\n\n", bufferAuxiliar);
 
 		printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
-		printf("%s\n\n\n\n", buffer);
+		printf("%s\n\n\n\n", buffer);*/
 
-
+		free(bufferAuxiliar);
 	}
 
-	free(bufferAuxiliar);
 
 	return retorno;
 }
@@ -434,7 +435,7 @@ static struct fuse_operations sac_cli_oper = {
 		.truncate = sac_cli_truncate,
 		.rename = sac_cli_rename,
 		.flush = sac_cli_flush,
-		.setattr = sac_setattr,
+		// .setattr = sac_setattr,
 };
 
 

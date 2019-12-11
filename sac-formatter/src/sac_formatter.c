@@ -19,10 +19,12 @@ int main(int argc, char **argv){
 	int diskFD = open(fileName, O_RDWR);
 	GBlock* myDisk = mmap(NULL, diskSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, 0);
 
-	uint32_t tamanioBitmap = (diskSize/4096) / 4096;
-	if((diskSize/4096)%4096 > 0){
+	uint32_t tamanioBitmap = ( diskSize / 4096 ) / ( 4096 * 8 );
+	if(( diskSize / 4096 ) % ( 4096 * 8 ) > 0 ){
 		tamanioBitmap ++;
 	}
+
+	printf("tamanioBitmap: %u", tamanioBitmap);
 
 	if (shouldFormat){
 		printf("Formateando disco %s...\n", fileName);
@@ -34,16 +36,7 @@ int main(int argc, char **argv){
 		writeBitmap(myDisk + 1, tamanioBitmap);
 
 		printf("\tEscribiendo la Tabla de Nodos en la posicion %p\n", NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
-		writeNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
-
-		/*munmap(myDisk, diskSize);
-
-		char* myDiskBitmap = mmap(NULL, BITMAP_SIZE_IN_BLOCKS*sizeof(GBlock), PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, diskFD, sizeof(GBlock));
-
-		printf("\tEscribiendo el Bitmap en la posicion %p\n", NEXT_BLOCK(myDisk));
-		writeBitmap(myDiskBitmap);
-
-		munmap(myDiskBitmap, BITMAP_SIZE_IN_BLOCKS*sizeof(GBlock));*/
+		writeNodeTable(NEXT_BLOCK(myDisk) + tamanioBitmap);
 
 		printf("FINALIZADO");
 	} else {
@@ -56,10 +49,10 @@ int main(int argc, char **argv){
 		dumpBitmap(NEXT_BLOCK(myDisk), tamanioBitmap);
 
 		printf("Contenidos Del NodeTable:\n");
-		dumpNodeTable(NEXT_BLOCK(myDisk) + BITMAP_SIZE_IN_BLOCKS);
+		dumpNodeTable(NEXT_BLOCK(myDisk) + tamanioBitmap);
 
-		printf("Dumpeando bloque %u\n", 133123);
-		dumpPointerBlock(myDisk + 133123);
+		//printf("Dumpeando bloque %u\n", 133123);
+		//dumpPointerBlock(myDisk + 133123);
 
 	}
 }
