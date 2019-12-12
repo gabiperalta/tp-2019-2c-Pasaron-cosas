@@ -41,6 +41,9 @@ uint32_t obtener_valor(t_list* lista_parametros){
 
 	list_remove_and_destroy_element(lista_parametros,0,(void*) destruir_parametro);
 
+	if(list_size(lista_parametros) == 0)
+		list_destroy_and_destroy_elements(lista_parametros,(void*) destruir_parametro);
+
 	return valor_obtenido;
 }
 
@@ -52,6 +55,9 @@ char* obtener_string(t_list* lista_parametros){
 
 	list_remove_and_destroy_element(lista_parametros,0,(void*) destruir_parametro);
 
+	if(list_size(lista_parametros) == 0)
+		list_destroy_and_destroy_elements(lista_parametros,(void*) destruir_parametro);
+
 	return string_obtenido;
 }
 
@@ -62,6 +68,9 @@ void* obtener_bloque_datos(t_list* lista_parametros){
 	memcpy(bloque_datos_obtenido,parametro->bloque_datos,parametro->valor);
 
 	list_remove_and_destroy_element(lista_parametros,0,(void*) destruir_parametro);
+
+	if(list_size(lista_parametros) == 0)
+		list_destroy_and_destroy_elements(lista_parametros,(void*) destruir_parametro);
 
 	return bloque_datos_obtenido;
 }

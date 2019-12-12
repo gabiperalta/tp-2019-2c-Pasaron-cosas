@@ -103,7 +103,7 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 	buffer = malloc(tam_buffer);
 
-	printf("TAM BUFFER: %i\n", tam_buffer);
+	printf("TAM BUFFER enviar_paquete: %i\n", tam_buffer);
 
 	memcpy(&buffer[posicion],&tam_buffer,sizeof(tam_buffer)); //mando el tamano del buffer para saber el total a recibir
 	posicion += sizeof(tam_buffer);
@@ -130,8 +130,9 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 		list_destroy_and_destroy_elements(paquete.parametros,(void*) destruir_parametro);
 	}
 
+	int bytesEnviados = send(socket_servidor,buffer,tam_buffer,0);
 
-	send(socket_servidor,buffer,tam_buffer,0);
+	printf("bytesEnviados %d\n",bytesEnviados);
 
 	free(buffer);
 }
@@ -152,10 +153,16 @@ t_paquete recibir_paquete(int socket_cliente){
 		return paquete;
 	}
 
-	buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
+	//if(tam_buffer > 500910)
+	//	tam_buffer = 200910;
 
-	printf("BYTES RECIBIDOS: %i", bytesRecibidos);
-	printf("TAM BUFFER: %i\n", tam_buffer);
+	buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
+	if(buffer == NULL){
+		printf("\tmalloc demasiado grande\n");
+	}
+
+	printf("BYTES RECIBIDOS: %i\n", bytesRecibidos);
+	printf("TAM BUFFER recibir_paquete: %i\n", tam_buffer);
 
 	recv(socket_cliente,buffer, sizeof(paquete.header), 0);
 	memcpy(&paquete.header,buffer,sizeof(paquete.header));
@@ -171,14 +178,10 @@ t_paquete recibir_paquete(int socket_cliente){
 	for(int i=0; i<cantidad_parametros ; i++){
 		t_parametro* parametro = malloc(sizeof(t_parametro));
 
-		// si hay un error, revisar lo del & ///////////////////////////////
-
 		recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
 		memcpy(&parametro->valor,buffer,sizeof(parametro->valor));
 		recv(socket_cliente,buffer, sizeof(parametro->recibir_bloque_datos), 0);
 		memcpy(&parametro->recibir_bloque_datos,buffer,sizeof(parametro->recibir_bloque_datos));
-
-		////////////////////////////////////////////////////////////////////
 
 		if(parametro->recibir_bloque_datos){
 			recv(socket_cliente,buffer, parametro->valor, 0);
