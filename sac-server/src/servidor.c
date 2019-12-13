@@ -15,6 +15,8 @@ void servidor(){
 	void * conectado;
 	int puerto_escucha = escuchar(PUERTO);
 
+	pthread_mutex_init(&mut_funcion_read,NULL);
+
 	while((conectado = aceptarConexion(puerto_escucha)) != 1 ){
 
 		//printf("Se acepto conexion\n");
@@ -85,7 +87,7 @@ void procesar_solicitud(void *socket_cliente){
 		paquete = recibir_paquete(socket_cliente);
 	}
 
-	funcion_finish(socket_cliente);
+	//funcion_finish(socket_cliente);
 
 	close(socket_cliente);
 
@@ -262,6 +264,7 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 
 
 void funcion_read(t_paquete paquete,int socket_fuse){
+	pthread_mutex_lock(&mut_funcion_read);
 	int retorno;
 
 	char* path = obtener_string(paquete.parametros);
@@ -276,7 +279,7 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 	//printf("%s\n\n\n\n", buffer);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
+			.header = FUSE_READ,
 			.parametros = list_create()
 	};
 
@@ -285,10 +288,11 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 		GFile* inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
 
 		retorno = minimo(size, (inodoArchivo->file_size - offset));
-		printf("RETORNO: %u", retorno);
+		printf("RETORNO: %u\n", retorno);
 		agregar_valor(paquete_respuesta.parametros, retorno);
-		agregar_bloque_datos(paquete_respuesta.parametros, buffer, retorno);
+		agregar_bloque_datos(paquete_respuesta.parametros, (void*)buffer, retorno);
 	}else{
+		printf("El buffer es NULL\n");
 		retorno = -EBADF;
 		agregar_valor(paquete_respuesta.parametros, retorno);
 	}
@@ -300,6 +304,7 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 	free(path);
 	free(buffer);
 
+	pthread_mutex_unlock(&mut_funcion_read);
 }
 
 

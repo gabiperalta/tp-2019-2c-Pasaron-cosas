@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <pthread.h>
 
 
 /* 	La utilidad del sac server es la de servir como comunicacion entre el proceso que quiere hacer operaciones
@@ -27,6 +28,10 @@
 
 int my_socket;
 int path_length;
+char* ip_filesystem;
+int puerto;
+
+pthread_mutex_t mut_funcion_read;
 
 // GENERALES
 static int sac_cli_getattr( const char *path, struct stat *st );

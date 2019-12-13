@@ -18,6 +18,8 @@ void inicializarServidor();
 void servidor();
 void procesar_solicitud(void *socket_cliente);
 
+pthread_mutex_t mut_funcion_read;
+
 
 /////////  FUNCIONES SAC SERVER  /////////
 

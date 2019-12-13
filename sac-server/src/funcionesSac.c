@@ -611,7 +611,8 @@ ptrGBloque buscarInodoArchivo( char *path, int mode){
 			if(directorioActual == 0){
 				memcpy(auxNombreBuscado, "/", 1);
 			}else{
-				memcpy(auxNombreBuscado, directorios[directorioActual - 1], MAX_FILENAME_LENGTH);
+				//memcpy(auxNombreBuscado, directorios[directorioActual - 1], MAX_FILENAME_LENGTH);
+				strcpy(auxNombreBuscado,directorios[directorioActual - 1]);
 			}
 
 			tieneElMismoNombre = !strcmp( auxNombreBuscado, auxName);
