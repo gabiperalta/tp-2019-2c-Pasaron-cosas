@@ -235,6 +235,7 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
  * Changed in version 2.2
  */
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
+	pthread_mutex_lock(&mut_funcion_read);
 	int retorno = 0;
 	char* bufferAuxiliar;
 
@@ -252,6 +253,7 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 	enviar_paquete( paquete_solicitud, my_socket);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
+	usleep(100000);
 	t_paquete paquete_respuesta = recibir_paquete(my_socket);
 
 	retorno = obtener_valor( paquete_respuesta.parametros );
@@ -267,11 +269,11 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 		//printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
 		//printf("%s\n\n\n\n", buffer);
 
-
+		free(bufferAuxiliar);
 	}
 
-	free(bufferAuxiliar);
-
+	//free(bufferAuxiliar);
+	pthread_mutex_unlock(&mut_funcion_read);
 	return retorno;
 }
 
@@ -497,6 +499,7 @@ static struct fuse_opt fuse_options[] = {
 int main(int argc, char *argv[]) {
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
+	pthread_mutex_init(&mut_funcion_read,NULL);
 
 	t_config* archivo_config = config_create(PATH_CONFIG);
 
