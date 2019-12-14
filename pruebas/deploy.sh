@@ -18,6 +18,8 @@ cp recursiva.c /home/utnso/linuse-tests-programs/
 cp hilolay_alumnos.c /home/utnso/linuse-tests-programs/
 cp estres_privado.c /home/utnso/linuse-tests-programs/
 cp revolucion_privada.c /home/utnso/linuse-tests-programs/
+cp estres_compartido.c /home/utnso/linuse-tests-programs/
+cp revolucion_compartida.c /home/utnso/linuse-tests-programs/
 
 cd
 mkdir directorioPrueba
