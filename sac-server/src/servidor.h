@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <commons/config.h>
-#include "biblioteca_sockets.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/biblioteca_sockets.h"
 #include "funcionesSac.h"
 
 

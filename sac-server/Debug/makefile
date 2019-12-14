@@ -25,14 +25,11 @@ endif
 # All Target
 all: sac-server
 
-dependents:
-	-cd /home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug && $(MAKE) clean all
-
 # Tool invocations
-sac-server: $(OBJS) $(USER_OBJS) /home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug/libbiblioteca.so
+sac-server: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug" -L/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug -o "sac-server" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug -o "sac-server" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -42,6 +39,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/utnso/tp-2019-2c-Pasaron-cosas/biblioteca/Debug/libbiblioteca.so:
 
 -include ../makefile.targets

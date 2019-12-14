@@ -368,18 +368,23 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 		//printf("offsetFinal: Bloque de punteros: %i\t Bloque de datos: %i\t Posicion en bloque de datos: %i\n", offsetFinal->bloqueDePunteros, offsetFinal->bloqueDeDatos, offsetFinal->posicionEnBloqueDeDatos);
 
 		//printf("ESCRIBIENDO 3\n");
+		int tamanioEnBloquesArchivo = inodoArchivo->file_size / BLOCK_SIZE;
+		if(inodoArchivo->file_size % BLOCK_SIZE){
+			tamanioEnBloquesArchivo ++;
+		}
 
 		// ASIGNAR TODOS LOS BLOQUES DE DATOS QUE SEAN NECESARIOS PARA REALIZAR LA ESCRITURA
-		if(offset+size > inodoArchivo->file_size){
-			int bloquesQueNecesita = (offset + size - inodoArchivo->file_size) / BLOCK_SIZE;
-			if(((offset + size - inodoArchivo->file_size) % BLOCK_SIZE) > 0) // PORQUE SI QUEDA RESTO, NECESITO UN BLOQUE DE MAS
+		if(offset+size > tamanioEnBloquesArchivo * BLOCK_SIZE){
+			int bloquesQueNecesita = (offset + size - tamanioEnBloquesArchivo * BLOCK_SIZE) / BLOCK_SIZE;
+			if(((offset + size - tamanioEnBloquesArchivo * BLOCK_SIZE) % BLOCK_SIZE) > 0) // PORQUE SI QUEDA RESTO, NECESITO UN BLOQUE DE MAS
 				bloquesQueNecesita ++;
 			for(int i = 0; i < bloquesQueNecesita; i++){ // TODO, NO SE SI NECESITA SER < O <=
 				asignarBloqueDeDatos(inodoArchivo);
 				//printf("SE LE ASIGNO UN BLOQUE AL ARCHIVO\n");
 			}
-
+			inodoArchivo->file_size = offset + size;
 		}
+
 
 		//printf("ESCRIBIENDO 4\n");
 
@@ -1198,7 +1203,7 @@ GBlock *asignarBloqueDeDatos(GFile* archivo){
 
 		memset(bloqueDeDatos, '\0', BLOCK_SIZE);
 
-		archivo->file_size += BLOCK_SIZE;
+		// archivo->file_size += BLOCK_SIZE;
 
 		printf("EN EL BLOQUE DE PUNTEROS:   %u\n", archivo->blocks[ultimoBloqueDePunteros]);
 		printf("SE LE ASIGNO UN BLOQUE AL ARCHIVO:   %u\n", bloqueDePunteros->blocks[numeroBloqueDeDatos]);
