@@ -28,3 +28,7 @@ cp tp-2019-2c-Pasaron-cosas/pruebas/completa/muse.config tp-2019-2c-Pasaron-cosa
 cd linuse-tests-programs/
 make && make entrega
 cd
+
+cd directorioPrueba/
+mkdir una
+cd
