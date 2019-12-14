@@ -140,10 +140,12 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 		if(statRetorno.st_nlink == 2){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_ctim);
 		}
 		if(statRetorno.st_nlink == 1){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_ctim);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
 		}
 	}
@@ -248,7 +250,7 @@ void funcion_write(t_paquete paquete,int socket_fuse){
 	int retorno = escribirArchivo(path, buffer, size, offset);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
+			.header = FUSE_WRITE,
 			.parametros = list_create()
 	};
 
@@ -315,7 +317,7 @@ void funcion_unlink(t_paquete paquete,int socket_fuse){
 	int retorno = eliminarArchivo(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
+			.header = FUSE_UNLINK,
 			.parametros = list_create()
 	};
 
@@ -378,7 +380,7 @@ void funcion_mkdir(t_paquete paquete,int socket_fuse){
 	int retorno = crearDirectorio(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
+			.header = FUSE_MKDIR,
 			.parametros = list_create()
 	};
 
@@ -401,7 +403,7 @@ void funcion_rmdir(t_paquete paquete,int socket_fuse){
 	int retorno = eliminarDirectorio(path);
 
 	t_paquete paquete_respuesta = {
-			.header = FUSE_OPEN,
+			.header = FUSE_RMDIR,
 			.parametros = list_create()
 	};
 
