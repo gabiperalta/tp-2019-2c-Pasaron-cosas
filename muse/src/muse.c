@@ -23,6 +23,7 @@ int main(void) {
 		free(linea);
 	}
 
+	fclose(archivo_swap);
 	log_destroy(archivo_log);
 	free(upcm);
 	return 0;

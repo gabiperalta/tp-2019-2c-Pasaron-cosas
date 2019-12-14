@@ -97,7 +97,14 @@ void init_memoria(){
 	bitmap_swap = bitarray_create_with_mode(frames_swap_bitmap,cantidad_frames_swap_bytes,MSB_FIRST);
 
 	archivo_swap = fopen(PATH_SWAP,"w");
+	void* buffer_archivo_swap = malloc(TAM_SWAP);
+	memset(buffer_archivo_swap,'\0',TAM_SWAP);
+	//fseek(archivo_swap,0,SEEK_SET);
+	fwrite(buffer_archivo_swap,TAM_SWAP,1,archivo_swap);
+	free(buffer_archivo_swap);
+
 	fclose(archivo_swap);
+	archivo_swap = fopen(PATH_SWAP,"r+");
 	////////////////////////////////////////////////////
 
 	algoritmo_clock_frame_recorrido = 0;
@@ -365,7 +372,28 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	}
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_ALLOC,
 			.parametros = list_create()
@@ -376,7 +404,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
 
-	log_estado_del_sistema();
+	//log_estado_del_sistema();
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
@@ -474,13 +502,33 @@ void funcion_free(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
 	}
 
-	//sleep(5);
 	cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
 	free(buffer);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_FREE,
 			.parametros = list_create()
@@ -559,7 +607,28 @@ void funcion_get(t_paquete paquete,int socket_muse){
 
 	free(buffer);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_obtenido->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_obtenido->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_GET,
 			.parametros = list_create()
@@ -689,7 +758,28 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 
 	free(buffer);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_obtenido->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_obtenido->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_CPY,
 			.parametros = list_create()
@@ -702,7 +792,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 }
 
 void funcion_map(t_paquete paquete,int socket_muse){
-	//printf("Inicio map\n");
+	//printf("\nInicio map\n");
 	char* path_recibido = obtener_string(paquete.parametros);
 	uint32_t length_recibido = obtener_valor(paquete.parametros);
 	uint8_t flag_recibido = obtener_valor(paquete.parametros);
@@ -791,7 +881,28 @@ void funcion_map(t_paquete paquete,int socket_muse){
 	}
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_MAP,
 			.parametros = list_create()
@@ -802,13 +913,13 @@ void funcion_map(t_paquete paquete,int socket_muse){
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
 
-	printf("Fin map\n");
+	//printf("Fin map\n");
 }
 
 void funcion_sync(t_paquete paquete,int socket_muse){
 
 	uint32_t resultado_sync = 1;
-	printf("\nInicio muse_sync\n");
+	//printf("\nInicio muse_sync\n");
 
 	uint32_t direccion_recibida = obtener_valor(paquete.parametros);
 	uint32_t length_recibido = obtener_valor(paquete.parametros);
@@ -875,7 +986,28 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 
 	free(buffer);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_obtenido->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_obtenido->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
 
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_SYNC,
 			.parametros = list_create()
@@ -886,7 +1018,7 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
 
-	printf("Fin muse_sync\n");
+	//printf("Fin muse_sync\n");
 }
 
 void funcion_unmap(t_paquete paquete,int socket_muse){
@@ -950,6 +1082,28 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
+	/*
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_encontrado->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_encontrado->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
+
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
+	*/
 	t_paquete paquete_respuesta = {
 			.header = MUSE_UNMAP,
 			.parametros = list_create()
@@ -959,6 +1113,8 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 	agregar_valor(paquete_respuesta.parametros,resultado_unmap);
 	enviar_paquete(paquete_respuesta,socket_muse);
 	///////////////////////////////////////////////////////
+
+	//printf("Fin unmap\n");
 }
 
 
