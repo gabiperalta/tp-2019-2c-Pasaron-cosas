@@ -35,7 +35,6 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	if(retorno == 0){
 		statRetorno->st_nlink = obtener_valor(paquete_respuesta.parametros);
 		statRetorno->st_mode = obtener_valor(paquete_respuesta.parametros);
-		//statRetorno->st_ctim = obtener_valor(paquete_respuesta.parametros);
 		if(statRetorno->st_nlink == 2){
 
 			//printf("RECIBI UN DIRECTORIO \n");
@@ -168,7 +167,7 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
 static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	int retorno = 0;
 	int fileDescriptor;
-	//int socket_interno = conectarseA(ip_filesystem,puerto);
+	int socket_interno = conectarseA(ip_filesystem,puerto);
 
 	t_paquete paquete_solicitud = {
 			.header = FUSE_OPEN,
@@ -178,10 +177,10 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	// MANDO UNICAMENTE EL PATH
 	// agregar_string(paquete_solicitud.parametros, path_formateado);
 	agregar_string(paquete_solicitud.parametros, path);
-	enviar_paquete(paquete_solicitud, my_socket);
+	enviar_paquete(paquete_solicitud, socket_interno);
 
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
-	t_paquete paquete_respuesta = recibir_paquete(my_socket);
+	t_paquete paquete_respuesta = recibir_paquete(socket_interno);
 
 	fileDescriptor = obtener_valor(paquete_respuesta.parametros );
 
@@ -191,7 +190,7 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 		retorno = -1;
 	}
 
-	//close(socket_interno);
+	close(socket_interno);
 
 	return retorno;
 }
