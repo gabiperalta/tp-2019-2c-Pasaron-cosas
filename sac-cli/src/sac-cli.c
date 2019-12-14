@@ -166,6 +166,7 @@ static int sac_cli_mknod(const char *path, mode_t mode, dev_t dev){
  */
 static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	int retorno = 0;
+	int fileDescriptor;
 	int socket_interno = conectarseA(ip_filesystem,puerto);
 
 	t_paquete paquete_solicitud = {
@@ -181,9 +182,16 @@ static int sac_cli_open(const char *path, struct fuse_file_info * file_info){
 	// RECIVO LA RESPUESTA DEL SAC-SERVER
 	t_paquete paquete_respuesta = recibir_paquete(socket_interno);
 
-	retorno = obtener_valor(paquete_respuesta.parametros );
+	fileDescriptor = obtener_valor(paquete_respuesta.parametros );
+
+	if(fileDescriptor >= 0 ){
+		file_info->fh = fileDescriptor;
+	}else{
+		retorno = -1;
+	}
 
 	close(socket_interno);
+
 	return retorno;
 }
 
@@ -260,18 +268,20 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 
 	retorno = obtener_valor( paquete_respuesta.parametros );
 	if(retorno > 0){
-		printf("----------------------RETORNO : %i", retorno);
+		//printf("----------------------RETORNO : %i", retorno);
 		memset(buffer, '\0', retorno);
 		bufferAuxiliar = obtener_bloque_datos( paquete_respuesta.parametros );
 		memcpy(buffer, bufferAuxiliar, retorno);
 
-		printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
-		printf("%s\n\n\n\n", bufferAuxiliar);
+		//printf("\n\n\n\n---------EL BUFFER AUXILIAR ES----------\n");
+		//printf("%s\n\n\n\n", bufferAuxiliar);
 
 		//printf("\n\n\n\n---------EL BUFFER FINAL ES----------\n");
 		//printf("%s\n\n\n\n", buffer);
 
 		free(bufferAuxiliar);
+	}else{
+		buffer = NULL;
 	}
 
 	//free(bufferAuxiliar);
@@ -308,7 +318,7 @@ static int sac_cli_unlink(const char *path){
 static int sac_cli_truncate(const char * path, off_t offset) {
 	int retorno = 0;
 	int socket_interno = conectarseA(ip_filesystem,puerto);
-	printf("PARAMETROS QUE LLEGARON:::   Path: %s, Offset: %u\n", path, offset);
+	//printf("PARAMETROS QUE LLEGARON:::   Path: %s, Offset: %u\n", path, offset);
 
 
 	t_paquete paquete_solicitud = {
@@ -332,7 +342,7 @@ static int sac_cli_truncate(const char * path, off_t offset) {
 static int sac_cli_rename(const char * pathVieja , const char * pathNueva){
 	int retorno = 0;
 	int socket_interno = conectarseA(ip_filesystem,puerto);
-	printf("PARAMETROS QUE LLEGARON:::   PathVieja: %s, PathNueva: %s\n", pathVieja, pathNueva);
+	//printf("PARAMETROS QUE LLEGARON:::   PathVieja: %s, PathNueva: %s\n", pathVieja, pathNueva);
 
 
 	t_paquete paquete_solicitud = {

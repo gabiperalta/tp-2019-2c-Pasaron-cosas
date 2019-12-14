@@ -326,7 +326,7 @@ uint8_t abrirArchivo( char *path, int socketProceso){ // debemos ver si hay que 
 
 	printf("FD: %i", fileDescriptor);
 
-	return 0;
+	return fileDescriptor;
 
 }
 

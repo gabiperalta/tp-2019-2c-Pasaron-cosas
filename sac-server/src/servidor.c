@@ -293,7 +293,7 @@ void funcion_read(t_paquete paquete,int socket_fuse){
 		agregar_bloque_datos(paquete_respuesta.parametros, (void*)buffer, retorno);
 	}else{
 		printf("El buffer es NULL\n");
-		retorno = -EBADF;
+		retorno = 0;
 		agregar_valor(paquete_respuesta.parametros, retorno);
 	}
 
