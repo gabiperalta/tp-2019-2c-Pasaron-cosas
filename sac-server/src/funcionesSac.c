@@ -387,7 +387,6 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 			inodoArchivo->file_size = offset + size;
 		}
 
-
 		//printf("ESCRIBIENDO 4\n");
 
 		escribirBloques( inodoArchivo, buffer, offsetInicial, offsetFinal );
@@ -510,16 +509,25 @@ int myTruncate( char *path, off_t offset){
 
 		GFile* inodoArchivo = (GFile*) obtenerBloque(punteroInodo);
 
-		if(offset < inodoArchivo){
-			int bloquesQueNecesitaLiberar = ( inodoArchivo->file_size - offset ) / BLOCK_SIZE;
+		int tamanioArchivoEnBloques = inodoArchivo->file_size / BLOCK_SIZE;
+		if( inodoArchivo->file_size % BLOCK_SIZE ){
+			tamanioArchivoEnBloques ++;
+		}
+
+		if(offset < tamanioArchivoEnBloques * BLOCK_SIZE - 1){
+			int tamanioOffsetEnBloques = offset / BLOCK_SIZE;
+			if( offset % BLOCK_SIZE ){
+				tamanioOffsetEnBloques ++;
+			}
+			int bloquesQueNecesitaLiberar = tamanioArchivoEnBloques - tamanioOffsetEnBloques ;
 			for(int i = 0; i < bloquesQueNecesitaLiberar; i++){
 				liberarBloqueTruncate( inodoArchivo );
 			}
 		}
 		else{
-			if(offset > inodoArchivo){
-				int bloquesQueNecesitaAsignar = ( offset - inodoArchivo->file_size ) / BLOCK_SIZE;
-				if(((offset - inodoArchivo->file_size) % BLOCK_SIZE) > 0) // PORQUE SI QUEDA RESTO, NECESITO UN BLOQUE DE MAS
+			if(offset > tamanioArchivoEnBloques * BLOCK_SIZE){
+				int bloquesQueNecesitaAsignar = ( offset - tamanioArchivoEnBloques * BLOCK_SIZE ) / BLOCK_SIZE;
+				if(((offset - tamanioArchivoEnBloques * BLOCK_SIZE) % BLOCK_SIZE) > 0) // PORQUE SI QUEDA RESTO, NECESITO UN BLOQUE DE MAS
 					bloquesQueNecesitaAsignar ++;
 				for(int j = 0; j < bloquesQueNecesitaAsignar; j++){
 					asignarBloqueDeDatos(inodoArchivo);
@@ -527,6 +535,7 @@ int myTruncate( char *path, off_t offset){
 			}
 		}
 
+		inodoArchivo->file_size = offset;
 
 		return 0;
 	}
