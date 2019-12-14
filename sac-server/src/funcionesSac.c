@@ -382,6 +382,8 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 				asignarBloqueDeDatos(inodoArchivo);
 				//printf("SE LE ASIGNO UN BLOQUE AL ARCHIVO\n");
 			}
+		}
+		if(offset + size > inodoArchivo->file_size){
 			inodoArchivo->file_size = offset + size;
 		}
 
