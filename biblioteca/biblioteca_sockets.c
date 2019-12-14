@@ -113,8 +113,8 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 		total_recibido += bytesRecibidos;
 	}while(total_recibido != cant_a_recibir && bytesRecibidos > 0);
 	memcpy(&tam_buffer_retornado,buffer_aux,sizeof(tam_buffer));
-	if(tam_buffer == tam_buffer_retornado)
-		printf("El envio de datos se realizara bien\n");
+	//if(tam_buffer == tam_buffer_retornado)
+		//printf("El envio de datos se realizara bien\n");
 	free(buffer_aux);
 
 	buffer = malloc(tam_buffer);
@@ -145,7 +145,7 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 	int bytesEnviados = send(socket_servidor,buffer,tam_buffer,0);
 
-	printf("bytesEnviados %d\n",bytesEnviados);
+	//printf("bytesEnviados %d\n",bytesEnviados);
 
 	free(buffer);
 }
@@ -201,11 +201,11 @@ t_paquete recibir_paquete(int socket_cliente){
 	//recv(socket_cliente,buffer, sizeof(paquete.header), 0);
 	memcpy(&paquete.header,&buffer[posicion],sizeof(paquete.header));
 	posicion += sizeof(paquete.header);
-	printf("paquete.header: %d\n", paquete.header);
+	//printf("paquete.header: %d\n", paquete.header);
 	//recv(socket_cliente,buffer, sizeof(cantidad_parametros), 0);
 	memcpy(&cantidad_parametros,&buffer[posicion],sizeof(cantidad_parametros));
 	posicion += sizeof(cantidad_parametros);
-	printf("cantidad_parametros: %d\n", cantidad_parametros);
+	//printf("cantidad_parametros: %d\n", cantidad_parametros);
 
 	if(cantidad_parametros == 0){
 		free(buffer);
