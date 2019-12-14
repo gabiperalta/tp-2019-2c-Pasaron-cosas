@@ -46,12 +46,12 @@ int myGetattr( char *path, struct stat *statRetorno ){
 		if(inodoArchivo->state == DIRECTORIO){
 			statRetorno->st_mode = S_IFDIR | 0777;
 			statRetorno->st_nlink = 2;
-			statRetorno->st_ctim = inodoArchivo->creation_date;
+			//statRetorno->st_ctim = inodoArchivo->creation_date;
 		}
 		if(inodoArchivo->state == ARCHIVO){
 			statRetorno->st_mode = S_IFREG | 0777;
 			statRetorno->st_nlink = 1;
-			statRetorno->st_ctim = inodoArchivo->creation_date;
+			//statRetorno->st_ctim = inodoArchivo->creation_date;
 			statRetorno->st_size = inodoArchivo->file_size;
 		}
 

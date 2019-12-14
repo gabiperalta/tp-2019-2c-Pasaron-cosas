@@ -35,7 +35,7 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	if(retorno == 0){
 		statRetorno->st_nlink = obtener_valor(paquete_respuesta.parametros);
 		statRetorno->st_mode = obtener_valor(paquete_respuesta.parametros);
-		statRetorno->st_ctim = obtener_valor(paquete_respuesta.parametros);
+		//statRetorno->st_ctim = obtener_valor(paquete_respuesta.parametros);
 		if(statRetorno->st_nlink == 2){
 
 			//printf("RECIBI UN DIRECTORIO \n");
