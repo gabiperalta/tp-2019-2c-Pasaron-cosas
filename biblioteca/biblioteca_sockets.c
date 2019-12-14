@@ -87,7 +87,7 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 	void* buffer;
 	int posicion = 0;
 	uint8_t cantidad_parametros = 0;
-	int tam_buffer = sizeof(paquete.header) + sizeof(tam_buffer) + sizeof(cantidad_parametros);
+	int tam_buffer = sizeof(paquete.header) + sizeof(cantidad_parametros);
 	t_parametro* parametro;
 
 	if(paquete.parametros != NULL){
@@ -101,12 +101,25 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 		}
 	}
 
+	send(socket_servidor,&tam_buffer,sizeof(tam_buffer),0);
+
+	void* buffer_aux = malloc(sizeof(tam_buffer));
+	int total_recibido = 0;
+	int cant_a_recibir = sizeof(tam_buffer);
+	int tam_buffer_retornado;
+	int bytesRecibidos;
+	do{
+		bytesRecibidos = recv(socket_servidor, &buffer_aux[total_recibido], cant_a_recibir - total_recibido, 0);
+		total_recibido += bytesRecibidos;
+	}while(total_recibido != cant_a_recibir && bytesRecibidos > 0);
+	memcpy(&tam_buffer_retornado,buffer_aux,sizeof(tam_buffer));
+	if(tam_buffer == tam_buffer_retornado)
+		printf("El envio de datos se realizara bien\n");
+	free(buffer_aux);
+
 	buffer = malloc(tam_buffer);
 
-	printf("TAM BUFFER enviar_paquete: %i\n", tam_buffer);
-
-	memcpy(&buffer[posicion],&tam_buffer,sizeof(tam_buffer)); //mando el tamano del buffer para saber el total a recibir
-	posicion += sizeof(tam_buffer);
+	//printf("TAM BUFFER enviar_paquete: %i\n", tam_buffer);
 	memcpy(&buffer[posicion],&paquete.header,sizeof(paquete.header));
 	posicion += sizeof(paquete.header);
 	memcpy(&buffer[posicion],&cantidad_parametros,sizeof(cantidad_parametros));
@@ -139,35 +152,60 @@ void enviar_paquete(t_paquete paquete,int socket_servidor){
 
 t_paquete recibir_paquete(int socket_cliente){
 	int bytesRecibidos;
+	int posicion = 0;
 	t_paquete paquete;
 	int tam_buffer;
 	void* buffer;
 	uint8_t cantidad_parametros = 0;
 
-	bytesRecibidos = recv(socket_cliente,&tam_buffer, sizeof(tam_buffer), 0);
+	int total_recibido = 0;
+	int cant_a_recibir = sizeof(tam_buffer);
+
+	//bytesRecibidos = recv(socket_cliente,&tam_buffer, sizeof(tam_buffer), 0);
+	buffer = malloc(cant_a_recibir);
+	//bytesRecibidos = recv(socket_cliente,buffer,200000,0);
 	paquete.error = 0;
+
+	do{
+		bytesRecibidos = recv(socket_cliente, &buffer[total_recibido], cant_a_recibir - total_recibido, 0);
+		total_recibido += bytesRecibidos;
+	}while(total_recibido != cant_a_recibir && bytesRecibidos > 0);
 
 	if(bytesRecibidos <= 0) {
 		perror("Se desconecto el cliente");
 		paquete.error = 1;
+		free(buffer);
 		return paquete;
 	}
 
-	//if(tam_buffer > 500910)
-	//	tam_buffer = 200910;
+	send(socket_cliente,buffer,sizeof(tam_buffer),0); // envio esto para decir que esta _todo ok
 
-	buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
+	memcpy(&tam_buffer,buffer,sizeof(tam_buffer));
+	buffer = realloc(buffer,tam_buffer);
+	total_recibido = 0;
+	cant_a_recibir = tam_buffer;
+	do{
+		bytesRecibidos = recv(socket_cliente, &buffer[total_recibido], cant_a_recibir - total_recibido, 0);
+		total_recibido += bytesRecibidos;
+	}while(total_recibido != cant_a_recibir && bytesRecibidos > 0);
+
+	//buffer = malloc(tam_buffer); // solo para que el buffer no ocupe mucho
 	if(buffer == NULL){
 		printf("\tmalloc demasiado grande\n");
 	}
 
-	printf("BYTES RECIBIDOS: %i\n", bytesRecibidos);
-	printf("TAM BUFFER recibir_paquete: %i\n", tam_buffer);
+	//printf("BYTES RECIBIDOS: %i\n", bytesRecibidos);
+	//printf("TAM BUFFER recibir_paquete: %i\n", tam_buffer);
+	//posicion = sizeof(tam_buffer);
 
-	recv(socket_cliente,buffer, sizeof(paquete.header), 0);
-	memcpy(&paquete.header,buffer,sizeof(paquete.header));
-	recv(socket_cliente,buffer, sizeof(cantidad_parametros), 0);
-	memcpy(&cantidad_parametros,buffer,sizeof(cantidad_parametros));
+	//recv(socket_cliente,buffer, sizeof(paquete.header), 0);
+	memcpy(&paquete.header,&buffer[posicion],sizeof(paquete.header));
+	posicion += sizeof(paquete.header);
+	printf("paquete.header: %d\n", paquete.header);
+	//recv(socket_cliente,buffer, sizeof(cantidad_parametros), 0);
+	memcpy(&cantidad_parametros,&buffer[posicion],sizeof(cantidad_parametros));
+	posicion += sizeof(cantidad_parametros);
+	printf("cantidad_parametros: %d\n", cantidad_parametros);
 
 	if(cantidad_parametros == 0){
 		free(buffer);
@@ -178,15 +216,18 @@ t_paquete recibir_paquete(int socket_cliente){
 	for(int i=0; i<cantidad_parametros ; i++){
 		t_parametro* parametro = malloc(sizeof(t_parametro));
 
-		recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
-		memcpy(&parametro->valor,buffer,sizeof(parametro->valor));
-		recv(socket_cliente,buffer, sizeof(parametro->recibir_bloque_datos), 0);
-		memcpy(&parametro->recibir_bloque_datos,buffer,sizeof(parametro->recibir_bloque_datos));
+		//recv(socket_cliente,buffer, sizeof(parametro->valor), 0);
+		memcpy(&parametro->valor,&buffer[posicion],sizeof(parametro->valor));
+		posicion += sizeof(parametro->valor);
+		//recv(socket_cliente,buffer, sizeof(parametro->recibir_bloque_datos), 0);
+		memcpy(&parametro->recibir_bloque_datos,&buffer[posicion],sizeof(parametro->recibir_bloque_datos));
+		posicion += sizeof(parametro->recibir_bloque_datos);
 
 		if(parametro->recibir_bloque_datos){
-			recv(socket_cliente,buffer, parametro->valor, 0);
+			//recv(socket_cliente,buffer, parametro->valor, 0);
 			parametro->bloque_datos = malloc(parametro->valor);
-			memcpy(parametro->bloque_datos,buffer,parametro->valor);
+			memcpy(parametro->bloque_datos,&buffer[posicion],parametro->valor);
+			posicion += parametro->valor;
 		}
 
 		list_add(paquete.parametros,parametro);
