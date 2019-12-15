@@ -120,11 +120,15 @@ t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento) {
     new->bit_presencia = bit_presencia;
     new->tipo_segmento = tipo_segmento;
     new->frame = 0;
+    new->puede_pasar_por_swap = true;
 
 	//printf("Estoy por crear una pagina\n");
 
-    if(!bit_presencia)
+    if(!bit_presencia){
+    	// si el segmento es MMAP, aun no paso por swap. Podra pasar una vez que este en UPCM
+    	new->puede_pasar_por_swap = false;
     	return new;
+    }
 
     frame_obtenido = obtener_frame_libre();
     if(frame_obtenido >= 0){
@@ -140,23 +144,23 @@ t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento) {
     	//printf("Se encontro la pagina a reemplazar\n");
     	pagina_a_reemplazar->bit_presencia = 0;
 		new->frame = obtener_frame_libre();
+		//new->bit_usado = 1;
 
-    	if(pagina_a_reemplazar->tipo_segmento == SEGMENTO_HEAP){
-			void* buffer = malloc(TAM_PAGINA);
-			int frame_swap_obtenido = obtener_frame_swap_libre();
+		void* buffer = malloc(TAM_PAGINA);
+		int frame_swap_obtenido = obtener_frame_swap_libre();
 
-			memcpy(buffer,&upcm[pagina_a_reemplazar->frame*TAM_PAGINA],TAM_PAGINA);
+		memcpy(buffer,&upcm[pagina_a_reemplazar->frame*TAM_PAGINA],TAM_PAGINA);
 
-			//archivo_swap = fopen(PATH_SWAP,"r+");
+		//archivo_swap = fopen(PATH_SWAP,"r+");
 
-			fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
-			fwrite(buffer,TAM_PAGINA,1,archivo_swap);
+		fseek(archivo_swap,frame_swap_obtenido*TAM_PAGINA,SEEK_SET);
+		fwrite(buffer,TAM_PAGINA,1,archivo_swap);
 
-			pagina_a_reemplazar->frame = frame_swap_obtenido;
+		pagina_a_reemplazar->frame = frame_swap_obtenido;
+		pagina_a_reemplazar->puede_pasar_por_swap = true;
 
-			free(buffer);
-			//fclose(archivo_swap);
-    	}
+		free(buffer);
+		//fclose(archivo_swap);
     }
 
     agregar_frame_clock(new);
@@ -295,6 +299,7 @@ void* obtener_datos_frame(t_pagina* pagina){
 
 void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pagina){
 	if(!pagina->bit_presencia && !espacio_en_upcm()){
+		printf("El frame no esta en memoria y no hay espacio\n");
     	t_pagina* pagina_upcm = ejecutar_algoritmo_clock_modificado();
 
     	void* buffer_pagina_upcm = malloc(TAM_PAGINA);
@@ -317,9 +322,11 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
 
     	// si este metodo no sirve, agregar un campo length_mmap en t_segmento
     	if((nro_pagina*TAM_PAGINA) <= segmento->tam_archivo_mmap){
+    		printf("nro_pagina*TAM_PAGINA %d\n",nro_pagina*TAM_PAGINA);
+    		printf("segmento->tam_archivo_mmap %d\n",segmento->tam_archivo_mmap);
     		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
 
-    		int bytes_a_leer = (int)fmin(TAM_PAGINA,((nro_pagina*TAM_PAGINA) + TAM_PAGINA) - segmento->tam_archivo_mmap);
+    		int bytes_a_leer = (int)fmin(TAM_PAGINA,segmento->tam_archivo_mmap - ((nro_pagina*TAM_PAGINA) + TAM_PAGINA));
 
     		fread(buffer_pagina_mmap,bytes_a_leer,1,segmento->archivo_mmap);
     		memcpy(&upcm[pagina->frame*TAM_PAGINA],buffer_pagina_mmap,bytes_a_leer);
@@ -339,11 +346,13 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
     	//fclose(archivo_swap);
 	}
 	else if(!pagina->bit_presencia && espacio_en_upcm()){
-    	void* buffer_pagina_mmap = malloc(TAM_PAGINA);
+		printf("El frame no esta en memoria y hay espacio\n");
+		void* buffer_pagina_mmap = malloc(TAM_PAGINA);
 
     	pagina->frame = obtener_frame_libre();
     	pagina->bit_presencia = 1;
     	pagina->bit_usado = 1;
+    	pagina->puede_pasar_por_swap = true;
 
 		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
 		fread(buffer_pagina_mmap,TAM_PAGINA,1,segmento->archivo_mmap);
@@ -523,4 +532,30 @@ void agregar_frame_clock(t_pagina* pagina){
 	else{
 		list_add_in_index(lista_clock,pagina->frame,pagina);
 	}
+}
+
+void print_de_prueba(t_proceso* proceso_obtenido){
+	/////////////// PRUEBA ///////////////
+	t_segmento* segmento_mostrado;
+	t_pagina* pagina_mostrada;
+	for(int s=0; s<list_size(proceso_obtenido->tabla_segmentos); s++){
+		segmento_mostrado = list_get(proceso_obtenido->tabla_segmentos,s);
+		printf("segmento nro %d\t",s);
+		printf("tipo: %d\t",segmento_mostrado->tipo_segmento);
+		printf("base: %d\t",segmento_mostrado->base);
+		printf("limite: %d\t\n",segmento_mostrado->limite);
+
+		printf("tabla de paginas: \n");
+		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
+			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
+			printf("pagina nro %d\t",p);
+			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			if(!pagina_mostrada->bit_presencia && !pagina_mostrada->puede_pasar_por_swap)
+				printf("frame: -\t\n");
+			else
+				printf("frame: %d\t\n",pagina_mostrada->frame);
+		}
+	}
+	printf("\n");
+	//////////////////////////////////////
 }

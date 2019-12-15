@@ -46,6 +46,7 @@ typedef struct{
 	uint8_t bit_modificado;
 	uint8_t bit_usado;
 	uint8_t tipo_segmento;
+	bool puede_pasar_por_swap;
 }t_pagina;
 
 typedef struct{
@@ -84,5 +85,6 @@ void eliminar_archivo_mmap(t_archivo_mmap* archivo_mmap);
 
 t_pagina* ejecutar_algoritmo_clock_modificado();
 void agregar_frame_clock(t_pagina* pagina);
+void print_de_prueba(t_proceso* proceso_obtenido);
 
 #endif /* PLUGINBABY_H_ */
