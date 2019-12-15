@@ -35,13 +35,12 @@ static int sac_cli_getattr( const char *path, struct stat *statRetorno ){
 	if(retorno == 0){
 		statRetorno->st_nlink = obtener_valor(paquete_respuesta.parametros);
 		statRetorno->st_mode = obtener_valor(paquete_respuesta.parametros);
-		if(statRetorno->st_nlink == 2){
-
-			//printf("RECIBI UN DIRECTORIO \n");
-		}
+		statRetorno->st_mtim.tv_sec = obtener_valor(paquete_respuesta.parametros);
+		/*if(statRetorno->st_nlink == 2){
+			printf("RECIBI UN DIRECTORIO \n");
+		}*/
 		if(statRetorno->st_nlink == 1){
 			statRetorno->st_size = obtener_valor(paquete_respuesta.parametros);
-
 			//printf("RECIBI UN ARCHIVO \n");
 		}
 	}
@@ -245,7 +244,7 @@ static int sac_cli_write( const char *path, const char *buffer, size_t size, off
  * Changed in version 2.2
  */
 static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
-	//pthread_mutex_lock(&mut_funcion_read);
+	pthread_mutex_lock(&mut_funcion_read);
 	int retorno = 0;
 	char* bufferAuxiliar;
 	int socket_interno = conectarseA(ip_filesystem,puerto);
@@ -284,8 +283,7 @@ static int sac_cli_read( const char *path, char *buffer, size_t size, off_t offs
 		buffer = NULL;
 	}
 
-	//free(bufferAuxiliar);
-	//pthread_mutex_unlock(&mut_funcion_read);
+	pthread_mutex_unlock(&mut_funcion_read);
 	close(socket_interno);
 	return retorno;
 }

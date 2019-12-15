@@ -140,10 +140,12 @@ void funcion_getattr(t_paquete paquete,int socket_fuse){
 		if(statRetorno.st_nlink == 2){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mtim.tv_sec);
 		}
 		if(statRetorno.st_nlink == 1){
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_nlink);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mode);
+			agregar_valor(paquete_respuesta.parametros, statRetorno.st_mtim.tv_sec);
 			agregar_valor(paquete_respuesta.parametros, statRetorno.st_size);
 		}
 	}

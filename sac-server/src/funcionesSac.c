@@ -14,8 +14,8 @@ void crearDirectorioRaiz(){
 	directorioRaiz->father_block = 0;
 	directorioRaiz->file_size = 0;
 	memcpy(directorioRaiz->fname, "/\0", 2);
-	directorioRaiz->creation_date = tiempo.tv_usec;
-	directorioRaiz->modification_date = tiempo.tv_usec;
+	directorioRaiz->creation_date = tiempo.tv_sec;
+	directorioRaiz->modification_date = tiempo.tv_sec;
 
 	bloqueDeDirectorio = asignarBloqueDeDirectorio(directorioRaiz);
 
@@ -46,11 +46,13 @@ int myGetattr( char *path, struct stat *statRetorno ){
 		if(inodoArchivo->state == DIRECTORIO){
 			statRetorno->st_mode = S_IFDIR | 0777;
 			statRetorno->st_nlink = 2;
+			statRetorno->st_mtim.tv_sec = inodoArchivo->creation_date;
 		}
 		if(inodoArchivo->state == ARCHIVO){
 			statRetorno->st_mode = S_IFREG | 0777;
 			statRetorno->st_nlink = 1;
 			statRetorno->st_size = inodoArchivo->file_size;
+			statRetorno->st_mtim.tv_sec = inodoArchivo->creation_date;
 		}
 
 		return 0;
@@ -94,33 +96,33 @@ int crearDirectorio(char *path ){
 
 	if(punteroAInodo > 0){ // DEBERIA SINCRONIZAR ESTO DE MANERA QUE UNA VEZ QUE SEPA QUE TIENE INODO Y ENTRADA DI DIRECTORIO LIBRES, NADIE SE LOS PUEDA QUITAR
 		inodo = (GFile*) obtenerBloque(punteroAInodo); // PUEDO ASIGNARLO Y SI NO PUEDO TERMINAR LA OPREACION LO LIBERA
-		hayEntradaLibre = reservarEntrada(punteroAInodoPadre, punteroAInodo, pathDividida[longitudDePath - 1]);
-		if(hayEntradaLibre){ // retorna true si se reservo correctamente, y false si no habian entradas.
-			for(int i; i<1000; i++){
-				inodo->blocks[i] = 0;
-			}
-
-
-			inodo->creation_date = tiempo.tv_usec;
-			inodo->father_block = punteroAInodoPadre;
-			inodo->file_size = 0;
-			memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
-			memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
-			inodo->modification_date = tiempo.tv_usec;
-			inodo->state = DIRECTORIO;
-
-			bloqueDeDirectorio = asignarBloqueDeDirectorio(inodo);
-
-			// CREAR LAS ENTRADAS . Y ..
-			inicializarPrimerasEntradas(bloqueDeDirectorio, punteroAInodo, punteroAInodoPadre);
-
-			liberarCharAsteriscoAsterisco(pathDividida);
-
-			//printf("Directorio creado: name = %s\t father_block = %i\t punteroInodo = %i", inodo->fname, inodo->father_block, punteroAInodo);
-
-			return 0;
+		//hayEntradaLibre = reservarEntrada(punteroAInodoPadre, punteroAInodo, pathDividida[longitudDePath - 1]);
+		//if(hayEntradaLibre){ // retorna true si se reservo correctamente, y false si no habian entradas.
+		for(int i = 0; i<1000; i++){
+			inodo->blocks[i] = 0;
 		}
-		inodo->state = BORRADO; // EN CASO DE QUE NO HAYA UNA ENTRADA DISPONILBE, LIBERA EL INODO QUE LE FUE ASIGNADO PREVIAMENTE
+
+
+		inodo->creation_date = tiempo.tv_sec;
+		inodo->father_block = punteroAInodoPadre;
+		inodo->file_size = 0;
+		memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
+		memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
+		inodo->modification_date = tiempo.tv_sec;
+		inodo->state = DIRECTORIO;
+
+		bloqueDeDirectorio = asignarBloqueDeDirectorio(inodo);
+
+		// CREAR LAS ENTRADAS . Y ..
+		inicializarPrimerasEntradas(bloqueDeDirectorio, punteroAInodo, punteroAInodoPadre);
+
+		liberarCharAsteriscoAsterisco(pathDividida);
+
+		//printf("Directorio creado: name = %s\t father_block = %i\t punteroInodo = %i", inodo->fname, inodo->father_block, punteroAInodo);
+
+		return 0;
+		//}
+		//inodo->state = BORRADO; // EN CASO DE QUE NO HAYA UNA ENTRADA DISPONILBE, LIBERA EL INODO QUE LE FUE ASIGNADO PREVIAMENTE
 	}
 	return -ENOSPC;
 }
@@ -251,26 +253,26 @@ int crearArchivo( char *path ){
 
 	if(punteroAInodo > 0){ // DEBERIA SINCRONIZAR ESTO DE MANERA QUE UNA VEZ QUE SEPA QUE TIENE INODO Y ENTRADA DI DIRECTORIO LIBRES, NADIE SE LOS PUEDA QUITAR
 		inodo = (GFile*) obtenerBloque(punteroAInodo);	// PUEDO ASIGNARLO Y SI NO PUEDO TERMINAR LA OPREACION LO LIBERA
-		hayEntradaLibre = reservarEntrada(punteroAInodoPadre, punteroAInodo, pathDividida[longitudDePath - 1]);
-		if(hayEntradaLibre){  // retorna true si se reservo correctamente, y false si no habian entradas.
-			for(int i; i<1000; i++){
-				inodo->blocks[i] = 0;
-			}
-
-
-			inodo->creation_date = tiempo.tv_usec;
-			inodo->father_block = punteroAInodoPadre;
-			inodo->file_size = 0;
-			memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
-			memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
-			inodo->modification_date = tiempo.tv_usec;
-			inodo->state = ARCHIVO;
-
-			liberarCharAsteriscoAsterisco(pathDividida);
-
-			return 0;
+		//hayEntradaLibre = reservarEntrada(punteroAInodoPadre, punteroAInodo, pathDividida[longitudDePath - 1]);
+		//if(hayEntradaLibre){  // retorna true si se reservo correctamente, y false si no habian entradas.
+		for(int i = 0; i<1000; i++){
+			inodo->blocks[i] = 0;
 		}
-		inodo->state = BORRADO; // EN CASO DE QUE NO HAYA UNA ENTRADA DISPONILBE, LIBERA EL INODO QUE LE FUE ASIGNADO PREVIAMENTE
+
+
+		inodo->creation_date = tiempo.tv_sec;
+		inodo->father_block = punteroAInodoPadre;
+		inodo->file_size = 0;
+		memcpy(inodo->fname, pathDividida[longitudDePath - 1], MAX_FILENAME_LENGTH);
+		memcpy(inodo->fname + strlen(pathDividida[longitudDePath - 1]), "\0", 1); // TODO VERIFICAR QUE ESTO FUNCIONE CORRECTAMENTE
+		inodo->modification_date = tiempo.tv_sec;
+		inodo->state = ARCHIVO;
+
+		liberarCharAsteriscoAsterisco(pathDividida);
+
+		return 0;
+		//}
+		//inodo->state = BORRADO; // EN CASO DE QUE NO HAYA UNA ENTRADA DISPONILBE, LIBERA EL INODO QUE LE FUE ASIGNADO PREVIAMENTE
 	}
 	return -ENOSPC;
 }
@@ -336,9 +338,9 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 	FileOffset *offsetInicial;
 	FileOffset *offsetFinal;
 
-	printf("DATOS QUE LLEGARON: Size: %u, Offset: %u\n", (uint32_t) size, (uint32_t)offset);
-	printf("\n\n\n\n---------EL BUFFER ES----------\n");
-	printf("%s\n\n\n\n", buffer);
+	//printf("DATOS QUE LLEGARON: Size: %u, Offset: %u\n", (uint32_t) size, (uint32_t)offset);
+	//printf("\n\n\n\n---------EL BUFFER ES----------\n");
+	//printf("%s\n\n\n\n", buffer);
 
 	// BUSCAR EL INODO DEL ARCHIVO
 	ptrGBloque punteroArchivo = buscarInodoArchivo(path, NORMAL);
@@ -346,15 +348,9 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 	GFile *inodoArchivo = (GFile*) obtenerBloque(punteroArchivo);
 	// VERIFICAR QUE EL OFFSET SEA MENOR AL TAMANIO MAXIMO DE UN ARCHIVO
 
-	// printf("ESCRIBIENDO 1\n");
-
-	if(offset > 5000000){
-		printf("caca\n");
-	}
 
 	if((4294967295) >= offset){ // 4294967295
 
-		// printf("ESCRIBIENDO 2\n");
 
 		hastaDondeEscribo = minimo((uint32_t) size + offset, 4294967295);
 
@@ -510,22 +506,33 @@ int myTruncate( char *path, off_t offset){
 
 		GFile* inodoArchivo = (GFile*) obtenerBloque(punteroInodo);
 
-		if(offset < inodoArchivo){
-			int bloquesQueNecesitaLiberar = ( inodoArchivo->file_size - offset ) / BLOCK_SIZE;
+		int pasarABloques(int tamanio){
+			int tamanioEnBloques = tamanio / BLOCK_SIZE;
+			if(tamanio % BLOCK_SIZE)
+				tamanioEnBloques ++;
+			return tamanioEnBloques;
+		}
+
+		int tamanioArchivoEnBloques = pasarABloques(inodoArchivo->file_size);
+
+		int offsetEnBloques = pasarABloques(offset);
+
+		if( offsetEnBloques < tamanioArchivoEnBloques ){
+			int bloquesQueNecesitaLiberar = tamanioArchivoEnBloques - offsetEnBloques;
 			for(int i = 0; i < bloquesQueNecesitaLiberar; i++){
 				liberarBloqueTruncate( inodoArchivo );
 			}
 		}
 		else{
-			if(offset > inodoArchivo){
-				int bloquesQueNecesitaAsignar = ( offset - inodoArchivo->file_size ) / BLOCK_SIZE;
-				if(((offset - inodoArchivo->file_size) % BLOCK_SIZE) > 0) // PORQUE SI QUEDA RESTO, NECESITO UN BLOQUE DE MAS
-					bloquesQueNecesitaAsignar ++;
+			if( offsetEnBloques > tamanioArchivoEnBloques ){
+				int bloquesQueNecesitaAsignar = offsetEnBloques - tamanioArchivoEnBloques ;
 				for(int j = 0; j < bloquesQueNecesitaAsignar; j++){
 					asignarBloqueDeDatos(inodoArchivo);
 				}
 			}
 		}
+
+		inodoArchivo->file_size = offset;
 
 
 		return 0;
@@ -719,7 +726,7 @@ GDirEntry *buscarEntrada(ptrGBloque directorioPadre, ptrGBloque archivo){
 	return entrada;
 }
 
-int reservarEntrada(ptrGBloque directorioPadre, ptrGBloque punteroAInodo, char* nombreArchivo){
+/*int reservarEntrada(ptrGBloque directorioPadre, ptrGBloque punteroAInodo, char* nombreArchivo){
 	GDirEntry *entrada= buscarEntrada(directorioPadre, punteroAInodo);
 	if(entrada){
 		entrada->inode = punteroAInodo;
@@ -735,16 +742,16 @@ int reservarEntrada(ptrGBloque directorioPadre, ptrGBloque punteroAInodo, char* 
 void borrarEntrada(ptrGBloque directorioPadre, ptrGBloque Archivo){
 	GDirEntry *entrada = buscarEntrada(directorioPadre, Archivo);
 	entrada->inode = 0;
-}
+}*/
 
 
-int escribirEnBloque(ptrGBloque bloqueDestino, GBlock *contenido){
+/*int escribirEnBloque(ptrGBloque bloqueDestino, GBlock *contenido){
 	if(bloqueDestino < INODE_TABLE_START){ // control para no escribir dentro del bitmap
 		memcpy(obtenerBloque(bloqueDestino), contenido, BLOCK_SIZE);
 		return 0;
 	}
 	return 1;
-}
+}*/
 
 GBlock *obtenerBloque(ptrGBloque bloque){
 	return (myDisk + bloque);
@@ -984,46 +991,46 @@ void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicia
 
 	// SI LO QUE QUIERO ESCRIBIR ESTA DENTRO DE UN UNICO BLOQUE. Perdon por el if horrible :(
 	if(condicion1 && 	condicion2){
-		printf("ADENTRO BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
-		printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
-		printf("EN POSICION: %u\n", contadorBloqueDatos);
+		//printf("ADENTRO BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
+		//printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
+		//printf("EN POSICION: %u\n", contadorBloqueDatos);
 
 		memcpy( bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos , buffer, offsetFinal->posicionEnBloqueDeDatos - offsetInicial->posicionEnBloqueDeDatos ); // offsetFinal->posicionEnBloqueDeDatos - offsetInicial->posicionEnBloqueDeDatos
 
 		/*printf("\n\n\n\n---------EL BUFFER QUE SE ESCRIBIRA ES----------\n");
 		printf("%s\n\n\n\n", buffer);*/
-		printf("\n\n\n\n---------EL BLOQUE ES----------\n");
-		printf("%s\n\n\n\n", bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos);
+		//printf("\n\n\n\n---------EL BLOQUE ES----------\n");
+		//printf("%s\n\n\n\n", bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos);
 		return;
 	}
 
 	//printf("--holaholaHOLAHOLA--\n");
 
-	printf("AFUERA 1 BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
-	printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
-	printf("EN POSICION: %u\n", contadorBloqueDatos);
+	//printf("AFUERA 1 BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
+	//printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
+	//printf("EN POSICION: %u\n", contadorBloqueDatos);
 
 
 
-	printf("tamanio escrito: %u\n", BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos);
-	printf("Buffer: %u\n", buffer);
+	//printf("tamanio escrito: %u\n", BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos);
+	//printf("Buffer: %u\n", buffer);
 
-	printf("Buffer: %u\n", buffer);
+	//printf("Buffer: %u\n", buffer);
 
-	printf("OFFSET_INICIAL: Bloque de punteros: %i\t Bloque de datos: %i\t Posicion en bloque de datos: %i\n", offsetInicial->bloqueDePunteros, offsetInicial->bloqueDeDatos, offsetInicial->posicionEnBloqueDeDatos);
+	//printf("OFFSET_INICIAL: Bloque de punteros: %i\t Bloque de datos: %i\t Posicion en bloque de datos: %i\n", offsetInicial->bloqueDePunteros, offsetInicial->bloqueDeDatos, offsetInicial->posicionEnBloqueDeDatos);
 
-	printf("OFFSET_FINAL: Bloque de punteros: %i\t Bloque de datos: %i\t Posicion en bloque de datos: %i\n", offsetFinal->bloqueDePunteros, offsetFinal->bloqueDeDatos, offsetFinal->posicionEnBloqueDeDatos);
+	//printf("OFFSET_FINAL: Bloque de punteros: %i\t Bloque de datos: %i\t Posicion en bloque de datos: %i\n", offsetFinal->bloqueDePunteros, offsetFinal->bloqueDeDatos, offsetFinal->posicionEnBloqueDeDatos);
 
-	printf("%p\n", &(bloqueDeDatos->bytes));
-	printf("%p\n", &(buffer));
+	//printf("%p\n", &(bloqueDeDatos->bytes));
+	//printf("%p\n", &(buffer));
 
 	memcpy( bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos, (void*)buffer, BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos );
 	punteroBuffer += BLOCK_SIZE - offsetInicial->posicionEnBloqueDeDatos ; // TODO, VER QUE PASA SI EL BUFFER ES MAS CHICO QUE ESTO. LO MISMO PARA LEER
 
-	printf("\n\n\n\n---------EL BLOQUE ES----------\n");
-	printf("%s\n\n\n\n", bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos);
+	//printf("\n\n\n\n---------EL BLOQUE ES----------\n");
+	//printf("%s\n\n\n\n", bloqueDeDatos->bytes + offsetInicial->posicionEnBloqueDeDatos);
 
-	printf("--------------------\n");
+	//printf("--------------------\n");
 
 	contadorBloqueDatos ++;
 	// ESCRIBO EN LOS BLOQUES INTERMEDIOS
@@ -1039,7 +1046,7 @@ void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicia
 		bloqueDePunteros = (GPointerBlock*) obtenerBloque(inodoArchivo->blocks[contadorBloquePunteros]);
 	}
 
-	printf("--------------------\n");
+	//printf("--------------------\n");
 
 	// ESCRIBO EN LOS BLOQUES DEL ULTIMO BLOQUE DE PUNTEROS
 	while( contadorBloqueDatos < offsetFinal->bloqueDeDatos ){
@@ -1049,28 +1056,28 @@ void escribirBloques(GFile* inodoArchivo, char* buffer, FileOffset* offsetInicia
 		contadorBloqueDatos ++;
 	}
 
-	printf("contadorBloqueDatos: %u\n", contadorBloqueDatos);
-	printf("contadorBloqueDePunteros: %u", contadorBloquePunteros);
+	//printf("contadorBloqueDatos: %u\n", contadorBloqueDatos);
+	//printf("contadorBloqueDePunteros: %u", contadorBloquePunteros);
 
-	printf("AFUERA 2 BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
-	printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
-	printf("EN POSICION: %u\n", contadorBloqueDatos);
+	//printf("AFUERA 2 BLOQUE DE PUNTEROS: %u\n", inodoArchivo->blocks[contadorBloquePunteros]);
+	//printf("BLOQUE DE DATOS: %u\n", bloqueDePunteros->blocks[contadorBloqueDatos]);
+	//printf("EN POSICION: %u\n", contadorBloqueDatos);
 
-	printf("--------------------\n");
+	//printf("--------------------\n");
 
 
 	// ESCRIBO EN EL ULTIMO BLOQUE DE DATOS
 	if(offsetFinal->posicionEnBloqueDeDatos !=0 ){
 		bloqueDeDatos = obtenerBloque(bloqueDePunteros->blocks[contadorBloqueDatos]);
 
-		printf("%s\n\n\n\n", bloqueDeDatos->bytes );
+		//printf("%s\n\n\n\n", bloqueDeDatos->bytes );
 
 		memcpy( bloqueDeDatos->bytes, buffer + punteroBuffer, offsetFinal->posicionEnBloqueDeDatos );
 
-		printf("\n\n\n\n---------EL BLOQUE ES----------\n");
-		printf("%s\n\n\n\n", bloqueDeDatos->bytes );
+		//printf("\n\n\n\n---------EL BLOQUE ES----------\n");
+		//printf("%s\n\n\n\n", bloqueDeDatos->bytes );
 
-		printf("--------------------\n");
+		//printf("--------------------\n");
 	}
 
 
@@ -1166,7 +1173,7 @@ GBlock *asignarBloqueDeDatos(GFile* archivo){
 
 			bloqueDePunteros = (GPointerBlock*) obtenerBloque(archivo->blocks[ultimoBloqueDePunteros]);
 
-			printf("ultimoBloqueDePunteros: %i\n", ultimoBloqueDePunteros);
+			//printf("ultimoBloqueDePunteros: %i\n", ultimoBloqueDePunteros);
 
 			// BUSCAR SI TIENE ALGUNA ENTRADA VACIA (CERO)
 			while(bloqueDePunteros->blocks[numeroBloqueDeDatos] != 0 && numeroBloqueDeDatos < 1023){
@@ -1207,9 +1214,9 @@ GBlock *asignarBloqueDeDatos(GFile* archivo){
 
 		// archivo->file_size += BLOCK_SIZE;
 
-		printf("EN EL BLOQUE DE PUNTEROS:   %u\n", archivo->blocks[ultimoBloqueDePunteros]);
-		printf("SE LE ASIGNO UN BLOQUE AL ARCHIVO:   %u\n", bloqueDePunteros->blocks[numeroBloqueDeDatos]);
-		printf("EN LA POSICION: %u", numeroBloqueDeDatos);
+		//printf("EN EL BLOQUE DE PUNTEROS:   %u\n", archivo->blocks[ultimoBloqueDePunteros]);
+		//printf("SE LE ASIGNO UN BLOQUE AL ARCHIVO:   %u\n", bloqueDePunteros->blocks[numeroBloqueDeDatos]);
+		//printf("EN LA POSICION: %u", numeroBloqueDeDatos);
 
 		return bloqueDeDatos;
 	}
@@ -1218,7 +1225,7 @@ GBlock *asignarBloqueDeDatos(GFile* archivo){
 }
 
 void liberarBloqueTruncate(GFile* inodoArchivo){
-	ptrGBloque ultimoBloqueDePunteros = minimo(cantidadBloquesAsignados(inodoArchivo->blocks) - 1, 0);
+	ptrGBloque ultimoBloqueDePunteros = maximo(cantidadBloquesAsignados(inodoArchivo->blocks) - 1, 0);
 	GPointerBlock *bloqueDePunteros;
 	int numeroBloqueDeDatos = 0;
 
@@ -1226,23 +1233,28 @@ void liberarBloqueTruncate(GFile* inodoArchivo){
 	bloqueDePunteros = (GPointerBlock*) obtenerBloque(inodoArchivo->blocks[ultimoBloqueDePunteros]);
 
 	// BUSCAR LA ULTIMA ENTRADA CARGADA
-	while(numeroBloqueDeDatos < 1023 && bloqueDePunteros->blocks[numeroBloqueDeDatos] != 0 ){
+	while(numeroBloqueDeDatos < 1024 && bloqueDePunteros->blocks[numeroBloqueDeDatos] != 0 ){
 		numeroBloqueDeDatos ++;
 	}
-	numeroBloqueDeDatos --;
+	if(numeroBloqueDeDatos)
+		numeroBloqueDeDatos --;
+
+	if(ultimoBloqueDePunteros == 0 && numeroBloqueDeDatos < 2){
+		printf("caca\n");
+	}
 
 	// LIBERAR EL ULTIMO BLOQUE DE DATOS
 	liberarBloqueDeDatos(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
 
 	bloqueDePunteros->blocks[numeroBloqueDeDatos] = 0;
 
-	if(numeroBloqueDeDatos){ // O SEA QUE EL BLOQUE DE PUNTEROS QUEDA VACIO
+	if(!numeroBloqueDeDatos){ // O SEA QUE EL BLOQUE DE PUNTEROS QUEDA VACIO
 		liberarBloqueDeDatos(inodoArchivo->blocks[ultimoBloqueDePunteros]);
+		inodoArchivo->blocks[ultimoBloqueDePunteros] = 0;
 	}
 
-	inodoArchivo->blocks[ultimoBloqueDePunteros] = 0;
 
-	inodoArchivo->file_size -= BLOCK_SIZE;
+	// inodoArchivo->file_size -= BLOCK_SIZE;
 
 }
 
