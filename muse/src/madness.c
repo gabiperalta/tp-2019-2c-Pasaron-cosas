@@ -891,6 +891,9 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
 	}
 
+	printf("Buffer antes de sync %s\n",buffer);
+	//pthread_mutex_lock(&mutex_acceso_upcm);
+
 	if((nro_pagina_obtenida*TAM_PAGINA) <= segmento_obtenido->tam_archivo_mmap){
 		fseek(segmento_obtenido->archivo_mmap,nro_pagina_obtenida*TAM_PAGINA,SEEK_SET);
 		int bytes_a_escribir = (int)fmin(length_recibido,segmento_obtenido->tam_archivo_mmap);

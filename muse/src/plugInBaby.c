@@ -319,6 +319,7 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
       	pagina->frame = obtener_frame_libre();
     	pagina->bit_presencia = 1;
     	pagina->bit_usado = 1;
+    	pagina->puede_pasar_por_swap = true;
 
     	// si este metodo no sirve, agregar un campo length_mmap en t_segmento
     	if((nro_pagina*TAM_PAGINA) <= segmento->tam_archivo_mmap){
@@ -326,7 +327,7 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
     		printf("segmento->tam_archivo_mmap %d\n",segmento->tam_archivo_mmap);
     		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
 
-    		int bytes_a_leer = (int)fmin(TAM_PAGINA,segmento->tam_archivo_mmap - ((nro_pagina*TAM_PAGINA) + TAM_PAGINA));
+    		int bytes_a_leer = (int)fmin(TAM_PAGINA,segmento->tam_archivo_mmap - (nro_pagina*TAM_PAGINA));
 
     		fread(buffer_pagina_mmap,bytes_a_leer,1,segmento->archivo_mmap);
     		memcpy(&upcm[pagina->frame*TAM_PAGINA],buffer_pagina_mmap,bytes_a_leer);
