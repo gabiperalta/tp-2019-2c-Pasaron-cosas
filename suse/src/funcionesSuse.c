@@ -35,17 +35,22 @@ int wait(int tid, char* id_sem, int pid){
 	process* proceso = list_find(lista_procesos, (void*)buscadorProceso);
 
 	thread* hilo_wait = proceso->hilo_exec;
-
-	list_add(semaforo->hilos_bloqueados, hilo_wait); // uso las dos colas para no hacer finds
-	pthread_mutex_lock(&mut_blocked);
-	thread* hilo_bloqueado = list_find(hilos_blocked,(void*) buscadorThread);
-	pthread_mutex_unlock(&mut_blocked);
-	if(hilo_bloqueado == NULL){
-		pthread_mutex_lock(&mut_blocked);
-		list_add(hilos_blocked, hilo_wait);//paso el thread a la cola de bloqueado
-		pthread_mutex_unlock(&mut_blocked);
-	}
+	
 	semaforo->cant_instancias_disponibles -=1;
+	
+	if(semaforo->cant_instancias_disponibles < 0){
+		
+		list_add(semaforo->hilos_bloqueados, hilo_wait); // uso las dos colas para no hacer finds
+		pthread_mutex_lock(&mut_blocked);
+		thread* hilo_bloqueado = list_find(hilos_blocked,(void*) buscadorThread);
+		pthread_mutex_unlock(&mut_blocked);
+		if(hilo_bloqueado == NULL){
+			pthread_mutex_lock(&mut_blocked);
+			list_add(hilos_blocked, hilo_wait);//paso el thread a la cola de bloqueado
+			pthread_mutex_unlock(&mut_blocked);
+		}
+	}
+
 
 	log_info(suse_log,"Se bloqueo el thread");
 	//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
@@ -64,6 +69,10 @@ int signal_suse(int tid, char* id_sem){
 	pthread_mutex_lock(&mut_semaforos);
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 	pthread_mutex_unlock(&mut_semaforos);
+	if(semaforo->cant_instancias_disponibles < semaforo->max_valor){
+
+			semaforo->cant_instancias_disponibles +=1;
+	}
 	if(semaforo->cant_instancias_disponibles <= 0 && list_size(semaforo->hilos_bloqueados) > 0){ //ver si la lista es vacia
 		//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
 		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
@@ -87,13 +96,7 @@ int signal_suse(int tid, char* id_sem){
 		pthread_mutex_unlock(&mut_blocked);
 		log_info(suse_log,"Desbloqueo thread");
 	}
-	else{
 
-		if(semaforo->cant_instancias_disponibles < semaforo->max_valor){
-
-			semaforo->cant_instancias_disponibles +=1;
-		}
-	}
 
 	printf("Fin signal\n");
 	return 1;
