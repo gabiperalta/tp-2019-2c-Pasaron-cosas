@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define RUTA_ARCHIVO "una/ruta"
-#define MAP_SHARED 1
+#define MAP_SHARED 2
 
 struct hilolay_sem_t *presion_emitida;
 struct hilolay_sem_t *presion_recibida;
@@ -16,12 +16,12 @@ struct hilolay_sem_t *revolucion_recibida;
 void grabar_archivo(uint32_t arch, char* palabra)
 {
 	uint32_t offset;
-	hilolay_wait(presion_recibida);
+	hilolay_wait(revolucion_recibida);
 	muse_get(&offset, arch, sizeof(uint32_t));
 	muse_cpy(arch + offset, palabra, strlen(palabra) + 1);
 	offset += strlen(palabra) + 1;
 	muse_cpy(arch, &offset, sizeof(uint32_t));
-	hilolay_signal(presion_emitida);
+	hilolay_signal(revolucion_emitida);
 	sleep(1);
 }
 
@@ -29,13 +29,13 @@ uint32_t leer_archivo(uint32_t arch, uint32_t leido)
 {
 	uint32_t offset;
 	char * palabra = malloc(100);
-	hilolay_wait(revolucion_emitida);
+	hilolay_wait(presion_emitida);
 	muse_get(&offset, arch, sizeof(uint32_t));
 	uint32_t len = offset - leido;
 	muse_get(palabra, arch + offset, len);
 	offset += strlen(palabra) + 1;
 	muse_cpy(arch, &offset, sizeof(uint32_t));
-	hilolay_signal(revolucion_recibida);
+	hilolay_signal(presion_recibida);
 	puts(palabra);
 	free(palabra);
 	return offset;
