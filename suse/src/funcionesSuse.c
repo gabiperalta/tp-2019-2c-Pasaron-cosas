@@ -24,11 +24,6 @@ int wait(int tid, char* id_sem, int pid){
 	//pthread_mutex_unlock(&mut_semaforos);
 
 
-	/*bool buscadorProceso(process* proceso){
-		return proceso->pid == pid;
-	}*/
-	//process* proceso = list_find(lista_procesos, (void*)buscadorProceso);
-
 	/*bool buscadorThread(thread* hilo){
 		return hilo->tid == tid;
 	}*/
@@ -79,6 +74,7 @@ int signal_suse(int tid, char* id_sem){
 
 	semaforos_suse* semaforo = list_find(semaforos, (void*) buscador);
 
+	pthread_mutex_lock(&semaforo->mutex);
 
 	if(semaforo->cant_instancias_disponibles < semaforo->max_valor){
 
@@ -108,12 +104,10 @@ int signal_suse(int tid, char* id_sem){
 		pthread_mutex_unlock(&proceso->mut_ready);
 
 
-		list_add(proceso->hilos_ready,hilo_desbloqueado);
-
-
 		log_info(suse_log,"Desbloqueo thread");
 	}
 
+	pthread_mutex_unlock(&semaforo->mutex);
 
 	printf("Fin signal\n");
 	return 1;
@@ -163,27 +157,28 @@ int close_suse(int tid, int pid){
 	process* proceso = buscarProcesoPorPid(pid);
 
 
-	thread* hilo_ejecutando = proceso->hilo_exec;
+	//thread* hilo_ejecutando = proceso->hilo_exec;
 
 	//printf("hilo_ejecutando->tid_joineado %d\n",hilo_ejecutando->tid_joineado);
-	log_info(suse_log, "hilo a cerrar %d\n",hilo_ejecutando->tid);
-	log_info(suse_log, "tid_joineado %d\n",list_size(hilo_ejecutando->hilos_joineado));
+	log_info(suse_log, "hilo a cerrar %d\n",proceso->hilo_exec->tid);
+	log_info(suse_log, "tid_joineado %d\n",list_size(proceso->hilo_exec->hilos_joineado));
 
-	int cantidadHilosJoineados = list_size(hilo_ejecutando->hilos_joineado);
+	int cantidadHilosJoineados = list_size(proceso->hilo_exec->hilos_joineado);
 
 	if( cantidadHilosJoineados > 0){
 
 		for( int i=0; i < cantidadHilosJoineados ; i++){
 
+			thread* hiloDesbloqueado = list_remove(proceso->hilo_exec->hilos_joineado, 0);
+
 			pthread_mutex_lock(&proceso->mut_ready);
 
-			list_add(proceso->hilos_ready,list_remove(hilo_ejecutando->hilos_joineado, 0));
+			list_add(proceso->hilos_ready, hiloDesbloqueado);
 			sem_post(&proceso->cant_hilos_ready);
 
+			// hilosEnReady = list_size(proceso->hilos_ready);
 
-			hilosEnReady = list_size(proceso->hilos_ready);
-
-			thread* hiloDesbloqueado = list_get(proceso->hilos_ready, hilosEnReady - 1);
+			pthread_mutex_unlock(&proceso->mut_ready);
 
 			log_info(suse_log, "pongo en ready %d\n", hiloDesbloqueado->tid);
 
@@ -191,19 +186,16 @@ int close_suse(int tid, int pid){
 				return unHilo->pid == hiloDesbloqueado->pid && unHilo->tid == hiloDesbloqueado->tid;
 			}
 
-			//pthread_mutex_lock(&mut_blocked);
+			pthread_mutex_lock(&mut_blocked);
 			list_remove_by_condition(hilos_blocked, (void*)buscadorHilo);
-			//pthread_mutex_unlock(&mut_blocked);
-
-
-			pthread_mutex_unlock(&proceso->mut_ready);
+			pthread_mutex_unlock(&mut_blocked);
 
 		}
 
 	}
 
 	pthread_mutex_lock(&mut_exit);
-	list_add(hilos_exit,hilo_ejecutando);
+	list_add(hilos_exit,proceso->hilo_exec);
 	proceso->hilo_exec = NULL;
 	pthread_mutex_unlock(&mut_exit);
 
@@ -289,6 +281,7 @@ int crear(int tid, int pid){
 		hilo->timestamp_inicio_espera = 0;
 		hilo->timestamp_final_espera = 0;
 
+
 		proceso->hilosEnSistema ++;
 
 
@@ -329,7 +322,9 @@ int join(int tid, int pid){
 
 	if(proceso->hilo_exec->tid != tid){
 
+		pthread_mutex_lock(&proceso->mut_ready);
 		thread* hilo_prioritario = list_find(proceso->hilos_ready, (void*)buscarEnReady);
+		pthread_mutex_unlock(&proceso->mut_ready);
 
 		if(hilo_prioritario == NULL){
 
@@ -382,31 +377,11 @@ int join(int tid, int pid){
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
 		}
-	
-		return 1;
-	}
-	/*
-				hilo_prioritario = list_find(hilos_exit, (void*)condicion);
-				pthread_mutex_unlock(&mut_exit);
-				log_error(suse_log, "El hilo a ejecutar prioritario ya esta finalizado");
-
-				pthread_mutex_lock(&proceso->mut_ready);
-				list_add(proceso->hilos_ready, proceso->hilo_exec);
-				//printf("PROCESO DENTRO READY ANTES DE HILO IGUAL A NULL: %i    \n", ((thread)list_get(proceso->hilos_ready, 0))->tid);
-				proceso->hilo_exec = NULL;
-				//printf("PROCESO DENTRO READY DESPUES DE HILO IGUAL A NULL: %i \n", ((thread)list_get(proceso->hilos_ready, 0))->tid); // TODO VERIFICAR QUE NO SE PONGA EN NULL EN LA LISTA
-				pthread_mutex_unlock(&proceso->mut_ready);
-
-				return 1;
-			}
-
-		}
-	}*/
 
 
-	/*	//pthread_mutex_lock(&mut_join);
-	if(proceso->hilo_exec != NULL && proceso->hilo_exec->tid != tid){
-		thread* hilo_en_ejecucion = proceso->hilo_exec;
+	/*	return 1;
+
+	}	thread* hilo_en_ejecucion = proceso->hilo_exec;
 		pthread_mutex_lock(&mut_blocked);
 		list_add(hilos_blocked, hilo_en_ejecucion);
 		pthread_mutex_unlock(&mut_blocked);
@@ -420,17 +395,18 @@ int join(int tid, int pid){
 		//printf("hilo_en_ejecucion->tid %d\n",hilo_en_ejecucion->tid);
 
 		log_info(suse_log, "se guardo el hilo en blocked %i \n", hilo_en_ejecucion->tid );
-	}
+
 	else{
 		log_error(suse_log, "No hay ningun hilo ejecutando");
-	}
+	}*/
 
 	//pthread_mutex_unlock(&mut_join);
 
+	}
 	log_info(suse_log, "Se hizo un join");
 
 	return 1;
-}*/
+}
 
 void actualizarTimestampEjecutado(thread* hilo){
 	hilo->ultimo_timestamp_ejecutado = getCurrentTime() - hilo->ultimo_inicio_ejecucion;
@@ -489,11 +465,7 @@ void aplicarFIFO(){
 	pthread_mutex_unlock(&mut_new);
 
 
-	//pthread_mutex_lock(&mut_procesos);
 	process* proceso = obtener_proceso_asociado(hilo_elegido);
-	//pthread_mutex_unlock(&mut_procesos);
-
-	//process* proceso = obtener_proceso_asociado(hilo_elegido);
 
 
 	log_info(suse_log, "el proceso es: %i \n", proceso->pid);
@@ -551,7 +523,7 @@ void aplicarSJF(process* proceso) {
 
 	log_info(suse_log, "pongo a ejecutar %d\n",proceso->hilo_exec->tid);
 
-	printf("proceso->hilo_exec %d\n",proceso->hilo_exec->tid);
+	printf("proceso->hilo_exec->tid %d\n",proceso->hilo_exec->tid);
 
 
 	// METADATA DEL HILO
@@ -606,10 +578,6 @@ process* obtener_proceso_asociado(thread* hilo){
 	bool buscador(process* proceso){
 		return proceso->pid == hilo->pid;
 	}
-
-	//pthread_mutex_lock(&mut_procesos);
-	//return list_find(lista_procesos,(void*) buscador);
-	//pthread_mutex_unlock(&mut_procesos);
 
 	//pthread_mutex_lock(&mut_procesos);
 	process* procesoEncontrado =list_find(lista_procesos,(void*) buscador);
