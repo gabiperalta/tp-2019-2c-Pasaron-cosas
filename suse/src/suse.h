@@ -53,7 +53,7 @@ t_list* hilos_new;
 t_list* hilos_blocked;
 t_list* hilos_exit;
 
-sem_t sem_planificacion;
+sem_t sem_multiprogramacion;
 sem_t sem_ejecute;
 sem_t sem_join;
 sem_t sem_new;
@@ -72,14 +72,15 @@ pthread_t threadMetrics;
 typedef struct{
 	int tid; // id del hilo
 	uint32_t pid; // proceso en el que esta el hilo
-	t_list* tid_joineado;
-	int rafagas_estimadas;
+	t_list* hilos_joineado;
+	uint32_t timestamp_anterior_estimado;
 	uint32_t tiempo_ejecucion;
 	uint32_t tiempo_ejecucion_total;
 	uint32_t tiempo_espera;
 	uint32_t tiempo_uso_CPU;
 	int	porcentaje_tiempo;
-	int rafagas_ejecutadas;
+	uint32_t ultimo_timestamp_ejecutado;
+	uint32_t ultimo_inicio_ejecucion;
 	uint32_t timestamp_inicio_ejec;
 	uint32_t timestamp_final_ejec;
 	uint32_t timestamp_inicio_espera;
@@ -94,6 +95,9 @@ typedef struct{
 	thread* hilo_exec;
 	pthread_mutex_t mut_ready;
 	pthread_mutex_t mut_exec;
+	sem_t cant_hilos_ready;
+	bool tieneElHiloInicial;
+	int hilosEnSistema;
 }process;
 
 
@@ -101,6 +105,7 @@ typedef struct{
 	char* id;
 	int cant_instancias_disponibles;
 	int max_valor;
+	pthread_mutex_t mutex;
 	t_list * hilos_bloqueados;
 }semaforos_suse;
 

@@ -28,11 +28,11 @@ int main(){
 
 		free(linea);
 	}
+
 	destructor_listas();
 	destruirLog();
+	destructor_semaforos_globales();
 
-
-	destructor_semaforos();
 	liberarCharAsteriscoAsterisco(ids_sem);
 	liberarCharAsteriscoAsterisco(inicio_sem);
 	liberarCharAsteriscoAsterisco(max_sem);

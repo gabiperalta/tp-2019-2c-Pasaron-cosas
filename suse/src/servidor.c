@@ -73,6 +73,7 @@ void procesar_solicitud(void* socket_cliente){
 
 void funcion_init(t_paquete paquete,int socket_suse){
 	uint32_t pid_recibido = obtener_valor(paquete.parametros);
+	printf("SUSE INIT\n");
 
 	process* proceso = malloc(sizeof(process));
 	//proceso->pid = pid_recibido;
@@ -81,6 +82,9 @@ void funcion_init(t_paquete paquete,int socket_suse){
 	proceso->hilo_exec = NULL;
 	pthread_mutex_init(&proceso->mut_ready, NULL);
 	pthread_mutex_init(&proceso->mut_exec, NULL);
+	sem_init(&proceso->cant_hilos_ready,0,0);
+	proceso->tieneElHiloInicial = false;
+	proceso->hilosEnSistema = 0;
 	list_add(lista_procesos,proceso);//list_add();
 	log_info(suse_log, "Se agrego el proceso correctamente");//agregar a la lista de procesos de suse
 
@@ -96,6 +100,8 @@ void funcion_init(t_paquete paquete,int socket_suse){
 }
 
 void funcion_join(t_paquete paquete,int socket_suse){
+
+	printf("SUSE JOIN\n");
 
 	int tid = obtener_valor(paquete.parametros);
 
@@ -118,6 +124,8 @@ void funcion_join(t_paquete paquete,int socket_suse){
 
 void funcion_close(t_paquete paquete,int socket_suse){
 
+	printf("SUSE CLOSE\n");
+
 	int tid = obtener_valor(paquete.parametros);
 
 	int retorno = close_suse(tid, socket_suse);
@@ -137,6 +145,8 @@ void funcion_close(t_paquete paquete,int socket_suse){
 }
 
 void funcion_signal(t_paquete paquete,int socket_suse){
+
+	printf("SUSE SIGNAL\n");
 
 	int tid = obtener_valor(paquete.parametros);
 	char* semaforo= obtener_string(paquete.parametros);
@@ -158,13 +168,15 @@ void funcion_signal(t_paquete paquete,int socket_suse){
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
-
+	free(semaforo);
 
 }
 
 
 
 void funcion_wait(t_paquete paquete,int socket_suse){
+
+	printf("SUSE WAIT\n");
 
 	int tid = obtener_valor(paquete.parametros);
 	char* semaforo= obtener_string(paquete.parametros);
@@ -186,29 +198,16 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 
+	free(semaforo);
 
 }
 
 void funcion_create(t_paquete paquete,int socket_suse){
 
+	printf("SUSE CREATE\n");
+
 	int tid = obtener_valor(paquete.parametros);
 
-	//uint8_t pid_recibido = obtener_valor(paquete.parametros);
-
-	process* proceso = malloc(sizeof(process));
-	proceso->pid = socket_suse;
-	proceso->hilos_ready = list_create();//inicializar lista proceso ready
-	proceso->hilo_exec = NULL;
-	bool condicion(process* proceso){
-		return proceso->pid == socket_suse;
-	}
-	if(!list_any_satisfy(lista_procesos, (void*) condicion)){
-		list_add(lista_procesos,proceso);
-		log_info(suse_log, "Se agrego el proceso correctamente");
-	}
-	else{
-		log_error(suse_log, "Ya existe el mismo proceso");
-	}
 	int retorno = crear(tid,socket_suse); //funcion suse)(tid); //podria tener una respuesta
 	t_paquete paquete_respuesta = {
 	.header = SUSE_CREATE,
@@ -223,12 +222,12 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
+	printf("SUSE SCHEDULE NEXT\n");
+
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
-	int retorno= next_tid(socket_suse);//funcion suse)(tid); //podria tener una respuesta
-	//en caso que tenga retorno int retorno = crearArchivo( path );
+	int retorno= next_tid(socket_suse);
 
-	//el mensaje que le devuelve a hilolay (que fue el que lo llamo)
 
 	t_paquete paquete_respuesta = {
 	.header = SUSE_SCHEDULE_NEXT,
@@ -237,10 +236,9 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
 	printf("next_tid esta retornando %d\n",retorno);
 
-	// agregas valor al paquete de respuesta
 
 	///////////////// Parametros a enviar /////////////////
-	agregar_valor(paquete_respuesta.parametros, retorno);//lo que te devuelve la suse create si hay retorno, generalmente int);
+	agregar_valor(paquete_respuesta.parametros, retorno); //lo que te devuelve la suse create si hay retorno, generalmente int);
 	enviar_paquete(paquete_respuesta, socket_suse);
 	///////////////////////////////////////////////////////
 }

@@ -26,14 +26,17 @@ thread* CalcularEstimacion(thread* unHilo);
 bool ComparadorDeRafagas(thread* unHilo, thread* otroHilo);
 int list_get_index(t_list* self,void* elemento,bool (*comparator)(void *,void *));
 
+process* buscarProcesoPorPid(uint32_t pid);
 process* obtener_proceso_asociado(thread* hilo);
 
 void destructor_de_procesos(process* proceso);
 void destructor_de_hilos(thread* hilo);
 void inicializar_listas();
-void inicializar_semaforos();
+void destructor_semaforos_nuestros(semaforos_suse* semaforo);
+void inicializar_semaforos_globalres();
 void leer_config();
-void planificarCortoPlazo(int pid);
+void actualizarTimestampEjecutado(thread* hilo);
+void planificarCortoPlazo(process* proceso);
 void planificarLargoPlazo();
 uint32_t getCurrentTime();
 void destructor_semaforos();
