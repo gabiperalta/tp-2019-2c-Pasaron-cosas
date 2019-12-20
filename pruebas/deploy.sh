@@ -5,12 +5,12 @@ cd
 #sudo make install
 #cd
 
-git clone https://github.com/sisoputnfrba/hilolay.git
-cd hilolay/
-make && sudo make install
-cd
+#git clone https://github.com/sisoputnfrba/hilolay.git
+#cd hilolay/
+#make && sudo make install
+#cd
 
-git clone https://github.com/sisoputnfrba/linuse-tests-programs.git
+#git clone https://github.com/sisoputnfrba/linuse-tests-programs.git
 cd tp-2019-2c-Pasaron-cosas/pruebas/tests_adaptados/
 cp archivo_de_swap_supermasivo.c /home/utnso/linuse-tests-programs/
 cp Makefile /home/utnso/linuse-tests-programs/
