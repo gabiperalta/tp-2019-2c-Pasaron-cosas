@@ -58,15 +58,6 @@ int wait(int tid, char* id_sem, int pid){
 
 		log_info(suse_log,"Se bloqueo el thread");
 
-
-		/*if(hilo_bloqueado == NULL){
-			pthread_mutex_lock(&mut_blocked);
-			list_add(hilos_blocked, hilo_wait);//paso el thread a la cola de bloqueado
-			pthread_mutex_unlock(&mut_blocked);
-
-		}
-		proceso->hilo_exec = NULL;*/
-
 	}
 
 	//pthread_mutex_unlock(&proceso->mut_exec);
@@ -94,13 +85,6 @@ int signal_suse(int tid, char* id_sem){
 			semaforo->cant_instancias_disponibles ++;
 
 	}
-
-	if( semaforo->cant_instancias_disponibles <= 0 ){ //&& list_size(semaforo->hilos_bloqueados) > 0){ //ver si la lista es vacia
-		//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
-		thread* hilo_desbloqueado = list_remove(semaforo->hilos_bloqueados,0); // por fifo
-
-		bool buscadorHiloBloqueado(thread* hilo){
-			return hilo->pid == hilo_desbloqueado->pid && hilo->tid == hilo_desbloqueado->tid;
 
 	if(semaforo->cant_instancias_disponibles <= 0){ //ver si la lista es vacia
 		//printf("size hilos_bloqueados %d\n",list_size(semaforo->hilos_bloqueados));
@@ -474,14 +458,14 @@ void planificarCortoPlazo(process* proceso){
 	printf("proceso->hilo_exec %d\n",proceso->hilo_exec->tid);
 
 	log_info(suse_log, "Planificar Corto Plazo: size hilos ready%d\n", list_size(proceso->hilos_ready));
-	t_list* hilos_listos = proceso->hilos_ready;
+	//t_list* hilos_listos = proceso->hilos_ready;
 	//while(!list_is_empty(hilos_listos) && proceso->hilo_exec != NULL){
 	printf("ANTES size hilos_ready %d\n",list_size(proceso->hilos_ready));
 	printf("size hilos_new %d\n",list_size(hilos_new));
 	printf("size hilo bloqueado %d\n",list_size(hilos_blocked));
-	if(!list_is_empty(hilos_listos)){
+	/*if(!list_is_empty(hilos_listos)){
 		aplicarSJF(proceso);// sockets
-
+	*/
 
 	log_info(suse_log, "Se planifico por SJF");
 
