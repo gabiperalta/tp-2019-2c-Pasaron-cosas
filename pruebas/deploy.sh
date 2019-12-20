@@ -1,16 +1,20 @@
 cd
 
-#git clone https://github.com/sisoputnfrba/so-commons-library.git
-#cd so-commons-library/
-#sudo make install
-#cd
+sudo rm -dfr so-commons-library/
+sudo rm -dfr hilolay/
+sudo rm -dfr linuse-tests-programs/
 
-#git clone https://github.com/sisoputnfrba/hilolay.git
-#cd hilolay/
-#make && sudo make install
-#cd
+git clone https://github.com/sisoputnfrba/so-commons-library.git
+cd so-commons-library/
+sudo make install
+cd
 
-#git clone https://github.com/sisoputnfrba/linuse-tests-programs.git
+git clone https://github.com/sisoputnfrba/hilolay.git
+cd hilolay/
+make && sudo make install
+cd
+
+git clone https://github.com/sisoputnfrba/linuse-tests-programs.git
 cd tp-2019-2c-Pasaron-cosas/pruebas/tests_adaptados/
 cp archivo_de_swap_supermasivo.c /home/utnso/linuse-tests-programs/
 cp Makefile /home/utnso/linuse-tests-programs/
@@ -22,4 +26,4 @@ cp estres_compartido.c /home/utnso/linuse-tests-programs/
 cp revolucion_compartida.c /home/utnso/linuse-tests-programs/
 
 cd
-mkdir directorioPrueba
+#mkdir directorioPrueba

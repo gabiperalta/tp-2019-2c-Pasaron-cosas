@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../tp-2019-2c-Pasaron-cosas/LibMuse/libmuse.h"
+#include "/home/utnso/tp-2019-2c-Pasaron-cosas/LibMuse/libmuse.h"
 #include <hilolay/hilolay.h>
 #include <string.h>
 
@@ -14,18 +14,17 @@ struct hilolay_sem_t* revolucion_recibida;
 
 uint32_t leer_archivo(uint32_t arch, uint32_t leido)
 {
-	uint32_t offset;
+	uint32_t len;
 	char * palabra = malloc(100);
-	hilolay_wait(revolucion_emitida);
-	muse_get(&offset, arch, sizeof(uint32_t));
-	uint32_t len = offset - leido;
-	muse_get(palabra, arch + offset, len);
-	offset += strlen(palabra) + 1;
-	muse_cpy(arch, &offset, sizeof(uint32_t));
-	hilolay_signal(revolucion_recibida);
-	puts(palabra);
+
+	muse_get(&len, arch + leido, sizeof(uint32_t));
+	leido += sizeof(uint32_t);
+	muse_get(palabra, arch + leido, len);
+	leido += len;
+
+	printf(palabra);
 	free(palabra);
-	return offset;
+	return leido;
 }
 
 void *revolucionar()
@@ -33,9 +32,11 @@ void *revolucionar()
 	hilolay_wait(presion_emitida);
 	uint32_t arch = muse_map(RUTA_ARCHIVO, 4096, MAP_PRIVATE);
 	uint32_t offset = 0;
+	uint32_t size;
 
+	muse_get(&size, arch, sizeof(uint32_t));
 	offset = sizeof(uint32_t);
-	for(int i = 0; i<6;i++)
+	while(offset < size)
 		offset = leer_archivo(arch, offset);
 
 	arch += 5000;

@@ -29,6 +29,6 @@ cd linuse-tests-programs/
 make && make entrega
 cd
 
-cd directorioPrueba/
-mkdir una
-cd
+#cd directorioPrueba/
+#mkdir una
+#cd
