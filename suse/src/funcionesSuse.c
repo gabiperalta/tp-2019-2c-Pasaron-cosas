@@ -382,7 +382,7 @@ int join(int tid, int pid){
 		else{
 			log_error(suse_log, "No hay ningun hilo ejecutando");
 		}
-	}
+	
 		return 1;
 	}
 	/*
