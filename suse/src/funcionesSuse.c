@@ -687,75 +687,77 @@ void destructor_de_semaforos(semaforos_suse* semaforo){
 }
 
 void suse_metricas(){
-	sleep(tiempo_metrics);
-	process* proceso = malloc(sizeof(process));
-	thread* hilo = malloc(sizeof(thread));
-	hilo->porcentaje_tiempo = 0;
-	hilo->tiempo_ejecucion = 0;
-	hilo->tiempo_ejecucion_total = 0;
-	hilo->tiempo_espera = 0;
-	hilo->tiempo_uso_CPU = 0;
-	hilo->timestamp_final_cpu = 0;
-	hilo->timestamp_inicio_cpu = 0;
-	hilo->timestamp_final_ejec = 0;
-	hilo->timestamp_inicio_ejec = 0;
-	hilo->timestamp_inicio_espera = 0;
-	hilo->timestamp_final_espera = 0;
-
-	uint32_t tiempoEjecucion = (hilo->timestamp_final_ejec - hilo->timestamp_inicio_ejec);
-	hilo->tiempo_ejecucion += tiempoEjecucion;
-	for(int i= 0; i < list_size(lista_procesos); i++){
-		proceso = list_get(lista_procesos, i);
-		for(int j= 0; j < list_size(proceso->hilos_ready); j++){
-			hilo = list_get(proceso->hilos_ready, j);
-			log_info(suse_log, "El tiempo de espera en Ready es: %i \n",hilo->tiempo_espera);
-			printf("El tiempo de espera en Ready es: %i \n",hilo->tiempo_espera);
-		}
-		log_info(suse_log, "El tiempo de uso de la CPU es: %i \n",hilo->tiempo_uso_CPU);
-		printf("El tiempo de uso de la CPU es: %i \n",hilo->tiempo_uso_CPU);
-		log_info(suse_log, "El tiempo de ejecucion es: %i \n",hilo->tiempo_uso_CPU);
-		printf("El tiempo de ejecucion es: %i \n",hilo->tiempo_uso_CPU);
-	}
-	for(int i = 0; i < list_size(lista_procesos); i++){
-		hilo->tiempo_ejecucion_total += hilo->tiempo_ejecucion;
-	}
-	if(hilo->tiempo_ejecucion_total == 0){
+	while(1){
+		sleep(tiempo_metrics);
+		process* proceso = malloc(sizeof(process));
+		thread* hilo = malloc(sizeof(thread));
 		hilo->porcentaje_tiempo = 0;
-	}
-	else{
-		hilo->porcentaje_tiempo = (hilo->tiempo_ejecucion / hilo->tiempo_ejecucion_total) * 100;
-	}
+		hilo->tiempo_ejecucion = 0;
+		hilo->tiempo_ejecucion_total = 0;
+		hilo->tiempo_espera = 0;
+		hilo->tiempo_uso_CPU = 0;
+		hilo->timestamp_final_cpu = 0;
+		hilo->timestamp_inicio_cpu = 0;
+		hilo->timestamp_final_ejec = 0;
+		hilo->timestamp_inicio_ejec = 0;
+		hilo->timestamp_inicio_espera = 0;
+		hilo->timestamp_final_espera = 0;
 
-	log_info(suse_log, "El porcentaje de tiempo de ejecucion es: %i \n",hilo->porcentaje_tiempo);
-	printf("El porcentaje de tiempo de ejecucion es: %i \n",hilo->porcentaje_tiempo);
-	for(int i= 0; i < list_size(lista_procesos); i++){
-			bool condition(thread* hilo){
-		return hilo->pid == proceso->pid;
-			}//filter proceso
-		pthread_mutex_lock(&mut_new);
-		t_list* procesos_en_new = list_filter(hilos_new, (void*) condition);
-		pthread_mutex_unlock(&mut_new);
-		pthread_mutex_lock(&mut_blocked);
-		t_list* procesos_en_blocked = list_filter(hilos_blocked, (void*)condition);
-		pthread_mutex_unlock(&mut_blocked);
-		printf("La cantidad de hilos en new es: %i \n", list_size(procesos_en_new));
-		log_info(suse_log, "La cantidad de hilos en new es: %i \n", list_size(procesos_en_new));
-		printf("La cantidad de hilos en ready es: %i \n", list_size(procesos_en_blocked));
-		log_info(suse_log,"La cantidad de hilos en ready es: %i \n", list_size(procesos_en_blocked));
-		int cantidadHilosExec(){
-			if(proceso->hilo_exec) return 1;
-			else return 0;
+		uint32_t tiempoEjecucion = (hilo->timestamp_final_ejec - hilo->timestamp_inicio_ejec);
+		hilo->tiempo_ejecucion += tiempoEjecucion;
+		for(int i= 0; i < list_size(lista_procesos); i++){
+			proceso = list_get(lista_procesos, i);
+			for(int j= 0; j < list_size(proceso->hilos_ready); j++){
+				hilo = list_get(proceso->hilos_ready, j);
+				log_info(suse_log, "El tiempo de espera en Ready es: %i \n",hilo->tiempo_espera);
+				printf("El tiempo de espera en Ready es: %i \n",hilo->tiempo_espera);
+			}
+			log_info(suse_log, "El tiempo de uso de la CPU es: %i \n",hilo->tiempo_uso_CPU);
+			printf("El tiempo de uso de la CPU es: %i \n",hilo->tiempo_uso_CPU);
+			log_info(suse_log, "El tiempo de ejecucion es: %i \n",hilo->tiempo_uso_CPU);
+			printf("El tiempo de ejecucion es: %i \n",hilo->tiempo_uso_CPU);
 		}
-		printf("La cantidad de hilos en blocked es: %i \n", cantidadHilosExec());
-		log_info(suse_log, "La cantidad de hilos en blocked es: %i \n", cantidadHilosExec());
-		printf("El grado actual de multiprogramacion es: %i \n", grado_multiprogramacion);
-	}
+		for(int i = 0; i < list_size(lista_procesos); i++){
+			hilo->tiempo_ejecucion_total += hilo->tiempo_ejecucion;
+		}
+		if(hilo->tiempo_ejecucion_total == 0){
+			hilo->porcentaje_tiempo = 0;
+		}
+		else{
+			hilo->porcentaje_tiempo = (hilo->tiempo_ejecucion / hilo->tiempo_ejecucion_total) * 100;
+		}
 
-	semaforos_suse* semaforo;
-	for(int i= 0; i < list_size(semaforos); i++){
-		semaforo = list_get(semaforos, i);
-		printf("El valor actual semaforo: %s es: %i \n", semaforo->id, semaforo->cant_instancias_disponibles);
-		log_info(suse_log, "El valor actual semaforo: %s es: %i \n",semaforo->id, semaforo->cant_instancias_disponibles);
+		log_info(suse_log, "El porcentaje de tiempo de ejecucion es: %i \n",hilo->porcentaje_tiempo);
+		printf("El porcentaje de tiempo de ejecucion es: %i \n",hilo->porcentaje_tiempo);
+		for(int i= 0; i < list_size(lista_procesos); i++){
+				bool condition(thread* hilo){
+			return hilo->pid == proceso->pid;
+				}//filter proceso
+			pthread_mutex_lock(&mut_new);
+			t_list* procesos_en_new = list_filter(hilos_new, (void*) condition);
+			pthread_mutex_unlock(&mut_new);
+			pthread_mutex_lock(&mut_blocked);
+			t_list* procesos_en_blocked = list_filter(hilos_blocked, (void*)condition);
+			pthread_mutex_unlock(&mut_blocked);
+			printf("La cantidad de hilos en new es: %i \n", list_size(procesos_en_new));
+			log_info(suse_log, "La cantidad de hilos en new es: %i \n", list_size(procesos_en_new));
+			printf("La cantidad de hilos en ready es: %i \n", list_size(procesos_en_blocked));
+			log_info(suse_log,"La cantidad de hilos en ready es: %i \n", list_size(procesos_en_blocked));
+			int cantidadHilosExec(){
+				if(proceso->hilo_exec) return 1;
+				else return 0;
+			}
+			printf("La cantidad de hilos en blocked es: %i \n", cantidadHilosExec());
+			log_info(suse_log, "La cantidad de hilos en blocked es: %i \n", cantidadHilosExec());
+			printf("El grado actual de multiprogramacion es: %i \n", grado_multiprogramacion);
+		}
+
+		semaforos_suse* semaforo;
+		for(int i= 0; i < list_size(semaforos); i++){
+			semaforo = list_get(semaforos, i);
+			printf("El valor actual semaforo: %s es: %i \n", semaforo->id, semaforo->cant_instancias_disponibles);
+			log_info(suse_log, "El valor actual semaforo: %s es: %i \n",semaforo->id, semaforo->cant_instancias_disponibles);
+		}
 	}
 }
 

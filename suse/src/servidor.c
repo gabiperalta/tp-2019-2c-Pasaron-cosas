@@ -65,7 +65,7 @@ void procesar_solicitud(void* socket_cliente){
 		paquete = recibir_paquete(socket_cliente);
 	}
 
-	close(socket_cliente);
+	//close(socket_cliente);
 }
 
 
