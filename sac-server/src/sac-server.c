@@ -18,6 +18,7 @@ int main(int argc, char *argv[]){
 	pthread_mutex_init(&mutexEscrituraInodeTable, NULL);
 	pthread_mutex_init(&mx_tablaGlobal, NULL);
 
+	iniciarLog();
 	 // HASTA ACA FUNCIONA TODO BIEN
 
 	// TODO VERIFICAR SI ESTA EL DIRECTORIO RAIZ, Y SI NO LO ESTA, CREARLO

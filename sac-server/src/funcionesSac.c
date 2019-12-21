@@ -9,6 +9,7 @@ void crearDirectorioRaiz(){
 	gettimeofday(&tiempo, NULL);
 	GDirectoryBlock* bloqueDeDirectorio;
 
+	log_info(sac_log, "Se creo el directorio Raiz.");
 
 	directorioRaiz->state = DIRECTORIO;
 	directorioRaiz->father_block = 0;
@@ -30,6 +31,8 @@ void crearDirectorioRaiz(){
 int myGetattr( char *path, struct stat *statRetorno ){
 	GFile *inodoArchivo;
 	ptrGBloque punteroInodo = 0;
+
+	//log_info(sac_log, "Se realizo un GETATTR de %s .", path);
 
 	//printf("myGetattr \n");
 	//printf("El path mandado es: %s \n", path);
@@ -102,6 +105,7 @@ int crearDirectorio(char *path ){
 			inodo->blocks[i] = 0;
 		}
 
+		log_info(sac_log, "Se CREO el directorio %s .", path);
 
 		inodo->creation_date = tiempo.tv_sec;
 		inodo->father_block = punteroAInodoPadre;
@@ -144,6 +148,8 @@ int eliminarDirectorio( char *path){
 		if(noTieneHijos(punteroAInodo)){
 			//printf("hola de nuevo bombon\n");
 
+			log_info(sac_log, "Se ELIMINO el directorio %s .", path);
+
 			liberarBloquesAsignados(directorio->blocks);
 			directorio->state = BORRADO;
 			directorio->father_block = 0; // NECESITO HACERLO PARA QUE NO TIRE ERRORES CON EL READDIR
@@ -167,6 +173,7 @@ char* myReaddir( char *path ){
 	t_list *listaDeArchivos;
 	int archivosEnDirectorio;
 
+
 	//printf("myReaddir \n");
 	//printf("El path mandado es: %s \n", path);
 
@@ -181,6 +188,8 @@ char* myReaddir( char *path ){
 
 	// SI NO EXISTE EL DIRECTORIO, TIRA ERROR
 	if(punteroInodo != 0){
+
+		log_info(sac_log, "Se realizo un READDIR de %s .", path);
 
 		int posicion = 0;
 		int longitudNombre;
@@ -259,6 +268,7 @@ int crearArchivo( char *path ){
 			inodo->blocks[i] = 0;
 		}
 
+		log_info(sac_log, "Se CREO el archivo %s .", path);
 
 		inodo->creation_date = tiempo.tv_sec;
 		inodo->father_block = punteroAInodoPadre;
@@ -319,6 +329,8 @@ uint8_t abrirArchivo( char *path, int socketProceso){ // debemos ver si hay que 
 	}
 
 	uint8_t fileDescriptor = agregarAListaDeArchivosDelProceso(fdNode, socketProceso);
+
+	log_info(sac_log, "Se ABRIO el archivo %s .", path);
 
 	//printf("HOLA FEDE7\n");
 
@@ -393,6 +405,9 @@ int escribirArchivo( char *path, char *buffer, size_t size, off_t offset ){
 		free( offsetFinal );
 		free( offsetInicial );
 
+		log_info(sac_log, "Se ESCRIBIO en el archivo %s\t en offset: %u\t con size: %u .", path, offset, size);
+
+
 		return hastaDondeEscribo - offset;
 	}
 
@@ -426,6 +441,8 @@ char* leerArchivo( char *path, size_t size, off_t offset ){
 
 		free( offsetFinal );
 		free( offsetInicial );
+
+		log_info(sac_log, "Se LEYO en el archivo %s\t en offset: %u\t con size: %u .", path, offset, size);
 
 		return buffer;
 	}
@@ -471,8 +488,8 @@ int eliminarArchivo( char *path){
 
 	GFile *inodoArchivo = (GFile*) obtenerBloque(punteroAlInodo);
 
-	printf("ELIMINANDO ARCHIVO 1\n");
-	printf("ARCHIVO: name: %s \t father: %i\t state: %i\n", inodoArchivo->fname, inodoArchivo->father_block, inodoArchivo->state);
+	//printf("ELIMINANDO ARCHIVO 1\n");
+	//printf("ARCHIVO: name: %s \t father: %i\t state: %i\n", inodoArchivo->fname, inodoArchivo->father_block, inodoArchivo->state);
 
 	if(inodoArchivo->state){
 		// VERIFICAR QUE EL ARCHIVO NO ESTE ABIERTO POR NINGUN PROCESO. SI LO ESTA, LA FUNCION SE CANCELARA
@@ -483,6 +500,8 @@ int eliminarArchivo( char *path){
 			liberarBloquesAsignados(inodoArchivo->blocks);
 
 			//printf("ELIMINANDO ARCHIVO 3\n");
+
+			log_info(sac_log, "Se ELIMINO el archivo %s .", path);
 
 			// BORRAR SU ENTRADA DEL DIRECTORIO
 			//borrarEntrada(inodoArchivo->father_block, punteroAlInodo);
@@ -532,6 +551,8 @@ int myTruncate( char *path, off_t offset){
 			}
 		}
 
+		log_info(sac_log, "Se TRUNCO el archivo %s, a un size: %u .", path, offset);
+
 		inodoArchivo->file_size = offset;
 
 
@@ -543,6 +564,8 @@ int myTruncate( char *path, off_t offset){
 int myRename(char* pathViejo, char* pathNuevo){
 	char** pathDividida = string_split(pathNuevo, "/");
 	int longitudDePath = cantidadElementosCharAsteriscoAsterisco(pathDividida);
+
+	log_info(sac_log, "Se hizo RENAME del archivo  %s   al archivo  %s .", pathViejo, pathNuevo);
 
 
 	ptrGBloque punteroInodoArchivo = buscarInodoArchivo(pathViejo, NORMAL);
@@ -1239,9 +1262,9 @@ void liberarBloqueTruncate(GFile* inodoArchivo){
 	if(numeroBloqueDeDatos)
 		numeroBloqueDeDatos --;
 
-	if(ultimoBloqueDePunteros == 0 && numeroBloqueDeDatos < 2){
+	/*if(ultimoBloqueDePunteros == 0 && numeroBloqueDeDatos < 2){
 		printf("caca\n");
-	}
+	}*/
 
 	// LIBERAR EL ULTIMO BLOQUE DE DATOS
 	liberarBloqueDeDatos(bloqueDePunteros->blocks[numeroBloqueDeDatos]);
@@ -1289,3 +1312,13 @@ uint32_t minimo(uint32_t unNumero, uint32_t otroNumero){
 	else
 		return otroNumero;
 }
+
+/////////////
+
+void iniciarLog(){
+	sac_log = log_create(PATH_LOG,"suse",false,LOG_LEVEL_INFO);
+	log_info(sac_log, "----------------SAC-SERVER----------------");
+}
+
+
+

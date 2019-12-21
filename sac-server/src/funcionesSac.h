@@ -2,6 +2,7 @@
 #define FUNCIONES_SAC_H_
 
 #include <errno.h>
+#include <commons/log.h>
 #include "gestorDeMemoria.h"
 #include "sac-server.h"
 

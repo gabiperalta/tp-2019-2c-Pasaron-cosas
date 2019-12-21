@@ -10,6 +10,8 @@
 #include "servidor.h"
 #include "gestorDeMemoria.h"
 
+#define PATH_LOG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/sac.log"
+
 // TAMANIO BLOQUE * CANTIDAD DE BLOQUES = TAMANIO MAXIMO DE DISCO
 //       2^12     *        2^X          =       2^44   =>   X = 32
 //		 ( 2^32 ) / 8 = 2^29  =>  ( 2^29 ) / ( 2^12 ) = 131.072	(TAMANIO DEL BITMAP EN BLOQUES)
@@ -22,6 +24,8 @@ t_list* tablaProcesosAbiertosGlobal;
 t_list* listaDeTablasDeArchivosPorProceso;
 pthread_mutex_t mx_tablaGlobal;
 int PUERTO;
+
+t_log* sac_log;
 
 #define PATH_CONFIG "/home/utnso/tp-2019-2c-Pasaron-cosas/sac-server/src/Config"
 
