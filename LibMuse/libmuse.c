@@ -44,6 +44,8 @@ void muse_close(){
 }
 
 uint32_t muse_alloc(uint32_t tam){
+	if(tam == 0)
+		return NULL;
 
 	t_paquete paquete = {
 			.header = MUSE_ALLOC,
@@ -57,12 +59,15 @@ uint32_t muse_alloc(uint32_t tam){
 
 	///////////////// Parametros a recibir ////////////////
 	t_paquete paquete_recibido = recibir_paquete(socket_muse);
-	uint32_t direccion_recibida = obtener_valor(paquete_recibido.parametros);
+	int direccion_recibida = obtener_valor(paquete_recibido.parametros);
 	//printf("Direccion recibida: %d\n",direccion_recibida);
 	///////////////////////////////////////////////////////
 
+	if(direccion_recibida < 0)
+		return NULL;
+
 	//printf("Fin muse_alloc\n");
-	return direccion_recibida;
+	return (uint32_t)direccion_recibida;
 }
 
 void muse_free(uint32_t dir){

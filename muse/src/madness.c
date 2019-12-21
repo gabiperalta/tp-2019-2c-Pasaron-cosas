@@ -169,7 +169,7 @@ void funcion_close(t_paquete paquete,int socket_muse){
 }
 
 void funcion_alloc(t_paquete paquete,int socket_muse){
-	//printf("\nInicio alloc\n");
+	printf("\nInicio alloc\n");
 	uint32_t tam = obtener_valor(paquete.parametros);
 
 	//printf("Tam solicitado: %d\n",tam);
@@ -181,11 +181,12 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	t_segmento* segmento_obtenido;
 	t_segmento* segmento_siguiente;
-	uint32_t direccion_retornada = 0;
+	int direccion_retornada = 0;
 	int posicion_recorrida = 0;
 	t_heap_metadata heap_metadata;
 	bool ultimo_valor_isFree;
 	void* buffer;
+	void* buffer_copia;
 	uint32_t tam_real = tam + SIZE_HEAP_METADATA;
 	uint32_t size_original;
 	bool analizar_extension = true;
@@ -208,10 +209,11 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 			continue;
 
 		buffer = malloc(segmento_obtenido->limite);// si falla, probar declarando la variable aca mismo
+		buffer_copia = malloc(segmento_obtenido->limite);
 		posicion_recorrida = 0;
 
 		//printf("Se cargan los datos en un buffer\n");
-		cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,0);
+		cargar_datos(buffer,NULL,segmento_obtenido,CARGAR_DATOS,0);
 
 		while(posicion_recorrida < segmento_obtenido->limite){
 			memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
@@ -252,9 +254,10 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 				analizar_extension = false;
 
 				// se vuelven a copiar los datos en los frames correspondientes
-				cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
+				cargar_datos(buffer,buffer_copia,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 				free(buffer);
+				free(buffer_copia);
 				break;
 			}
 
@@ -281,6 +284,10 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		}
 
 		cantidad_paginas_solicitadas = (int)ceil((double)tam_auxiliar/TAM_PAGINA);
+
+		// si se solicitan mas paginas de las que hay disponibles, no hay que hacer alloc
+		if(cantidad_paginas_solicitadas > obtener_cantidad_frames_disponibles())
+			break;
 
 		//printf("tam_auxiliar: %d\n",tam_auxiliar);
 		//printf("cantidad paginas solicitadas: %d\n",cantidad_paginas_solicitadas);
@@ -328,7 +335,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		}
 
 		// se vuelven a copiar los datos en los frames correspondientes
-		cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,0);
+		cargar_datos(buffer,buffer_copia,segmento_obtenido,GUARDAR_DATOS,0);
 
 		segmento_limite_anterior = segmento_obtenido->limite;
 		segmento_obtenido->limite += (cantidad_paginas_solicitadas * TAM_PAGINA);
@@ -357,18 +364,22 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 		}
 
 		// se copian los datos en los nuevos frames
-		cargar_datos(buffer_auxiliar,segmento_obtenido,CREAR_DATOS,cantidad_paginas_solicitadas);
+		cargar_datos(buffer_auxiliar,NULL,segmento_obtenido,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 		free(buffer_auxiliar);
 		free(buffer);
+		free(buffer_copia);
 	}// termina for
 
-	//si no hay ningun segmento creado, se crea uno nuevo
+	//si no hay ningun segmento creado o no hay espacio en uno ya creado, se crea uno nuevo
 	if(direccion_retornada == NULL){
 		direccion_retornada = crear_segmento(SEGMENTO_HEAP,proceso_encontrado->tabla_segmentos,tam);
-		// obtengo el segmento para las metricas
-		segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
-		proceso_encontrado->metrica_espacio_disponible = segmento_obtenido->limite - tam - (2*SIZE_HEAP_METADATA);
+
+		if(direccion_retornada >= 0){
+			// obtengo el segmento para las metricas
+			segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+			proceso_encontrado->metrica_espacio_disponible = segmento_obtenido->limite - tam - (2*SIZE_HEAP_METADATA);
+		}
 	}
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
@@ -386,6 +397,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 	///////////////////////////////////////////////////////
 
 	//log_estado_del_sistema();
+	printf("Fin alloc\n");
 }
 
 void funcion_free(t_paquete paquete,int socket_muse){
@@ -403,11 +415,12 @@ void funcion_free(t_paquete paquete,int socket_muse){
 	t_segmento* segmento_obtenido = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_recibida);
 	// si no se encuentra el segmento, deberia controlar el error
 	void* buffer = malloc(segmento_obtenido->limite);
+	void* buffer_copia = malloc(segmento_obtenido->limite);
 	t_heap_metadata heap_metadata;
 	t_heap_metadata heap_metadata_anterior;
 	int posicion_recorrida = 0;
 
-	cargar_datos(buffer,segmento_obtenido,CARGAR_DATOS,NULL);
+	cargar_datos(buffer,NULL,segmento_obtenido,CARGAR_DATOS,NULL);
 
 	posicion_recorrida = direccion_recibida - segmento_obtenido->base - SIZE_HEAP_METADATA;
 	memcpy(&heap_metadata.isFree,&buffer[posicion_recorrida],sizeof(heap_metadata.isFree));
@@ -459,8 +472,8 @@ void funcion_free(t_paquete paquete,int socket_muse){
 
 	int cantidad_paginas_libres = (int)floor((double)heap_metadata.size/TAM_PAGINA);
 	if((heap_metadata.isFree == true) && (cantidad_paginas_libres>0)){
-		// analizo si el ultimo espacio esta libre para eliminar las paginas que no
-		// esten siendo usadas
+		// analizo si el ultimo espacio esta libre para eliminar
+		// las paginas que no esten siendo usadas
 
 		//printf("Elimino paginas libres\n");
 
@@ -483,13 +496,13 @@ void funcion_free(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[posicion_recorrida],&heap_metadata.size,sizeof(heap_metadata.size));
 	}
 
-	cargar_datos(buffer,segmento_obtenido,GUARDAR_DATOS,NULL);
+	cargar_datos(buffer,buffer_copia,segmento_obtenido,GUARDAR_DATOS,NULL);
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
 	free(buffer);
 
-	print_de_prueba(proceso_encontrado);
+	//print_de_prueba(proceso_encontrado);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_FREE,
@@ -575,7 +588,7 @@ void funcion_get(t_paquete paquete,int socket_muse){
 	free(buffer);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_obtenido);
+	//print_de_prueba(proceso_obtenido);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_GET,
@@ -664,6 +677,10 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
 	}
 
+	// creo una copia del buffer para luego comparar los frames modificados
+	void* buffer_copia = malloc(cantidad_paginas_necesarias*TAM_PAGINA);
+	memcpy(buffer_copia,buffer,cantidad_paginas_necesarias*TAM_PAGINA);
+
 	switch(segmento_obtenido->tipo_segmento){
 		case SEGMENTO_HEAP:
 			// obtengo la metadata
@@ -680,6 +697,10 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 					pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
 					direccion_datos = obtener_datos_frame(pagina_obtenida);
 					memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
+
+					if(memcmp(&buffer[TAM_PAGINA*x],&buffer_copia[TAM_PAGINA*x],TAM_PAGINA) != 0){
+						pagina_obtenida->bit_modificado = 1;
+					}
 				}
 			}
 			else{
@@ -696,6 +717,10 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 					pagina_obtenida = list_get(segmento_obtenido->tabla_paginas,x + nro_pagina_obtenida);
 					direccion_datos = obtener_datos_frame_mmap(segmento_obtenido,pagina_obtenida,x + nro_pagina_obtenida);
 					memcpy(direccion_datos,&buffer[TAM_PAGINA*x],TAM_PAGINA);
+
+					if(memcmp(&buffer[TAM_PAGINA*x],&buffer_copia[TAM_PAGINA*x],TAM_PAGINA) != 0){
+						pagina_obtenida->bit_modificado = 1;
+					}
 				}
 			}
 			else{
@@ -707,6 +732,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	}
 
 	free(buffer);
+	free(buffer_copia);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
 	print_de_prueba(proceso_obtenido);
@@ -735,7 +761,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 	t_proceso* proceso_encontrado = buscar_proceso(lista_procesos,socket_muse);
 
 	t_segmento* segmento_nuevo;
-	uint32_t direccion_retornada = NULL;
+	int direccion_retornada = NULL;
 
 	if(proceso_encontrado == NULL){
 		printf("No se inicializo libmuse\n");
@@ -774,21 +800,26 @@ void funcion_map(t_paquete paquete,int socket_muse){
 			if(archivo_mmap_encontrado == NULL){
 				// aun no se mapeo el archivo
 				direccion_retornada = crear_segmento(SEGMENTO_MMAP,proceso_encontrado->tabla_segmentos,length_recibido);
-				segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
-				segmento_nuevo->archivo_mmap = archivo_solicitado;
-				segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
-				agregar_archivo_mmap(archivo_solicitado,socket_muse,segmento_nuevo->tabla_paginas);
 
+				if(direccion_retornada >= 0){
+					segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+					segmento_nuevo->archivo_mmap = archivo_solicitado;
+					segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
+					agregar_archivo_mmap(archivo_solicitado,socket_muse,segmento_nuevo->tabla_paginas);
+				}
 			}
 			else{
 				// ya se mapeo el archivo anteriormente
 				direccion_retornada = crear_segmento(SEGMENTO_MMAP_EXISTENTE,proceso_encontrado->tabla_segmentos,length_recibido);
-				segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
-				segmento_nuevo->tabla_paginas = archivo_mmap_encontrado->tabla_paginas;
-				segmento_nuevo->archivo_mmap = archivo_mmap_encontrado->archivo;
-				segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
-				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
-				fclose(archivo_solicitado);
+
+				if(direccion_retornada >= 0){
+					segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+					segmento_nuevo->tabla_paginas = archivo_mmap_encontrado->tabla_paginas;
+					segmento_nuevo->archivo_mmap = archivo_mmap_encontrado->archivo;
+					segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
+					list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
+					fclose(archivo_solicitado);
+				}
 			}
 			segmento_nuevo->tipo_map = MAP_SHARED;
 			break;
@@ -796,20 +827,22 @@ void funcion_map(t_paquete paquete,int socket_muse){
 			printf("Map private\n");
 			direccion_retornada = crear_segmento(SEGMENTO_MMAP,proceso_encontrado->tabla_segmentos,length_recibido);
 			//printf("direccion_retornada %d\n",direccion_retornada);
-			segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
-			segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
-			if(archivo_mmap_encontrado == NULL){
-				// aun no se mapeo el archivo
-				segmento_nuevo->archivo_mmap = archivo_solicitado;
-				agregar_archivo_mmap(archivo_solicitado,socket_muse,NULL); // no mando la tabla de paginas ya que no se comparte
+			if(direccion_retornada >= 0){
+				segmento_nuevo = buscar_segmento(proceso_encontrado->tabla_segmentos,direccion_retornada);
+				segmento_nuevo->tam_archivo_mmap = obtener_tam_archivo(fd_archivo_solicitado);
+				if(archivo_mmap_encontrado == NULL){
+					// aun no se mapeo el archivo
+					segmento_nuevo->archivo_mmap = archivo_solicitado;
+					agregar_archivo_mmap(archivo_solicitado,socket_muse,NULL); // no mando la tabla de paginas ya que no se comparte
+				}
+				else{
+					// ya se mapeo el archivo anteriormente
+					segmento_nuevo->archivo_mmap = archivo_mmap_encontrado->archivo;
+					list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
+					fclose(archivo_solicitado);
+				}
+				segmento_nuevo->tipo_map = MAP_PRIVATE;
 			}
-			else{
-				// ya se mapeo el archivo anteriormente
-				segmento_nuevo->archivo_mmap = archivo_mmap_encontrado->archivo;
-				list_add(archivo_mmap_encontrado->sockets_procesos,socket_muse);
-				fclose(archivo_solicitado);
-			}
-			segmento_nuevo->tipo_map = MAP_PRIVATE;
 			break;
 	}
 

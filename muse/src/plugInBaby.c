@@ -48,6 +48,12 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 
 			cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado_real/TAM_PAGINA);
 
+			// si se solicitan mas paginas de las que hay disponibles, no hay que hacer alloc
+			if(cantidad_paginas_solicitadas > obtener_cantidad_frames_disponibles()){
+				free(nuevo);
+				return -1;
+			}
+
 			//printf("cantidad paginas solicitadas %d\n",cantidad_paginas_solicitadas);
 
 			nuevo->limite = cantidad_paginas_solicitadas * TAM_PAGINA;
@@ -77,7 +83,7 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 			list_add(tabla_segmentos,nuevo);
 
 			nuevo->tabla_paginas = list_create();
-			cargar_datos(buffer,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
+			cargar_datos(buffer,NULL,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 			free(buffer);
 
@@ -92,6 +98,11 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 			cantidad_paginas_solicitadas = (int)ceil((double)tam_solicitado/TAM_PAGINA);
 			//printf("cantidad paginas solicitadas %d\n",cantidad_paginas_solicitadas);
 
+			if(cantidad_paginas_solicitadas > obtener_cantidad_frames_disponibles()){
+				free(nuevo);
+				return -1;
+			}
+
 			nuevo->limite = cantidad_paginas_solicitadas * TAM_PAGINA;
 			nuevo->tipo_segmento = SEGMENTO_MMAP;
 
@@ -103,7 +114,7 @@ uint32_t crear_segmento(uint8_t tipo,t_list* tabla_segmentos,uint32_t tam_solici
 				break;
 
 			nuevo->tabla_paginas = list_create();
-			cargar_datos(NULL,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
+			cargar_datos(NULL,NULL,nuevo,CREAR_DATOS,cantidad_paginas_solicitadas);
 
 			break;
 	}
@@ -129,6 +140,8 @@ t_pagina* crear_pagina(uint8_t bit_presencia,uint8_t tipo_segmento) {
     	new->puede_pasar_por_swap = false;
     	return new;
     }
+
+    new->bit_usado = 1;
 
     frame_obtenido = obtener_frame_libre();
     if(frame_obtenido >= 0){
@@ -205,7 +218,7 @@ void agregar_archivo_mmap(FILE* archivo,int socket_proceso,t_list* tabla_paginas
 	list_add(lista_archivos_mmap,archivo_mmap_nuevo);
 }
 
-void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
+void cargar_datos(void* buffer,void* buffer_copia,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas){
 	t_pagina* pagina;
 	void* direccion_frame;
 	int paginas_a_recorrer = cantidad_paginas_solicitadas;
@@ -234,6 +247,13 @@ void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int 
 				memcpy(&buffer[TAM_PAGINA*numero_pagina],direccion_frame,TAM_PAGINA);
 				break;
 			case GUARDAR_DATOS:
+				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
+				if(buffer_copia == NULL)
+					break;
+				if(memcmp(&buffer[TAM_PAGINA*numero_pagina],&buffer_copia[TAM_PAGINA*numero_pagina],TAM_PAGINA) != 0){
+					pagina->bit_modificado = 1;
+				}
+				break;
 			case CREAR_DATOS:
 				memcpy(direccion_frame,&buffer[TAM_PAGINA*numero_pagina],TAM_PAGINA);
 		    	//printf("Se copiaron los datos nuevos\n");
@@ -262,6 +282,8 @@ void* obtener_datos_frame(t_pagina* pagina){
     	memcpy(&upcm[pagina_upcm->frame*TAM_PAGINA],buffer_pagina_swap,TAM_PAGINA);
 
     	pagina_upcm->bit_presencia = 0;
+    	pagina_upcm->bit_modificado = 0;
+    	// no pongo en 0 el bit usado pq debio hacerlo el algoritmo clock
     	pagina_upcm->frame = pagina->frame;
 
     	pagina->frame = obtener_frame_libre();
@@ -299,7 +321,7 @@ void* obtener_datos_frame(t_pagina* pagina){
 
 void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pagina){
 	if(!pagina->bit_presencia && !espacio_en_upcm()){
-		printf("El frame no esta en memoria y no hay espacio\n");
+		//printf("El frame no esta en memoria y no hay espacio\n");
     	t_pagina* pagina_upcm = ejecutar_algoritmo_clock_modificado();
 
     	void* buffer_pagina_upcm = malloc(TAM_PAGINA);
@@ -315,6 +337,7 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
 
 		pagina_upcm->frame = frame_swap_obtenido;
     	pagina_upcm->bit_presencia = 0;
+    	pagina_upcm->bit_modificado = 0;
 
       	pagina->frame = obtener_frame_libre();
     	pagina->bit_presencia = 1;
@@ -323,8 +346,8 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
 
     	// si este metodo no sirve, agregar un campo length_mmap en t_segmento
     	if((nro_pagina*TAM_PAGINA) <= segmento->tam_archivo_mmap){
-    		printf("nro_pagina*TAM_PAGINA %d\n",nro_pagina*TAM_PAGINA);
-    		printf("segmento->tam_archivo_mmap %d\n",segmento->tam_archivo_mmap);
+    		//printf("nro_pagina*TAM_PAGINA %d\n",nro_pagina*TAM_PAGINA);
+    		//printf("segmento->tam_archivo_mmap %d\n",segmento->tam_archivo_mmap);
     		fseek(segmento->archivo_mmap,nro_pagina*TAM_PAGINA,SEEK_SET);
 
     		int bytes_a_leer = (int)fmin(TAM_PAGINA,segmento->tam_archivo_mmap - (nro_pagina*TAM_PAGINA));
@@ -347,7 +370,7 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
     	//fclose(archivo_swap);
 	}
 	else if(!pagina->bit_presencia && espacio_en_upcm()){
-		printf("El frame no esta en memoria y hay espacio\n");
+		//printf("El frame no esta en memoria y hay espacio\n");
 		void* buffer_pagina_mmap = malloc(TAM_PAGINA);
 
     	pagina->frame = obtener_frame_libre();
@@ -415,6 +438,22 @@ int obtener_tam_archivo(int fd_archivo){
 	struct stat st;
 	fstat(fd_archivo,&st);
 	return st.st_size;
+}
+
+// frames libres de upcm y swap
+int obtener_cantidad_frames_disponibles(){
+	int cantidad_frames_disponibles = 0;
+	for(int i=0;i<cantidad_frames;i++){
+		if(!bitarray_test_bit(bitmap_upcm,i)){ // retorna el primer bit q encuentre en 0
+			cantidad_frames_disponibles++;
+		}
+	}
+	for(int x=0;x<cantidad_frames_swap;x++){
+		if(!bitarray_test_bit(bitmap_swap,x)){ // retorna el primer bit q encuentre en 0
+			cantidad_frames_disponibles++;
+		}
+	}
+	return cantidad_frames_disponibles;
 }
 
 bool espacio_en_upcm(){
@@ -550,7 +589,9 @@ void print_de_prueba(t_proceso* proceso_obtenido){
 		for(int p=0; p<list_size(segmento_mostrado->tabla_paginas); p++){
 			pagina_mostrada = list_get(segmento_mostrado->tabla_paginas,p);
 			printf("pagina nro %d\t",p);
-			printf("bit presencia: %d\t",pagina_mostrada->bit_presencia);
+			printf("bp: %d\t",pagina_mostrada->bit_presencia);
+			printf("bu: %d\t",pagina_mostrada->bit_usado);
+			printf("bm: %d\t",pagina_mostrada->bit_modificado);
 			if(!pagina_mostrada->bit_presencia && !pagina_mostrada->puede_pasar_por_swap)
 				printf("frame: -\t\n");
 			else

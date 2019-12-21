@@ -74,8 +74,9 @@ void* obtener_datos_frame_mmap(t_segmento* segmento,t_pagina* pagina,int nro_pag
 int obtener_frame_libre();
 int obtener_frame_swap_libre();
 int obtener_tam_archivo(int fd_archivo);
-void cargar_datos(void* buffer,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
+void cargar_datos(void* buffer,void* buffer_copia,t_segmento* segmento,uint32_t flag_operacion,int cantidad_paginas_solicitadas);
 bool espacio_en_upcm();
+int obtener_cantidad_frames_disponibles();
 
 void liberar_frame(int numero_frame);
 void liberar_frame_swap(int numero_frame_swap);
