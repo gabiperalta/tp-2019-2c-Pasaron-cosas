@@ -8,12 +8,12 @@ int main(){
 	iniciarLog();
 	log_info(suse_log,"====================== SUSE ======================");
 	inicializarServidor();
-	log_info(suse_log, "hola");
-	log_info(suse_log, "hasta aca llegue");
+	//log_info(suse_log, "hola");
+	//log_info(suse_log, "hasta aca llegue");
 	iniciarPlanificacion();
-	log_info(suse_log, "planifique");
+	log_info(suse_log, "Planifique");
 	iniciarMetricas();
-	log_info(suse_log, "metricas");
+	//log_info(suse_log, "Metricas mostradas correctamente");
 	system("clear");
 	printf("---------------- SUSE ----------------\n");
 	char * linea;
