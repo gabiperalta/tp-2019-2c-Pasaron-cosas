@@ -242,8 +242,8 @@ int close_suse(int tid, int pid){
 
 int crear(int tid, int pid){
 
-	printf("Inicio crear\n");
-	printf("tid %d\n",tid);
+	//printf("Inicio crear\n");
+	//printf("tid %d\n",tid);
 
 
 	process* proceso = buscarProcesoPorPid(pid);
