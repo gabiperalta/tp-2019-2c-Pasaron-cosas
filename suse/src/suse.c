@@ -29,7 +29,7 @@ int main(){
 		free(linea);
 	}
 
-	destructor_listas();
+	//destructor_listas();
 	destruirLog();
 	destructor_semaforos_globales();
 

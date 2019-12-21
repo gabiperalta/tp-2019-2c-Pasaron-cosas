@@ -55,7 +55,7 @@ void procesar_solicitud(void* socket_cliente){
 	// MUSE_CLOSE
 	funcion_close(paquete,(int)socket_cliente);
 
-	close((int)socket_cliente);
+	//close((int)socket_cliente);
 }
 
 void leer_config(){
@@ -384,7 +384,7 @@ void funcion_alloc(t_paquete paquete,int socket_muse){
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_encontrado);
+	//print_de_prueba(proceso_encontrado);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_ALLOC,
@@ -735,7 +735,7 @@ void funcion_cpy(t_paquete paquete,int socket_muse){
 	free(buffer_copia);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_obtenido);
+	//print_de_prueba(proceso_obtenido);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_CPY,
@@ -848,7 +848,7 @@ void funcion_map(t_paquete paquete,int socket_muse){
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_encontrado);
+	//print_de_prueba(proceso_encontrado);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_MAP,
@@ -924,7 +924,7 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 		memcpy(&buffer[TAM_PAGINA*i],direccion_datos,TAM_PAGINA);
 	}
 
-	printf("Buffer antes de sync %s\n",buffer);
+	//printf("Buffer antes de sync %s\n",buffer);
 	//pthread_mutex_lock(&mutex_acceso_upcm);
 
 	if((nro_pagina_obtenida*TAM_PAGINA) <= segmento_obtenido->tam_archivo_mmap){
@@ -940,7 +940,7 @@ void funcion_sync(t_paquete paquete,int socket_muse){
 	free(buffer);
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_obtenido);
+	//print_de_prueba(proceso_obtenido);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_SYNC,
@@ -1016,7 +1016,7 @@ void funcion_unmap(t_paquete paquete,int socket_muse){
 
 	pthread_mutex_unlock(&mutex_acceso_upcm);
 
-	print_de_prueba(proceso_encontrado);
+	//print_de_prueba(proceso_encontrado);
 
 	t_paquete paquete_respuesta = {
 			.header = MUSE_UNMAP,
