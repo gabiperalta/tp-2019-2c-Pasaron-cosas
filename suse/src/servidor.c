@@ -73,11 +73,11 @@ void procesar_solicitud(void* socket_cliente){
 
 void funcion_init(t_paquete paquete,int socket_suse){
 	uint32_t pid_recibido = obtener_valor(paquete.parametros);
-	//printf("SUSE INIT\n");
+	printf("SUSE INIT\n");
 
 	process* proceso = malloc(sizeof(process));
-	proceso->pid = pid_recibido;
-	//proceso->pid = socket_suse;
+	//proceso->pid = pid_recibido;
+	proceso->pid = socket_suse;
 	proceso->hilos_ready = list_create();//inicializar lista proceso ready
 	proceso->hilo_exec = NULL;
 	pthread_mutex_init(&proceso->mut_ready, NULL);
@@ -101,7 +101,7 @@ void funcion_init(t_paquete paquete,int socket_suse){
 
 void funcion_join(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE JOIN\n");
+	printf("SUSE JOIN\n");
 
 	int tid = obtener_valor(paquete.parametros);
 
@@ -124,7 +124,7 @@ void funcion_join(t_paquete paquete,int socket_suse){
 
 void funcion_close(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE CLOSE\n");
+	printf("SUSE CLOSE\n");
 
 	int tid = obtener_valor(paquete.parametros);
 
@@ -146,7 +146,7 @@ void funcion_close(t_paquete paquete,int socket_suse){
 
 void funcion_signal(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE SIGNAL\n");
+	printf("SUSE SIGNAL\n");
 
 	int tid = obtener_valor(paquete.parametros);
 	char* semaforo= obtener_string(paquete.parametros);
@@ -176,7 +176,7 @@ void funcion_signal(t_paquete paquete,int socket_suse){
 
 void funcion_wait(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE WAIT\n");
+	printf("SUSE WAIT\n");
 
 	int tid = obtener_valor(paquete.parametros);
 	char* semaforo= obtener_string(paquete.parametros);
@@ -204,7 +204,7 @@ void funcion_wait(t_paquete paquete,int socket_suse){
 
 void funcion_create(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE CREATE\n");
+	printf("SUSE CREATE\n");
 
 	int tid = obtener_valor(paquete.parametros);
 
@@ -222,7 +222,7 @@ void funcion_create(t_paquete paquete,int socket_suse){
 
 void funcion_schedule_next(t_paquete paquete,int socket_suse){
 
-	//printf("SUSE SCHEDULE NEXT\n");
+	printf("SUSE SCHEDULE NEXT\n");
 
 	//aca le das la orden a suse
 	//tengo que mandarle un id de programa o algo?
@@ -234,7 +234,7 @@ void funcion_schedule_next(t_paquete paquete,int socket_suse){
 	.parametros = list_create()
 	};
 
-	//printf("next_tid esta retornando %d\n",retorno);
+	printf("next_tid esta retornando %d\n",retorno);
 
 
 	///////////////// Parametros a enviar /////////////////
